@@ -1,8 +1,10 @@
-import math
-from game_class.C_table import Table
+NOT_FREE_SHOT = (-1, float("inf"))
 from game_class.C_ball import Ball
-from game_class.C_pocket import Pocket
+from game_class.C_table import Table
 from game_class.C_calc import Calculations
+from game_class.C_pocket import Pocket
+import math
+from const_numbers import *
 
 
 class BestShot:
@@ -11,39 +13,80 @@ class BestShot:
         self.target = target
         self.table = table
 
-        # השתמש במחלקת Calculations כדי למצוא את הזווית הכי טובה
-        calc = Calculations(white, target, table.pockets)
+        # חישוב כיס עם זווית מינימלית
+        calc = Calculations(white, target, table)
         best_pocket_id, best_angle = calc.min_abs_angle()
 
-        # שמירת הנתונים
-        self.pocket: Pocket = next(p for p in table.pockets if p.id == best_pocket_id)
-        self.angle: float = best_angle
+        if (best_pocket_id, best_angle) == NOT_FREE_SHOT:
+            # לא קיים שוט חוקי
+            self.pocket: Pocket | None = None
+            self.angle: float = float("inf")
+            self.dist_target_to_pocket = float("inf")
+            self.dist_white_to_target = float("inf")
+            self.score_angle: -1
+            self.score_distance =-1
+            self.score = -1
+            self.valid = False
+        else:
+            # שמירת הכיס שנבחר
+            self.pocket: Pocket = next(p for p in table.pockets if p.id == best_pocket_id)
+            self.angle: float = best_angle
 
-        # מרחקים
-        self.dist_target_to_pocket = math.hypot(
-            self.pocket.x_cord - target.x_cord,
-            self.pocket.y_cord - target.y_cord
-        )
-        self.dist_white_to_target = math.hypot(
-            target.x_cord - white.x_cord,
-            target.y_cord - white.y_cord
-        )
+            # חישוב מרחקים
+            self.dist_target_to_pocket = math.hypot(
+                self.pocket.x_cord - target.x_cord,
+                self.pocket.y_cord - target.y_cord
+            )
+            self.dist_white_to_target = math.hypot(
+                target.x_cord - white.x_cord,
+                target.y_cord - white.y_cord
+            )
 
-        # ציון סופי – יחושב בהמשך
-        self.score: float | None = None
+            self.score_angle = self.calculate_score_angle(self.angle)
+            self.score_distance = self.calculate_score_distance( self.dist_white_to_target, self.dist_target_to_pocket)
+            self.score=  self.score_angle * self.score_distance
+            self.valid = True
 
-    def get_pocket(self) -> int:
-        """מחזירה את ה־ID של הכיס שנבחר"""
-        return self.pocket.id
 
-    def get_pocket_and_angle(self) -> tuple[int, float]:
-        """מחזירה tuple עם (pocket_id, angle)"""
-        return self.pocket.id, self.angle
+    @staticmethod
+    def calculate_score_angle(angle: float) -> float:
+        """מחשב ציון מ־1 עד 100 לפי גודל הזווית"""
+        abs_angle = abs(angle)
+        if abs_angle >= 90:
+            return 1
+        return max(1, 100 * (1 - abs_angle / 90))
+
+
+    @staticmethod
+    def calculate_score_distance(dist_white_to_target: float, dist_target_to_pocket: float) -> float:
+        norm_white = dist_white_to_target / MAX_WHITE_TO_TARGET
+        norm_target = dist_target_to_pocket / MAX_TARGET_TO_POCKET
+        score = 1 - (norm_white + norm_target) / 2  # ממוצע נורמליזציות
+        return max(0.0, min(1.0, score))
+
+    def get_pocket(self) -> int | None:
+        """מחזירה את ה־ID של הכיס שנבחר, או None אם אין שוט חוקי"""
+        return self.pocket.id if self.valid else None
+
+    def get_score(self) -> float | None:
+        return self.score
+
+    def get_pocket_and_angle(self) -> tuple[int | None, float]:
+        """מחזירה tuple עם (pocket_id, angle) או (None, inf) אם אין שוט חוקי"""
+        return (self.pocket.id, self.angle) if self.valid else (None, float("inf"))
 
     def __repr__(self):
-        return (f"BestShot(target_id={self.target.id}, "
-                f"pocket_id={self.pocket.id}, "
-                f"angle={self.angle:.2f}, "
-                f"dist_white_target={self.dist_white_to_target:.2f}, "
-                f"dist_target_pocket={self.dist_target_to_pocket:.2f}, "
-                f"score={self.score})")
+        if not self.valid:
+            return f"BestShot(INVALID: no free shot for target_id={self.target.id})"
+
+        return (
+            f"BestShot("
+            f"target_id={self.target.id}, "
+            f"pocket_id={self.pocket.id}, "
+            f"angle={self.angle:.2f}, "
+            f"dist_white_target={self.dist_white_to_target:.2f}, "
+            f"dist_target_pocket={self.dist_target_to_pocket:.2f}, "
+            f"score_angle={self.score_angle:.2f}, "
+            f"score_distance={self.score_distance:.3f}, "
+            f"final_score={self.score:.2f})"
+        )

@@ -31,6 +31,17 @@ class Table:
         for ball in self.balls:
             print(ball)
 
+    def get_pockets(self) -> List[Pocket]:
+        return self.pockets
+    def get_balls(self) -> List[Ball]:
+        return self.balls
+    def get_solid(self) -> List[Ball]:
+        return [ball for ball in self.balls if ball.type == "solid"]
+    def get_striped(self) -> List[Ball]:
+        return [ball for ball in self.balls if ball.type == "striped"]
+    def get_black(self) -> List[Ball]:
+        return [ball for ball in self.balls if ball.type == "black"]
+
     def show_pockets(self):
         for pocket in self.pockets:
             print(pocket)
