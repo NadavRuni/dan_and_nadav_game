@@ -15,3 +15,5 @@ if __name__ == "__main__":
 
     # צייר את השולחן עם הכדורים
     draw_table(table)
+
+
