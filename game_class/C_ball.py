@@ -1,6 +1,6 @@
 import math
 from typing import Tuple
-from copy import copy
+from const_numbers import *
 
 class Ball:
     def __init__(self, ball_id: int, x_cord: float, y_cord: float, ball_type: str, radius: float = BALL_RADIUS):
