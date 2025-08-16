@@ -4,6 +4,8 @@ from const_numbers import *
 from game_class.C_ball import *
 from game_class.C_calc import *
 from game_class.C_bestShot import *
+from dan.build_table_from_image import *
+
 
 
 def main():
@@ -29,5 +31,11 @@ def main():
     # ציור
     draw_table(table , best_shot=bestShot)
 
+def dan():
+    tbl = build_table_from_image(IMAGE_PATH)
+    draw_table(tbl)
+
+
 if __name__ == "__main__":
-    main()
+   # main()
+    dan()
