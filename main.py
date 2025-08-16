@@ -1,16 +1,17 @@
-# This is a sample Python script.
+from game_class.table import Table
+from game_class.draw  import draw_table
 
-# Press ⌃F5 to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+if __name__ == "__main__":
+    # צור שולחן חדש
+    table = Table(length=200, width=100)
 
+    # הדפס מידע
+    print("📋 Table size:", table.length, "x", table.width)
+    print("🕳️ Pockets:", table.pockets)
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press F9 to toggle the breakpoint.
+    print("🎱 Balls on table:")
+    for ball in table.balls:
+        print("   ", ball)
 
-
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    # צייר את השולחן עם הכדורים
+    draw_table(table)
