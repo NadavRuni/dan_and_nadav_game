@@ -1,22 +1,33 @@
-from game_class.table import Table
-from game_class.draw  import *
+from game_class.C_table import Table
+from game_class.C_draw  import *
 from const_numbers import *
+from game_class.C_ball import *
+from game_class.C_calc import *
+from game_class.C_bestShot import *
 
+
+def main():
+    # יצירת כדורים
+    x_white, y_white = TABLE_LENGTH / 2, TABLE_WIDTH / 2
+    white = Ball(0, x_white, y_white, "white", BALL_RADIUS)
+
+    x_black = random.uniform(BALL_RADIUS * 2, TABLE_LENGTH - BALL_RADIUS * 2)
+    y_black = random.uniform(BALL_RADIUS * 2, TABLE_WIDTH - BALL_RADIUS * 2)
+    black = Ball(8, x_black, y_black, "black", BALL_RADIUS)
+
+    # יצירת שולחן עם שני כדורים
+    table = Table(TABLE_LENGTH, TABLE_WIDTH, [white, black])
+
+    bestShot = BestShot(white, black, table)
+
+
+    print (bestShot)
+
+
+
+
+    # ציור
+    draw_table(table , best_shot=bestShot)
 
 if __name__ == "__main__":
-    # # צור שולחן חדש
-    # table = Table(length=TABLE_LENGTH, width=TABLE_WIDTH)
-    #
-    # # הדפס מידע
-    # print("📋 Table size:", table.length, "x", table.width)
-    # print("🕳️ Pockets:", table.pockets)
-    #
-    # print("🎱 Balls on table:")
-    # for ball in table.balls:
-    #     print("   ", ball)
-    #
-    # # צייר את השולחן עם הכדורים
-    # draw_table(table)
-    #draw_random_table()
-
-    draw_random_white_and_black()
+    main()
