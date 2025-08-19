@@ -209,3 +209,7 @@ __marimo__/
 dan/images/
 dan/output/
 yolov8n.pt
+**.txt
+**.jpg
+**.yaml
+**.cache

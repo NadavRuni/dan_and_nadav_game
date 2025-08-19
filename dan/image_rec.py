@@ -5,9 +5,9 @@ import os
 import json
 
 # ====== PATHS (ללא CLI): ======
-IMAGE_PATH       = "/Users/danbenzvi/Desktop/dan_nadav_game/dan_and_nadav_game/dan/images/table-11.jpg"
-OUTPUT_ANN_PATH  = "/Users/danbenzvi/Desktop/dan_nadav_game/dan_and_nadav_game/dan/output/table-11-annotated.jpg"
-OUTPUT_JSON_PATH = "/Users/danbenzvi/Desktop/dan_nadav_game/dan_and_nadav_game/dan/output/analysis-table-11.json"
+IMAGE_PATH       = "/Users/danbenzvi/Desktop/dan_nadav_game/dan_and_nadav_game/dan/images/table-13.jpg"
+OUTPUT_ANN_PATH  = "/Users/danbenzvi/Desktop/dan_nadav_game/dan_and_nadav_game/dan/output/table-13-annotated.jpg"
+OUTPUT_JSON_PATH = "/Users/danbenzvi/Desktop/dan_nadav_game/dan_and_nadav_game/dan/output/analysis-table-13.json"
 
 # ====== YOLO / Hough ======
 MODEL_PATH           = "yolov8n.pt"
@@ -198,65 +198,84 @@ def patch_stats(img_bgr, centers, radii, inner_ratio=0.55, outer_ratio=0.85):
 # ======= שחור עמיד להיילייטים =======
 def find_black_index_robust(img_bgr, centers, radii,
                             inner_ratio=0.55, outer_ratio=0.85,
-                            very_dark_V=60,      # פיקסלים כהים ממש (0..255)
-                            min_dark_frac=0.08,  # לפחות 8% מהטבעת מאוד כהים
+                            very_dark_V=60, min_dark_frac=0.08,
                             w_V10=0.55, w_L10=0.25, w_meanV=0.20, w_chroma=0.35):
     """
-    בוחר את הכדור השחור על בסיס:
-    - V10 (אחוזון 10 של V) + L10  → עמיד להיילייטים
-    - meanV  → תוספת יציבות
-    - chroma (Lab) → מענישים צבעים רוויים
-    - דרישת סף: אחוז פיקסלים מאוד כהים ≥ min_dark_frac
-    מחזיר: (black_idx, scores, details)
+    החלפת לוגיקת הזיהוי לשחור:
+    - מסננים לפי רדיוס קרוב לחציוני (כמו בקוד הדוגמה)
+    - מסננים עיגולים שקרובים מדי לשוליים (כיסים)
+    - מחשבים עוצמת צבע ממוצעת B+G+R בתוך דיסק העיגול
+    - מתעלמים מעוצמות נמוכות מאוד (כיסים חשוכים לחלוטין)
+    - בוחרים את המועמד עם העוצמה הנמוכה ביותר כ"כדור שחור"
+
+    החתימה נשמרת; מוחזרים:
+      black_idx (אינדקס בתוך centers) או None,
+      scores (עוצמה; נמוך=כהה/עדיף),
+      details (מידע עזר לכל אינדקס).
     """
-    h, w = img_bgr.shape[:2]
-    hsv = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2HSV); H, S, V = cv2.split(hsv)
-    lab = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2LAB); L, A, B = cv2.split(lab)
-
-    scores = []
-    details = []
-    for (cx_f, cy_f), r_est in zip(centers, radii):
-        cx, cy = int(round(cx_f)), int(round(cy_f))
-        r_in  = max(2, int(inner_ratio * r_est))
-        r_out = max(r_in+1, int(outer_ratio * r_est))
-        lim   = int(min(cx, cy, w-1-cx, h-1-cy))
-        r_out = min(r_out, lim)
-        if r_out <= r_in or r_out < 3:
-            scores.append(+1e9); details.append({}); continue
-
-        ann = _annulus_mask(h, w, cx, cy, r_in, r_out)
-        v_vals = V[ann.astype(bool)]
-        l_vals = L[ann.astype(bool)]
-        a_vals = (A[ann.astype(bool)].astype(np.float32) - 128.0)
-        b_vals = (B[ann.astype(bool)].astype(np.float32) - 128.0)
-        chroma = float(np.hypot(a_vals.mean() if a_vals.size else 0.0,
-                                b_vals.mean() if b_vals.size else 0.0))
-
-        if v_vals.size == 0:
-            scores.append(+1e9); details.append({}); continue
-
-        V10   = float(np.percentile(v_vals, 10))
-        L10   = float(np.percentile(l_vals, 10)) if l_vals.size else 255.0
-        meanV = float(v_vals.mean())
-
-        dark_frac = float((v_vals < very_dark_V).sum()) / float(len(v_vals))
-
-        score = (w_V10 * (V10/255.0)) + (w_L10 * (L10/255.0)) \
-                + (w_meanV * (meanV/255.0)) + (w_chroma * min(chroma/80.0, 1.5))
-
-        if dark_frac < min_dark_frac:
-            score += 0.6  # ענישה חזקה
-
-        scores.append(score)
-        details.append({"V10": V10, "L10": L10, "meanV": meanV,
-                        "chroma": chroma, "dark_frac": dark_frac,
-                        "r_est": r_est})
-
-    if not scores:
+    if not centers or not radii:
         return None, [], []
 
-    black_idx = int(np.argmin(scores))
-    return black_idx, scores, details
+    h, w = img_bgr.shape[:2]
+
+    # פרמטרים כפי שבדוגמה השנייה
+    border_margin   = 30           # מרחק מינ' מהקצוות (פיקסלים)
+    tol_px          = 5            # סבילות להבדל רדיוס מהחציוני (פיקסלים)
+    min_intensity   = 20.0         # סכום B+G+R מינימלי כדי לא להיות "כיס שחור"
+
+    median_r = float(np.median(radii)) if len(radii) > 0 else 0.0
+
+    scores  = []
+    details = []
+    best_idx   = None
+    best_score = float('inf')
+
+    for i, ((cx_f, cy_f), r_est) in enumerate(zip(centers, radii)):
+        cx, cy = int(round(cx_f)), int(round(cy_f))
+        r      = int(round(r_est))
+
+        # סינון לפי רדיוס ~ לחציוני
+        if median_r > 0 and abs(r - median_r) > tol_px:
+            scores.append(1e9)
+            details.append({"skip": "radius_mismatch", "r": r, "median_r": median_r})
+            continue
+
+        # סינון לפי קירבה לגבולות (מונע כיסים בפינות/שוליים)
+        if cx < border_margin or cx > (w - border_margin) or cy < border_margin or cy > (h - border_margin):
+            scores.append(1e9)
+            details.append({"skip": "near_border"})
+            continue
+
+        if r < 2:
+            scores.append(1e9)
+            details.append({"skip": "too_small"})
+            continue
+
+        # עוצמת צבע ממוצעת בתוך דיסק העיגול
+        mask = np.zeros((h, w), dtype=np.uint8)
+        cv2.circle(mask, (cx, cy), r, 255, -1)
+        mean_bgr = cv2.mean(img_bgr, mask=mask)[:3]
+        intensity = float(sum(mean_bgr))  # B + G + R
+
+        # סינון אם כהה מאוד (כיס שחור לגמרי)
+        if intensity < min_intensity:
+            scores.append(1e9)
+            details.append({"skip": "too_dark_pocket_like", "intensity": intensity})
+            continue
+
+        # ציון = עוצמה (נמוך עדיף)
+        scores.append(intensity)
+        details.append({"intensity": intensity, "cx": cx, "cy": cy, "r": r})
+
+        if intensity < best_score:
+            best_score = intensity
+            best_idx   = i
+
+    if best_idx is None:
+        return None, scores, details
+
+    return int(best_idx), scores, details
+
 
 def classify_white_black_orange(img_bgr, centers, radii):
     stats = patch_stats(img_bgr, centers, radii)
@@ -302,6 +321,65 @@ def add_missing_orange_candidates(img, existing_boxes, min_radius_px, max_radius
                 added_scores.append(0.45)   # ציון בינוני
                 added_r.append(float(r))
     return added_boxes, added_scores, added_r
+
+
+def detect_black_global_candidate(img, existing_boxes):
+    """מאתר את הכדור השחור בכל הפריים (Hough+Intensity) ומחזיר קופסה+ציון+רדיוס+מרכז.
+       מתעלם מכיסים/שוליים ומדיטקציות שכבר קיימות.
+    """
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    h, w = gray.shape[:2]
+
+    # טווח רדיוסים נדיב יותר מה-hough_fallback כדי לא לפספס
+    r_min = int(0.010 * min(h, w))
+    r_max = int(0.030 * min(h, w))
+    circles = cv2.HoughCircles(
+        gray, cv2.HOUGH_GRADIENT,
+        dp=1.2, minDist=max(50, int(0.035*min(h,w))),
+        param1=50, param2=30,
+        minRadius=max(10, r_min), maxRadius=max(20, r_max)
+    )
+    if circles is None:
+        return None
+
+    arr = np.round(circles[0, :]).astype("int")
+    radii = arr[:, 2]
+    median_r = int(np.median(radii)) if len(radii) else 0
+
+    border_margin = 30
+    best_intensity = float('inf')
+    best = None
+
+    for (x, y, r) in arr:
+        # סינון כמו בקוד שלך
+        if median_r and abs(r - median_r) > 5:
+            continue
+        if x < border_margin or x > w - border_margin or y < border_margin or y > h - border_margin:
+            continue
+
+        # עוצמת BGR ממוצעת בתוך הדיסק
+        mask = np.zeros_like(gray)
+        cv2.circle(mask, (x, y), r, 255, -1)
+        mean_bgr = cv2.mean(img, mask=mask)[:3]
+        intensity = float(sum(mean_bgr))
+
+        # סף כהות קיצוני -> כנראה כיס
+        if intensity < 20:
+            continue
+
+        # אל תוסיף אם כבר יש חפיפה משמעותית עם דיטקציות קיימות
+        box = (float(x - r), float(y - r), float(x + r), float(y + r))
+        if any(iou_xyxy(box, bx) > 0.25 for bx in existing_boxes):
+            continue
+
+        if intensity < best_intensity:
+            best_intensity = intensity
+            best = (box, 0.65, float(r), (float(x), float(y)))  # (box, score, radius, center)
+
+    return best  # או None
+
+
+
 
 # ----- ניפוי כדורים בתוך כיסים -----
 def remove_balls_in_pockets(centers, radii, pockets_list, factor=POCKET_INCLUSION_FACTOR):
@@ -349,7 +427,7 @@ def main():
     all_scores = yolo_scores + h_scores
     all_radii  = [est_radius_from_box(b) for b in yolo_boxes] + h_radii
 
-    # 1.1 הוספת מועמדים כתומים אם חסר
+    # 1.1 כתומים חסרים
     min_r = int(max(6, 0.009 * min(H, W)))
     max_r = int(max(min_r + 6, 0.018 * min(H, W)))
     add_boxes, add_scores, add_r = add_missing_orange_candidates(img, all_boxes, min_r, max_r)
@@ -357,10 +435,21 @@ def main():
     all_scores += add_scores
     all_radii  += add_r
 
+    # >>> 1.2 הזרקת מועמד שחור ע"י Hough גלובלי (הקוד הקטן שלך)
+    black_center_hint = None
+    blk_cand = detect_black_global_candidate(img, all_boxes)
+    if blk_cand is not None:
+        bx, sc, rr, center_hint = blk_cand
+        all_boxes.append(bx)
+        all_scores.append(sc)
+        all_radii.append(rr)
+        black_center_hint = center_hint
+    # <<< סוף ההזרקה
+
     f_boxes, f_scores, f_radii = filter_and_limit(img, all_boxes, all_scores, all_radii)
     centers = boxes_to_centers(f_boxes)
 
-    # 2) כיסים מועמדים + בחירת BL כ-Origin (fallback לפינת התמונה)
+    # 2) כיסים + BL origin
     pockets_cand = detect_pocket_candidates(img)
     bl_guess = pick_nearest(pockets_cand, (0.0 * W, 1.0 * H))
     if bl_guess is None:
@@ -368,7 +457,7 @@ def main():
     else:
         blx, bly, blr = map(float, bl_guess)
 
-    # 3) הסרת כדורים שנמצאים בתוך כיסים
+    # 3) הסרת כדורים בתוך כיסים
     if pockets_cand:
         keep_idx = remove_balls_in_pockets(centers, f_radii, pockets_cand, factor=POCKET_INCLUSION_FACTOR)
         f_boxes  = [f_boxes[i]  for i in keep_idx]
@@ -376,8 +465,29 @@ def main():
         f_radii  = [f_radii[i]  for i in keep_idx]
         centers  = [centers[i]  for i in keep_idx]
 
-    # 4) סיווג: לבן/שחור/כתום/אחר
+    # >>> 3.1 מציאת אינדקס הכדור השחור שהוזרק (אם הוחדר)
+    forced_black_idx = None
+    if black_center_hint is not None and centers:
+        bx, by = black_center_hint
+        d2 = [ (cx - bx)**2 + (cy - by)**2 for (cx, cy) in centers ]
+        forced_black_idx = int(np.argmin(d2))
+    # <<<
+
+    # 4) סיווג
     w_idx, b_idx, o_idx, stats, _ = classify_white_black_orange(img, centers, f_radii)
+
+    # >>> 4.1 אם מצאנו שחור גלובלי – נכפה אותו
+    if forced_black_idx is not None:
+        b_idx = forced_black_idx
+        # דאג שלא יתנגש עם הלבן
+        if w_idx is not None and w_idx == b_idx and stats:
+            white_scores = [st["frac_white"] - 0.35*st["hue_var"] for st in stats]
+            order_w = list(np.argsort(-np.array(white_scores)))
+            for cand in order_w:
+                if cand != b_idx:
+                    w_idx = int(cand)
+                    break
+    # <<<
 
     types = []
     for i in range(len(centers)):
@@ -385,10 +495,11 @@ def main():
             types.append("white")
         elif i == b_idx:
             types.append("black")
-        elif i == o_idx and stats[i]["frac_orange"] > 0.25:  # מסנן מינימלי לכתום
+        elif i == o_idx and stats[i]["frac_orange"] > 0.25:
             types.append("orange")
         else:
             types.append("other")
+
 
     # 5) JSON (קואורדינטות יחסית ל-BL, y למעלה)
     balls_json = []
