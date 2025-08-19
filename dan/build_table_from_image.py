@@ -14,7 +14,7 @@ from game_class.C_ball import Ball
 from game_class.C_table import Table
 from game_class.C_draw import draw_table
 
-ANALYSIS_JSON_PATH = "/Users/danbenzvi/Desktop/dan_nadav_game/dan_and_nadav_game/dan/output/analysis-table-11.json"
+ANALYSIS_JSON_PATH = "/Users/danbenzvi/Desktop/dan_nadav_game/dan_and_nadav_game/dan/output/analysis-table-13.json"
 
 def load_analysis(json_path: str):
     with open(json_path, "r", encoding="utf-8") as f:
