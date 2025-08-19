@@ -114,6 +114,76 @@ def make_felt_mask(img_bgr):
     return mask
 
 
+def assign_six_pockets(pockets_cand, W, H):
+    """
+    מכניס את המועמדים שזוהו לכיסים: TL, TM, TR, BL, BM, BR
+    לפי הקרוב ביותר לעוגני הפינות/האמצעים. מחזיר dict עם נקודות (x,y) או None אם חסר.
+    """
+    if not pockets_cand:
+        return None
+    anchors = {
+        "TL": (0.00*W, 0.00*H),
+        "TM": (0.50*W, 0.00*H),
+        "TR": (1.00*W, 0.00*H),
+        "BL": (0.00*W, 1.00*H),
+        "BM": (0.50*W, 1.00*H),
+        "BR": (1.00*W, 1.00*H),
+    }
+    taken = set()
+    out = {}
+    for name, (ax, ay) in anchors.items():
+        best, best_d = None, 1e18
+        best_k = None
+        for k, (x, y, r) in enumerate(pockets_cand):
+            if k in taken:
+                continue
+            d = (x-ax)**2 + (y-ay)**2
+            if d < best_d:
+                best, best_d, best_k = (float(x), float(y)), d, k
+        if best is None:
+            return None
+        out[name] = best
+        taken.add(best_k)
+    return out
+
+
+def build_img2table_h(pmap, table_w=2.0, table_h=1.0):
+    """
+    בונה הומוגרפיה מהתמונה -> מערכת שולחן (2:1).
+    pmap: dict עם TL,TM,TR,BL,BM,BR (כל אחת (x,y) בתמונה).
+    מחזיר H_img2tab (3x3) והמידות (table_w, table_h).
+    """
+    # נקודות מקור (תמונה)
+    src = np.array([
+        pmap["TL"], pmap["TM"], pmap["TR"],
+        pmap["BL"], pmap["BM"], pmap["BR"]
+    ], dtype=np.float32)
+
+    # נקודות יעד (שולחן ישר, יחס 2:1)
+    dst = np.array([
+        [0.0*table_w, 0.0*table_h],   # TL
+        [0.5*table_w, 0.0*table_h],   # TM
+        [1.0*table_w, 0.0*table_h],   # TR
+        [0.0*table_w, 1.0*table_h],   # BL
+        [0.5*table_w, 1.0*table_h],   # BM
+        [1.0*table_w, 1.0*table_h],   # BR
+    ], dtype=np.float32)
+
+    H, _ = cv2.findHomography(src, dst, method=cv2.RANSAC, ransacReprojThreshold=3.0)
+    return H, (table_w, table_h)
+
+def warp_points_xy(points, H):
+    """
+    ממפה רשימת נקודות [(x,y),...] באמצעות הומוגרפיה H.
+    מחזיר np.array Nx2 במערכת היעד.
+    """
+    if H is None or len(points) == 0:
+        return np.zeros((0,2), dtype=np.float32)
+    pts = np.array(points, dtype=np.float32).reshape(-1,1,2)
+    warped = cv2.perspectiveTransform(pts, H).reshape(-1,2)
+    return warped
+
+
 
 
 
@@ -537,6 +607,22 @@ def image_recognizer(stage):
     f_tags   = keep_by_indices(f_tags,   keep_soft)
     centers  = keep_by_indices(centers,  keep_soft)
 
+
+        # === הומוגרפיה: מהמועמדים לכיסים בנה מיפוי לתצוגת שולחן ישר ===
+    six = assign_six_pockets(pockets_cand, W, H)
+    H_img2tab, (TW, TH) = (None, (2.0, 1.0))
+    if six is not None:
+        H_img2tab, (TW, TH) = build_img2table_h(six, table_w=2.0, table_h=1.0)
+
+    # העתק נקודות הכדורים למערכת השולחן (u,v)
+    uv = warp_points_xy(centers, H_img2tab) if H_img2tab is not None else np.zeros((len(centers),2), dtype=np.float32)
+    # נרמול ל-[0..1] (u_norm=x/TW, v_norm=y/TH)
+    uv_norm = uv.copy()
+    if uv_norm.size > 0:
+        uv_norm[:,0] /= TW
+        uv_norm[:,1] /= TH
+
+
     # --- 5) תיוג סופי לפי תגיות זיכרון ---
     types = []
     for tg in f_tags:
@@ -566,18 +652,31 @@ def image_recognizer(stage):
     cv2.imwrite(OUTPUT_ANN_PATH, ann)
 
     balls_json = []
-    for i, (cx, cy) in enumerate(centers):
-        balls_json.append({
+    for i, ((cx, cy), t) in enumerate(zip(centers, types)):
+        rec = {
             "index": i,
-            "type": types[i],
-            "x_px": float(cx - blx),
-            "y_px": float(bly - cy)
-        })
+            "type": t,
+            "center_px": {"x": float(cx), "y": float(cy)},  # נשמר למעקב/דיבוג
+            "rel_to_BL_px": {"x": float(cx - blx), "y": float(bly - cy)},  # תאימות לאחור
+        }
+        if uv_norm.size > 0:
+            rec["table_uv"] = {"u": float(uv_norm[i,0]), "v": float(uv_norm[i,1])}   # 0..1, 2:1 כבר נלקח בחשבון
+            rec["table_xy_units"] = {"x": float(uv[i,0]), "y": float(uv[i,1])}        # 0..2 ברוחב, 0..1 בגובה
+        balls_json.append(rec)
 
     result = {
         "image_path": IMAGE_PATH,
         "origin_px": {"x": float(blx), "y": float(bly)},
-        "pockets_px": {"0": {"x": float(blx), "y": float(bly), "r": float(blr)}},
+        "pockets_px": {
+            "TL": {"x": float(six["TL"][0]), "y": float(six["TL"][1])} if six else None,
+            "TM": {"x": float(six["TM"][0]), "y": float(six["TM"][1])} if six else None,
+            "TR": {"x": float(six["TR"][0]), "y": float(six["TR"][1])} if six else None,
+            "BL": {"x": float(six["BL"][0]), "y": float(six["BL"][1])} if six else None,
+            "BM": {"x": float(six["BM"][0]), "y": float(six["BM"][1])} if six else None,
+            "BR": {"x": float(six["BR"][0]), "y": float(six["BR"][1])} if six else None,
+        },
+        "table_rect_units": {"width": 2.0, "height": 1.0},   # יחס 2:1
+        "homography_img2table": H_img2tab.tolist() if H_img2tab is not None else None,
         "table_size_px": {"width_px": float(W), "height_px": float(H)},
         "balls": balls_json
     }
