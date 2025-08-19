@@ -4,9 +4,9 @@ import numpy as np
 import os, json
 
 # ====== PATHS ======
-IMAGE_PATH       = "/Users/danbenzvi/Desktop/dan_nadav_game/dan_and_nadav_game/dan/images/table-13.jpg"
-OUTPUT_ANN_PATH  = "/Users/danbenzvi/Desktop/dan_nadav_game/dan_and_nadav_game/dan/output/table-13-annotated.jpg"
-OUTPUT_JSON_PATH = "/Users/danbenzvi/Desktop/dan_nadav_game/dan_and_nadav_game/dan/output/analysis-table-13.json"
+IMAGE_PATH       = "/Users/danbenzvi/Desktop/dan_nadav_game/dan_and_nadav_game/dan/images/table-15.jpg"
+OUTPUT_ANN_PATH  = "/Users/danbenzvi/Desktop/dan_nadav_game/dan_and_nadav_game/dan/output/table-15-annotated.jpg"
+OUTPUT_JSON_PATH = "/Users/danbenzvi/Desktop/dan_nadav_game/dan_and_nadav_game/dan/output/analysis-table-15.json"
 
 # Debug stage outputs (לא חובה, אבל נוח לראות)
 OUT_DIR          = os.path.dirname(OUTPUT_ANN_PATH) or "."
@@ -27,7 +27,7 @@ MAX_BALLS              = 16
 MIN_RADIUS_REL         = 0.010
 MIN_RADIUS_PX_OVERRIDE = None
 
-POCKET_INCLUSION_FACTOR = 1.05  # “כדור בכיס” — ניפוי דיטקציות שמרכזן בתוך רדיוס כיס *פקטור*
+POCKET_INCLUSION_FACTOR = 1.05  
 
 
 # ---------------- Utils ----------------
@@ -43,6 +43,64 @@ def iou_xyxy(a, b):
     union = area_a + area_b - inter + 1e-9
     return inter / union
 
+# ---------------- memory ----------------
+def nms_with_tags(boxes, scores, radii, tags, iou_thr=0.45):
+    """NMS שמשמר תגיות 'זיכרון' (mem_white/mem_black)."""
+    if not boxes:
+        return [], [], [], []
+    order = np.argsort(scores)[::-1]
+    used = np.zeros(len(order), dtype=bool)
+
+    kept_boxes, kept_scores, kept_radii, kept_tags = [], [], [], []
+    while True:
+        valid = np.where(~used)[0]
+        if valid.size == 0:
+            break
+        i = int(order[valid[0]])
+        used[valid[0]] = True
+
+        kb, ks = boxes[i], scores[i]
+        kr = radii[i] if (radii and i < len(radii) and radii[i] is not None) else est_radius_from_box(kb)
+        kt = set(tags[i]) if tags and i < len(tags) else set()
+
+        # דחיית חופפים + איסוף תגיות מהם
+        for idx in valid[1:]:
+            j = int(order[idx])
+            if iou_xyxy(boxes[i], boxes[j]) > iou_thr:
+                used[idx] = True
+                if tags and j < len(tags):
+                    kt |= set(tags[j]) if isinstance(tags[j], (set, list, tuple)) else ({tags[j]} if tags[j] else set())
+
+        kept_boxes.append(kb)
+        kept_scores.append(ks)
+        kept_radii.append(kr)
+        kept_tags.append(kt)
+
+    return kept_boxes, kept_scores, kept_radii, kept_tags
+
+
+def inject_memory_candidate(mem, all_boxes, all_scores, all_radii, all_tags, boost_score, tag_name):
+    """אם יש זיכרון (box,radius), ננסה לתייג דיטקציה קיימת; אחרת נוסיף חדשה עם ציון גבוה."""
+    if not mem:
+        return
+    box = mem["box"]; r = mem["radius"]
+    # נסה לתייג קופסה קיימת
+    for j, bx in enumerate(all_boxes):
+        if iou_xyxy(box, bx) > 0.30:
+            all_scores[j] = max(all_scores[j], boost_score)
+            all_tags[j].add(tag_name)
+            return
+    # לא נמצאה חופפת — הוסף חדשה
+    all_boxes.append(box)
+    all_scores.append(boost_score)
+    all_radii.append(r)
+    all_tags.append({tag_name})
+
+
+
+
+
+
 def make_felt_mask(img_bgr):
     """מסכת משטח הלבד (כחול/ירוק) ב-HSV, עם ניקוי מורפולוגי."""
     hsv = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2HSV)
@@ -54,6 +112,9 @@ def make_felt_mask(img_bgr):
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN,  np.ones((5,5), np.uint8), iterations=1)
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((9,9), np.uint8), iterations=1)
     return mask
+
+
+
 
 
 
@@ -160,7 +221,131 @@ def remove_balls_in_pockets(centers, radii, pockets_list, factor=POCKET_INCLUSIO
     return kept_idx
 
 
-    
+
+def keep_by_indices(seq, indices):
+    return [seq[i] for i in indices]
+
+
+
+
+def disk_overlap_frac_with_mask(H, W, cx, cy, r, mask):
+    """
+    מחזירה את אחוז שטח הדיסק (כדור) שנופל בתוך המסכה (mask>0).
+    H,W – גודל התמונה; cx,cy,r – מרכז/רדיוס הכדור בפיקסלים; mask – מסכת uint8.
+    """
+    cx = int(round(cx)); cy = int(round(cy))
+    r  = int(max(2, round(r)))
+
+    # חלון חיתוך סביב הדיסק
+    x1, y1 = max(0, cx - r), max(0, cy - r)
+    x2, y2 = min(W, cx + r + 1), min(H, cy + r + 1)
+    if x2 <= x1 or y2 <= y1:
+        return 0.0
+
+    submask = mask[y1:y2, x1:x2]
+
+    # מסכת דיסק לוגית בתוך חלון החיתוך
+    yy, xx = np.ogrid[y1:y2, x1:x2]
+    circle = ((xx - cx) * (xx - cx) + (yy - cy) * (yy - cy)) <= (r * r)
+
+    area = int(circle.sum())
+    if area == 0:
+        return 0.0
+
+    hit = (submask > 0) & circle
+    return float(hit.sum()) / float(area)
+
+
+
+
+def remove_in_pockets_protected(centers, radii, pockets, tags, factor):
+    keep = []
+    for i, (cx, cy) in enumerate(centers):
+        protected = ("mem_white" in tags[i]) or ("mem_black" in tags[i])
+        if protected:
+            keep.append(i); continue
+        inside = False
+        for (px, py, pr) in pockets:
+            if np.hypot(cx - px, cy - py) <= pr * factor:
+                inside = True; break
+        if not inside:
+            keep.append(i)
+    return keep
+
+def felt_filter_protected(H, W, centers, radii, tags, felt_mask, min_frac=0.55, min_frac_in=0.35, erode_px=3, dilate_px=2):
+    k1 = 2*erode_px + 1; k2 = 2*dilate_px + 1
+    felt_eroded = cv2.erode(felt_mask, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k1, k1)), 1)
+    felt_dilated= cv2.dilate(felt_mask, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k2, k2)), 1)
+
+    def frac(mask, cx, cy, r):
+        cx, cy, r = float(cx), float(cy), float(r)
+        return disk_overlap_frac_with_mask(H, W, cx, cy, r, mask)
+
+    keep = []
+    dropped = []
+    for i, (cx, cy) in enumerate(centers):
+        if ("mem_white" in tags[i]) or ("mem_black" in tags[i]):
+            keep.append(i); continue
+        r = radii[i]
+        f  = frac(felt_mask,  cx, cy, r)
+        fi = frac(felt_eroded, cx, cy, r)
+        if f >= min_frac or fi >= min_frac_in or (felt_dilated[int(round(cy)), int(round(cx))] > 0):
+            keep.append(i)
+        else:
+            dropped.append(i)
+
+    # Rescue רך
+    for i in dropped:
+        if len(keep) >= len(centers):
+            break
+        if disk_overlap_frac_with_mask(H, W, centers[i][0], centers[i][1], radii[i], felt_dilated) >= 0.25:
+            keep.append(i)
+
+    return sorted(set(keep))
+
+
+
+
+def add_missing_orange_candidates(img, existing_boxes, min_radius_px, max_radius_px):
+    """
+    השלמת עיגולים חסרים באמצעות פילטר כתום + Hough.
+    שימו לב: זה רק מוסיף מועמדים לרשימה (בסוף כולם יסווגו white/black/other).
+    מחזיר: added_boxes, added_scores, added_r
+    """
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+    # כתום חזק (עובד טוב על לבד כחול/ירוק). אפשר להתאים לפי הצורך.
+    mask = cv2.inRange(hsv, (10, 90, 90), (30, 255, 255))
+    mask = cv2.medianBlur(mask, 5)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN,  np.ones((3,3), np.uint8), iterations=1)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((5,5), np.uint8), iterations=1)
+
+    circles = cv2.HoughCircles(
+        mask, cv2.HOUGH_GRADIENT,
+        dp=1.2,
+        minDist=int(max(12, min_radius_px * 2.0)),
+        param1=100,
+        param2=15,
+        minRadius=int(min_radius_px),
+        maxRadius=int(max_radius_px)
+    )
+
+    added_boxes, added_scores, added_r = [], [], []
+    if circles is not None:
+        for x, y, r in np.uint16(np.around(circles[0, :])):
+            x1, y1, x2, y2 = x - r, y - r, x + r, y + r
+            # אל תוסיף אם יש חפיפה משמעותית עם דיטקציה קיימת
+            if any(iou_xyxy((x1, y1, x2, y2), bx) > 0.25 for bx in existing_boxes):
+                continue
+            added_boxes.append((float(x1), float(y1), float(x2), float(y2)))
+            added_scores.append(0.45)   # ציון בינוני — רק כדי לעבור filter
+            added_r.append(float(r))
+
+    return added_boxes, added_scores, added_r
+
+
+
+
 
 
 # =========================================================
@@ -271,78 +456,111 @@ def black_recognizer(stage):
 
 def image_recognizer(stage):
     """
-    מזהה את כל הכדורים (YOLO + Hough fallback), מסיר כיסים,
-    מסמן WHITE/BLACK לפי מה שהוגדר בשלבים הקודמים. אין טיפול מיוחד לכתום.
+    מזהה כדורים (YOLO + Hough + השלמות), שומר את ה- white/black מהשלבים הקודמים
+    בעזרת תגיות זיכרון (mem_white/mem_black), ומסנן כיסים/לבד בלי להפיל את הזיכרון.
     """
     img = stage["img"]
-    felt_mask = make_felt_mask(img)
     H, W = img.shape[:2]
 
-    # 1) detect balls
+    # --- felt mask לשלב הסינון המאוחר ---
+    felt_mask = make_felt_mask(img)
+
+    # --- 1) YOLO + Hough ---
     yolo_boxes, yolo_scores = yolo_detect(img)
     h_boxes, h_scores, h_radii = hough_fallback(img, yolo_boxes)
+
     all_boxes  = yolo_boxes + h_boxes
     all_scores = yolo_scores + h_scores
     all_radii  = [est_radius_from_box(b) for b in yolo_boxes] + h_radii
+    all_tags   = [set() for _ in all_boxes]
 
-    # 2) filter
-    f_boxes, f_scores, f_radii = filter_and_limit(img, all_boxes, all_scores, all_radii)
-    centers = boxes_to_centers(f_boxes)
+    # --- 1.1) הזרקת זיכרון: לבן/שחור שנמצאו בשלבים קודמים ---
+    inject_memory_candidate(stage.get("white"), all_boxes, all_scores, all_radii, all_tags, boost_score=0.99, tag_name="mem_white")
+    inject_memory_candidate(stage.get("black"), all_boxes, all_scores, all_radii, all_tags, boost_score=1.05, tag_name="mem_black")
 
-    # 3) pockets + BL origin (רק BL בתור origin)
+    # --- 1.2) השלמת מועמדים (להחזיר כדורים חסרים) ---
+    min_r = int(max(6, 0.009 * min(H, W)))
+    max_r = int(max(min_r + 6, 0.018 * min(H, W)))
+    add_boxes, add_scores, add_r = add_missing_orange_candidates(img, all_boxes, min_r, max_r)
+    for b, s, r in zip(add_boxes, add_scores, add_r):
+        all_boxes.append(b); all_scores.append(s); all_radii.append(r); all_tags.append(set())
+
+    # --- 1.3) NMS עם תגיות ---
+    all_boxes, all_scores, all_radii, all_tags = nms_with_tags(all_boxes, all_scores, all_radii, all_tags, iou_thr=0.40)
+
+    # --- 2) סינון בסיסי + מגבלה (שומר תגיות) ---
+    # גרסה קטנה של filter_and_limit ששומרת תגיות
+    hmin, wmin = img.shape[:2]
+    min_r_px = MIN_RADIUS_PX_OVERRIDE if MIN_RADIUS_PX_OVERRIDE else int(MIN_RADIUS_REL * min(hmin, wmin))
+    triplets = []
+    for bx, sc, rr, tg in zip(all_boxes, all_scores, all_radii, all_tags):
+        r = rr if rr is not None else est_radius_from_box(bx)
+        if r >= min_r_px:
+            triplets.append((bx, sc, r, tg))
+    triplets.sort(key=lambda t: t[1], reverse=True)
+    triplets = triplets[:MAX_BALLS]
+    f_boxes  = [t[0] for t in triplets]
+    f_scores = [t[1] for t in triplets]
+    f_radii  = [t[2] for t in triplets]
+    f_tags   = [t[3] for t in triplets]
+    centers  = boxes_to_centers(f_boxes)
+
+    # --- 3) כיסים + Origin ---
     pockets_cand = detect_pocket_candidates(img)
-    bl_guess = None
     if pockets_cand:
         bl_guess = min(pockets_cand, key=lambda p: (p[0]-0)**2 + (p[1]-H)**2)
+    else:
+        bl_guess = None
     if bl_guess is None:
         blx, bly, blr = 0.0, float(H - 1), 0.03 * min(W, H)
     else:
         blx, bly, blr = map(float, bl_guess)
 
-    # הסר כדורים שהמרכז שלהם בתוך כיס
+    # 3.1) הסרת כדורים בכיסים (מוגן לזיכרון)
     if pockets_cand:
-        keep_idx = remove_balls_in_pockets(centers, f_radii, pockets_cand, factor=POCKET_INCLUSION_FACTOR)
-        f_boxes  = [f_boxes[i]  for i in keep_idx]
-        f_scores = [f_scores[i] for i in keep_idx]
-        f_radii  = [f_radii[i]  for i in keep_idx]
-        centers  = [centers[i]  for i in keep_idx]
+        keep_idx = remove_in_pockets_protected(centers, f_radii, pockets_cand, f_tags, factor=POCKET_INCLUSION_FACTOR)
+        f_boxes  = keep_by_indices(f_boxes,  keep_idx)
+        f_scores = keep_by_indices(f_scores, keep_idx)
+        f_radii  = keep_by_indices(f_radii,  keep_idx)
+        f_tags   = keep_by_indices(f_tags,   keep_idx)
+        centers  = keep_by_indices(centers,  keep_idx)
 
-    # 4) קבע אינדקסים ל־WHITE/BLACK לפי הקרוב ביותר למרכזים שזוהו בשלבים הקודמים
-    forced_w_idx = forced_b_idx = None
-    if stage.get("white") and centers:
-        wx, wy = stage["white"]["center"]
-        forced_w_idx = int(np.argmin([(cx-wx)**2 + (cy-wy)**2 for (cx,cy) in centers]))
-    if stage.get("black") and centers:
-        bx, by = stage["black"]["center"]
-        forced_b_idx = int(np.argmin([(cx-bx)**2 + (cy-by)**2 for (cx,cy) in centers]))
+    # --- 4) סינון לפי הלבד (מוגן לזיכרון) ---
+    median_r  = int(np.median(f_radii)) if f_radii else 8
+    keep_soft = felt_filter_protected(H, W, centers, f_radii, f_tags, felt_mask,
+                                      min_frac=0.55, min_frac_in=0.35,
+                                      erode_px=max(2, int(0.40*median_r)),
+                                      dilate_px=max(1, int(0.20*median_r)))
+    f_boxes  = keep_by_indices(f_boxes,  keep_soft)
+    f_scores = keep_by_indices(f_scores, keep_soft)
+    f_radii  = keep_by_indices(f_radii,  keep_soft)
+    f_tags   = keep_by_indices(f_tags,   keep_soft)
+    centers  = keep_by_indices(centers,  keep_soft)
 
-    # אם התנגשו, נשמור שחור ונחליף לבן לאלטרנטיבי הקרוב הבא
-    if forced_w_idx is not None and forced_b_idx is not None and forced_w_idx == forced_b_idx and len(centers) > 1:
-        dists = [(i, (centers[i][0]-stage["white"]["center"][0])**2 + (centers[i][1]-stage["white"]["center"][1])**2) for i in range(len(centers))]
-        dists.sort(key=lambda t: t[1])
-        for i, _ in dists:
-            if i != forced_b_idx:
-                forced_w_idx = i
-                break
-
-    # 5) types: רק white/black/other (אין orange)
+    # --- 5) תיוג סופי לפי תגיות זיכרון ---
     types = []
-    for i in range(len(centers)):
-        if forced_w_idx is not None and i == forced_w_idx:
-            types.append("white")
-        elif forced_b_idx is not None and i == forced_b_idx:
+    for tg in f_tags:
+        if "mem_black" in tg and "mem_white" in tg:
+            # אם בטעות שתיהן על אותה תיבה — עדיף black
             types.append("black")
+        elif "mem_black" in tg:
+            types.append("black")
+        elif "mem_white" in tg:
+            types.append("white")
         else:
             types.append("other")
 
-    # 6) שמירה + JSON
+    # --- 6) ציור + JSON ---
     ann = img.copy()
     for i, b in enumerate(f_boxes):
         t = types[i]
         color = (0,255,0)
         if t == "white": color = (255,255,0)
         elif t == "black": color = (255,0,255)
-        draw_rect_label(ann, b, t, color)
+        x1,y1,x2,y2 = map(int,b)
+        cv2.rectangle(ann,(x1,y1),(x2,y2),color,2)
+        cv2.putText(ann,t,(x1,max(0,y1-6)),cv2.FONT_HERSHEY_SIMPLEX,0.6,color,2)
+
     cv2.circle(ann, (int(blx), int(bly)), int(blr), (0,165,255), 2)
     cv2.putText(ann, "Origin", (int(blx)+4, int(bly)-4), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,165,255), 2)
     cv2.imwrite(OUTPUT_ANN_PATH, ann)
@@ -363,17 +581,14 @@ def image_recognizer(stage):
         "table_size_px": {"width_px": float(W), "height_px": float(H)},
         "balls": balls_json
     }
-
     os.makedirs(os.path.dirname(OUTPUT_JSON_PATH), exist_ok=True)
     with open(OUTPUT_JSON_PATH, "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
 
-    print(f"[OK] White stage annotated: {OUTPUT_WHITE_ANN}")
-    print(f"[OK] Black stage annotated: {OUTPUT_BLACK_ANN}")
     print(f"[OK] Final annotated:      {OUTPUT_ANN_PATH}")
     print(f"[OK] Analysis JSON saved:  {OUTPUT_JSON_PATH}")
-
     return stage
+
 
 
 # =========================================================
