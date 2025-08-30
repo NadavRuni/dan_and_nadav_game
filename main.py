@@ -4,6 +4,9 @@ from const_numbers import *
 from game_class.C_ball import *
 from game_class.C_calc import *
 from game_class.C_bestShot import *
+from dan.build_table_from_image import build_table_from_image
+from dan.pipe_Line import IMAGE_PATH
+
 from game_class.C_gameAnalayzer import *
 import random
 
@@ -55,5 +58,13 @@ def main():
     draw_table(table, best_shot=best_shot[0])
 
 
+def dan():
+    
+    tbl = build_table_from_image(IMAGE_PATH)
+    draw_table(tbl)
+
+
 if __name__ == "__main__":
-    main()
+   # main()
+    dan()
+
