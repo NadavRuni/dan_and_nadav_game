@@ -36,61 +36,44 @@ def draw_table(
     ax.set_aspect("equal", adjustable="box")
 
     # ציור קווים רגילים
+    final_lines = []   # רשימה שתאחסן את כל הקווים
+
+    # ציור קווים רגילים
     if lines:
         for line in lines:
             (x1, y1), (x2, y2) = line.as_tuple()
-            ax.plot(
-                [x1, x2],
-                [y1, y2],
-                linestyle="--",
-                color="black",
-                linewidth=1.5,
-                zorder=2,
-            )
+            ax.plot([x1, x2], [y1, y2],
+                    linestyle="--", color="black", linewidth=1.5, zorder=2)
+            final_lines.append(((x1, y1), (x2, y2)))
 
     # ציור לפי best shot
     if best_shot:
-        if type(best_shot) is BestShotBallToBall:
-            ax.plot(
-                [best_shot.target.x_cord, best_shot.pocket.x_cord],
-                [best_shot.target.y_cord, best_shot.pocket.y_cord],
-                linestyle="-",
-                color="red",
-                linewidth=2,
-                zorder=2,
-            )
-            draw_contact_line(ax, best_shot.white , best_shot.target_helper, best_shot.target , color="blue")
-            draw_contact_line(ax, best_shot.target_helper, best_shot.target, best_shot.pocket)
-            fig2  = draw_ball_contact_view(
-                best_shot.target_helper, best_shot.target, best_shot.pocket
-            )
-            fig2.show()
-            fig3 = draw_ball_contact_view(
-                best_shot.white, best_shot.target_helper, best_shot.target
-            )
-            fig3.show()
+        if isinstance(best_shot, BestShotBallToBall):
+            ax.plot([best_shot.target.x_cord, best_shot.pocket.x_cord],
+                    [best_shot.target.y_cord, best_shot.pocket.y_cord],
+                    linestyle="-", color="red", linewidth=2, zorder=2)
+            final_lines.append(((best_shot.target.x_cord, best_shot.target.y_cord),
+                                (best_shot.pocket.x_cord, best_shot.pocket.y_cord)))
 
+            draw_contact_line(ax, best_shot.white, best_shot.target_helper, best_shot.target, color="blue")
+            final_lines.append(((best_shot.white.x_cord, best_shot.white.y_cord),
+                                (best_shot.target_helper.x_cord, best_shot.target_helper.y_cord)))
+
+            draw_contact_line(ax, best_shot.target_helper, best_shot.target, best_shot.pocket)
+            final_lines.append(((best_shot.target_helper.x_cord, best_shot.target_helper.y_cord),
+                                (best_shot.target.x_cord, best_shot.target.y_cord)))
         else:
-            # קו לבן → מטרה
-            # ax.plot(
-            #     [best_shot.white.x_cord, best_shot.target.x_cord],
-            #     [best_shot.white.y_cord, best_shot.target.y_cord],
-            #     linestyle="-", color="blue", linewidth=2, zorder=2
-            # )
-            # קו מטרה → כיס
-            ax.plot(
-                [best_shot.target.x_cord, best_shot.pocket.x_cord],
-                [best_shot.target.y_cord, best_shot.pocket.y_cord],
-                linestyle="-",
-                color="red",
-                linewidth=2,
-                zorder=2,
-            )
-            draw_contact_line(ax, best_shot.white, best_shot.target, best_shot.pocket )
-            fig2 = draw_ball_contact_view(
-                best_shot.white, best_shot.target, best_shot.pocket
-            )
-            fig2.show()
+            ax.plot([best_shot.target.x_cord, best_shot.pocket.x_cord],
+                    [best_shot.target.y_cord, best_shot.pocket.y_cord],
+                    linestyle="-", color="red", linewidth=2, zorder=2)
+            final_lines.append(((best_shot.target.x_cord, best_shot.target.y_cord),
+                                (best_shot.pocket.x_cord, best_shot.pocket.y_cord)))
+
+            draw_contact_line(ax, best_shot.white, best_shot.target, best_shot.pocket)
+            final_lines.append(((best_shot.white.x_cord, best_shot.white.y_cord),
+                                (best_shot.target.x_cord, best_shot.target.y_cord)))
+
+# בסוף הפונקציה
     # ציור חורים
     for pocket in table.pockets:
         pocket_circle = plt.Circle(
@@ -126,8 +109,8 @@ def draw_table(
             zorder=5,
         )
 
-    #plt.show()
-    return fig
+    plt.show()
+    return fig , final_lines
 
 
 

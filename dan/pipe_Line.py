@@ -4,9 +4,9 @@ import numpy as np
 import os, json
 
 # ====== PATHS ======
-IMAGE_PATH       = "/Users/danbenzvi/Desktop/dan_nadav_game/dan_and_nadav_game/dan/images/table-15.jpg"
-OUTPUT_ANN_PATH  = "/Users/danbenzvi/Desktop/dan_nadav_game/dan_and_nadav_game/dan/output/table-15-annotated.jpg"
-OUTPUT_JSON_PATH = "/Users/danbenzvi/Desktop/dan_nadav_game/dan_and_nadav_game/dan/output/analysis-table-15.json"
+IMAGE_PATH       = "photos/img_start7.jpeg"
+OUTPUT_ANN_PATH  = "photos/output/img_output.jpg"
+OUTPUT_JSON_PATH = "photos/output/img_JSON.json"
 
 # Debug stage outputs (לא חובה, אבל נוח לראות)
 OUT_DIR          = os.path.dirname(OUTPUT_ANN_PATH) or "."
@@ -653,12 +653,27 @@ def image_recognizer(stage):
 
     balls_json = []
     for i, ((cx, cy), t) in enumerate(zip(centers, types)):
-        rec = {
-            "index": i,
-            "type": t,
-            "center_px": {"x": float(cx), "y": float(cy)},  # נשמר למעקב/דיבוג
-            "rel_to_BL_px": {"x": float(cx - blx), "y": float(bly - cy)},  # תאימות לאחור
+        if t == "white":
+            rec = {
+                "index": 0,
+                "type": t,
+                "center_px": {"x": float(cx), "y": float(cy)},  # נשמר למעקב/דיבוג
+                "rel_to_BL_px": {"x": float(cx - blx), "y": float(bly - cy)},  # תאימות לאחור
         }
+        elif t == "black":
+            rec = {
+                "index": 1,
+                "type": t,
+                "center_px": {"x": float(cx), "y": float(cy)},  # נשמר למעקב/דיבוג
+                "rel_to_BL_px": {"x": float(cx - blx), "y": float(bly - cy)},  # תאימות לאחור
+            }
+        else:
+            rec = {
+                "index": i,
+                "type": t,
+                "center_px": {"x": float(cx), "y": float(cy)},  # נשמר למעקב/דיבוג
+                "rel_to_BL_px": {"x": float(cx - blx), "y": float(bly - cy)},  # תאימות לאחור
+            }
         if uv_norm.size > 0:
             rec["table_uv"] = {"u": float(uv_norm[i,0]), "v": float(uv_norm[i,1])}   # 0..1, 2:1 כבר נלקח בחשבון
             rec["table_xy_units"] = {"x": float(uv[i,0]), "y": float(uv[i,1])}        # 0..2 ברוחב, 0..1 בגובה
