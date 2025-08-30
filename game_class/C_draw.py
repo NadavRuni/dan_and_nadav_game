@@ -7,16 +7,25 @@ from game_class.C_line import Line
 from game_class.C_pocket import Pocket
 from game_class.C_calc import *
 from typing import List, Optional
-from game_class.C_bestShot  import BestShot  # נניח שזה השם של המחלקה שלך
+from game_class.C_bestShot import BestShot  # נניח שזה השם של המחלקה שלך
+from game_class.C_bestShotBallToBall import BestShotBallToBall
 
 
-def draw_table(table: Table, lines: Optional[List[Line]] = None, best_shot: Optional[BestShot] = None):
+def draw_table(
+    table: Table,
+    lines: Optional[List[Line]] = None,
+    best_shot: Optional[BestShot | BestShotBallToBall] = None,
+):
     fig, ax = plt.subplots(figsize=(10, 5))
 
     # ציור מסגרת השולחן
     border = plt.Rectangle(
-        (0, 0), table.length, table.width,
-        linewidth=15, edgecolor="saddlebrown", facecolor="none"
+        (0, 0),
+        table.length,
+        table.width,
+        linewidth=15,
+        edgecolor="saddlebrown",
+        facecolor="none",
     )
     ax.add_patch(border)
 
@@ -30,34 +39,62 @@ def draw_table(table: Table, lines: Optional[List[Line]] = None, best_shot: Opti
     if lines:
         for line in lines:
             (x1, y1), (x2, y2) = line.as_tuple()
-            ax.plot([x1, x2], [y1, y2],
-                    linestyle="--", color="black", linewidth=1.5, zorder=2)
+            ax.plot(
+                [x1, x2],
+                [y1, y2],
+                linestyle="--",
+                color="black",
+                linewidth=1.5,
+                zorder=2,
+            )
 
     # ציור לפי best shot
     if best_shot:
-        # קו לבן → מטרה
-        # ax.plot(
-        #     [best_shot.white.x_cord, best_shot.target.x_cord],
-        #     [best_shot.white.y_cord, best_shot.target.y_cord],
-        #     linestyle="-", color="blue", linewidth=2, zorder=2
-        # )
-        # קו מטרה → כיס
-        ax.plot(
-            [best_shot.target.x_cord, best_shot.pocket.x_cord],
-            [best_shot.target.y_cord, best_shot.pocket.y_cord],
-            linestyle="-", color="red", linewidth=2, zorder=2
-        )
-        draw_contact_line(ax, best_shot.white, best_shot.target, best_shot.pocket)
-        draw_contact_line(ax, best_shot.white, best_shot.target, best_shot.pocket)
-        fig2, ax2 = draw_ball_contact_view(best_shot.white, best_shot.target, best_shot.pocket)
-        fig2.show()
+        if type(best_shot) is BestShotBallToBall:
+            ax.plot(
+                [best_shot.target.x_cord, best_shot.pocket.x_cord],
+                [best_shot.target.y_cord, best_shot.pocket.y_cord],
+                linestyle="-",
+                color="red",
+                linewidth=2,
+                zorder=2,
+            )
+            draw_contact_line(ax, best_shot.white , best_shot.target_helper, best_shot.target , color="blue")
+            draw_contact_line(ax, best_shot.target_helper, best_shot.target, best_shot.pocket)
+            fig2  = draw_ball_contact_view(
+                best_shot.target_helper, best_shot.target, best_shot.pocket
+            )
+            fig2.show()
+            fig3 = draw_ball_contact_view(
+                best_shot.white, best_shot.target_helper, best_shot.target
+            )
+            fig3.show()
+
+        else:
+            # קו לבן → מטרה
+            # ax.plot(
+            #     [best_shot.white.x_cord, best_shot.target.x_cord],
+            #     [best_shot.white.y_cord, best_shot.target.y_cord],
+            #     linestyle="-", color="blue", linewidth=2, zorder=2
+            # )
+            # קו מטרה → כיס
+            ax.plot(
+                [best_shot.target.x_cord, best_shot.pocket.x_cord],
+                [best_shot.target.y_cord, best_shot.pocket.y_cord],
+                linestyle="-",
+                color="red",
+                linewidth=2,
+                zorder=2,
+            )
+            draw_contact_line(ax, best_shot.white, best_shot.target, best_shot.pocket )
+            fig2 = draw_ball_contact_view(
+                best_shot.white, best_shot.target, best_shot.pocket
+            )
+            fig2.show()
     # ציור חורים
     for pocket in table.pockets:
         pocket_circle = plt.Circle(
-            (pocket.x_cord, pocket.y_cord),
-            pocket.radius,
-            color="black",
-            zorder=3
+            (pocket.x_cord, pocket.y_cord), pocket.radius, color="black", zorder=3
         )
         ax.add_patch(pocket_circle)
 
@@ -75,18 +112,22 @@ def draw_table(table: Table, lines: Optional[List[Line]] = None, best_shot: Opti
             color = "gray"
 
         circle = plt.Circle(
-            (ball.x_cord, ball.y_cord),
-            ball.radius,
-            color=color,
-            ec="black",
-            zorder=4
+            (ball.x_cord, ball.y_cord), ball.radius, color=color, ec="black", zorder=4
         )
         ax.add_patch(circle)
-        ax.text(ball.x_cord, ball.y_cord, str(ball.id),
-                ha="center", va="center",
-                fontsize=8, color="black", zorder=5)
+        ax.text(
+            ball.x_cord,
+            ball.y_cord,
+            str(ball.id),
+            ha="center",
+            va="center",
+            fontsize=8,
+            color="black",
+            zorder=5,
+        )
 
-    plt.show()
+    #plt.show()
+    return fig
 
 
 
@@ -111,6 +152,7 @@ def draw_random_table():
 
     table = Table(TABLE_LENGTH, TABLE_WIDTH, balls)
     draw_table(table)
+
 
 def draw_random_white_and_black(draw_line_between: bool = False, pocket_id: int = None):
     """יוצר שולחן עם שני כדורים (לבן ושחור) במיקומים אקראיים ומצייר אותו
@@ -143,6 +185,7 @@ def draw_random_white_and_black(draw_line_between: bool = False, pocket_id: int 
 
     # ציור
     draw_table(table, lines)
+
 
 def draw_white_center_black_to_corner():
     """מצייר שולחן עם כדור לבן במרכז
@@ -183,7 +226,8 @@ def draw_white_center_black_to_corner():
     angles = calc.angle_to_pockets()
     print(angles)
 
-def draw_contact_line(ax, white, black, pocket):
+
+def draw_contact_line(ax, white, black, pocket , color = "orange"):
     # וקטור שחור→חור
     vx = pocket.x_cord - black.x_cord
     vy = pocket.y_cord - black.y_cord
@@ -199,13 +243,45 @@ def draw_contact_line(ax, white, black, pocket):
     ax.plot(
         [white.x_cord, contact_x],
         [white.y_cord, contact_y],
-        linestyle="--", color="orange", linewidth=2, zorder=2
+        linestyle="--",
+        color=color,
+        linewidth=2,
+        zorder=2,
     )
 
     # ציור נקודת המגע עצמה
     ax.plot(contact_x, contact_y, "o", color="orange", markersize=6, zorder=6)
 
-def draw_ball_contact_view(white, black, pocket):
+def draw_contact_line_B2B(ax, white, target_helper, target, pocket):
+    # וקטור שחור→חור
+    vx = pocket.x_cord - target.x_cord
+    vy = pocket.y_cord - target.y_cord
+    norm = math.hypot(vx, vy)
+    vx /= norm
+    vy /= norm
+
+    # נקודת מגע על היקף השחור (בכיוון מהחור לשחור)
+    contact_x = target.x_cord - vx * target.radius
+    contact_y = target.y_cord - vy * target.radius
+
+    # ציור הקו מלבן → נקודת מגע
+    ax.plot(
+        [target_helper.x_cord, contact_x],
+        [target_helper.y_cord, contact_y],
+
+
+        linestyle="--",
+        color="blue",
+        linewidth=2,
+        zorder=2,
+    )
+
+    # ציור נקודת המגע עצמה
+    ax.plot(contact_x, contact_y, "o", color="orange", markersize=6, zorder=6)
+
+
+
+def draw_ball_contact_view(white, target, pocket):
     """
     מצייר גרף חדש שמתרכז רק בכדור השחור,
     ומראה עליו את נקודת הפגיעה הרצויה + הכדור הלבן.
@@ -215,39 +291,52 @@ def draw_ball_contact_view(white, black, pocket):
     ax.set_facecolor("green")
 
     # קובעים גבולות - הכדור השחור במרכז והגדלה סביבו
-    margin = black.radius * 4
-    ax.set_xlim(black.x_cord - margin, black.x_cord + margin)
-    ax.set_ylim(black.y_cord - margin, black.y_cord + margin)
+    margin = target.radius * 4
+    ax.set_xlim(target.x_cord - margin, target.x_cord + margin)
+    ax.set_ylim(target.y_cord - margin, target.y_cord + margin)
+    type_to_color = {
+        "white": "white",
+        "black": "black",
+        "solid": "blue",     # תוכל לשנות לפי מה שמתאים לך
+        "striped": "red" # דוגמה
+    }
+    face_color = type_to_color.get(target.type, "gray")
 
     # ציור הכדור השחור
     circle_black = plt.Circle(
-        (black.x_cord, black.y_cord),
-        black.radius,
-        color="black",
-        ec="white",
-        zorder=3
+        (target.x_cord, target.y_cord), target.radius, color=face_color, ec="white", zorder=3
     )
     ax.add_patch(circle_black)
 
+    ax.text(
+        target.x_cord,
+        target.y_cord,
+        str(target.id),
+        ha="center",
+        va="center",
+        fontsize=14,
+        color="black" if face_color != "black" else "white",
+        zorder=4
+    )
+
     # חישוב נקודת המגע (שחור→חור)
-    vx = pocket.x_cord - black.x_cord
-    vy = pocket.y_cord - black.y_cord
+    vx = pocket.x_cord - target.x_cord
+    vy = pocket.y_cord - target.y_cord
     norm = math.hypot(vx, vy)
     vx /= norm
     vy /= norm
-    contact_x = black.x_cord - vx * black.radius
-    contact_y = black.y_cord - vy * black.radius
+    contact_x = target.x_cord - vx * target.radius
+    contact_y = target.y_cord - vy * target.radius
 
     # ציור נקודת הפגיעה (אדום קטן)
-    ax.plot(contact_x, contact_y, "o", color="red", markersize=10, zorder=5)
+    if target.type == "black":
+        ax.plot(contact_x, contact_y, "o", color="red", markersize=10, zorder=5)
+    else:
+        ax.plot(contact_x, contact_y, "o", color="black", markersize=10, zorder=5)
 
     # ציור הכדור הלבן (רק בשביל הכיוון)
     circle_white = plt.Circle(
-        (white.x_cord, white.y_cord),
-        white.radius,
-        color="white",
-        ec="black",
-        zorder=4
+        (white.x_cord, white.y_cord), white.radius, color="white", ec="black", zorder=4
     )
     ax.add_patch(circle_white)
 
@@ -255,9 +344,11 @@ def draw_ball_contact_view(white, black, pocket):
     ax.plot(
         [white.x_cord, contact_x],
         [white.y_cord, contact_y],
-        linestyle="--", color="orange", linewidth=2, zorder=2
+        linestyle="--",
+        color="orange",
+        linewidth=2,
+        zorder=2,
     )
 
     plt.title("Zoom on Target Ball with Contact Point")
-    return fig, ax
-
+    return fig

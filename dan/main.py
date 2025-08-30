@@ -1,1 +1,1 @@
-print ("ho,om)")
+print("ho,om)")
