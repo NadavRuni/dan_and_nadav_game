@@ -17,10 +17,12 @@ class BestShot:
         calc = Calculations(white, target, table)
         best_pocket_id, best_angle = calc.min_abs_angle()
 
-        if (best_pocket_id, best_angle) == NOT_FREE_SHOT:
+        if best_pocket_id == NOT_FREE_SHOT or best_angle == float("inf"):
             # לא קיים שוט חוקי
             self.no_valid_shot()
         else:
+            print(f"Best pocket: {best_pocket_id}, Best angle: {best_angle}")
+
             # שמירת הכיס שנבחר
             self.pocket: Pocket = next(
                 p for p in table.pockets if p.id == best_pocket_id
