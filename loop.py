@@ -1,14 +1,14 @@
-from game_class.C_table import Table
-from game_class.C_draw import *
-from const_numbers import *
-from game_class.C_ball import *
-from game_class.C_calc import *
-from game_class.C_bestShot import *
-from game_class.C_gameAnalayzer import *
 import random
+import os
+import matplotlib.pyplot as plt
+from game_class.C_table import Table
+from game_class.C_draw import draw_table
+from const_numbers import *
+from game_class.C_ball import Ball
+from game_class.C_gameAnalayzer import GameAnalayzer
 
 
-def main():
+def run_one_simulation(run_idx: int, out_dir: str):
     x_white, y_white = TABLE_LENGTH / 2, TABLE_WIDTH / 2
     white = Ball(0, x_white, y_white, "white", BALL_RADIUS)
 
@@ -39,20 +39,30 @@ def main():
         y = random.uniform(BALL_RADIUS * 2, TABLE_WIDTH - BALL_RADIUS * 2)
         balls.append(Ball(str(i), x, y, ball_type, BALL_RADIUS))
 
-    # יצירת שולחן עם 16 כדורים
+    # יצירת שולחן עם כל הכדורים
     table = Table(TABLE_LENGTH, TABLE_WIDTH, [white, black] + balls)
 
     game = GameAnalayzer(table)
     best_shot = game.find_best_overall_shot("striped")
-    if len(best_shot) > 0:
-        print("best shot is:", best_shot[0])
-    if len(best_shot) > 1:
-        print("second best shot is:", best_shot[1])
-    if len(best_shot) > 2:
-        print("third best shot is:", best_shot[2])
 
-    # ציור
-    draw_table(table, best_shot=best_shot[0])
+    if best_shot:
+        print(f"[{run_idx}] best shot is:", best_shot[0])
+
+    # ציור ושמירה לקובץ
+    fig = draw_table(table, best_shot=best_shot[0] if best_shot else None)
+    save_path = os.path.join(out_dir, f"table_{run_idx:02d}.png")
+    fig.savefig(save_path)
+    plt.close(fig)
+
+
+def main():
+    out_dir = "simulations"
+    os.makedirs(out_dir, exist_ok=True)
+
+    for i in range(1, 21):  # 20 ריצות
+        run_one_simulation(i, out_dir)
+
+    print(f"\n✅ Done! Saved 20 images inside ./{out_dir}")
 
 
 if __name__ == "__main__":

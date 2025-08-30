@@ -6,14 +6,12 @@ from game_class.C_table import Table
 from const_numbers import NOT_FREE_SHOT
 
 
-
 class Calculations:
-    def __init__(self, white: Ball, target: Ball, table: Table ):
+    def __init__(self, white: Ball, target: Ball, table: Table):
         self.white = white
         self.target = target
         self.pockets = table.get_pockets()
         self.balls = table.get_balls()
-
 
     def angle_to_pockets(self):
         """
@@ -41,13 +39,14 @@ class Calculations:
             # המרה למעלות
             angle_deg = math.degrees(angle_rad)
 
-            if (self.have_free_shot(pocket)):
+            if self.have_free_shot(pocket):
                 angles[pocket.id] = angle_deg
-            else: angles[pocket.id] = NOT_FREE_SHOT
+            else:
+                angles[pocket.id] = NOT_FREE_SHOT
 
         return angles
 
-    def have_free_shot(self , pocket: Pocket) -> bool:
+    def have_free_shot(self, pocket: Pocket) -> bool:
         """
         בודק אם מהכדור המטרה אל חור מסוים יש מסלול פנוי (בלי כדורים שחוסמים).
         """
@@ -66,7 +65,7 @@ class Calculations:
             by = ball.y_cord - target.y_cord
 
             # היטל של הכדור על הקו
-            t = (bx * dx + by * dy) / (dist_target_pocket ** 2)
+            t = (bx * dx + by * dy) / (dist_target_pocket**2)
 
             # בודקים רק אם ההיטל נמצא בין המטרה לחור
             if 0 < t < 1:
@@ -96,9 +95,6 @@ class Calculations:
         }
 
         if not valid_angles:
-            return NOT_FREE_SHOT , NOT_FREE_SHOT
+            return NOT_FREE_SHOT, NOT_FREE_SHOT
 
         return min(valid_angles.items(), key=lambda kv: abs(kv[1]))
-
-
-

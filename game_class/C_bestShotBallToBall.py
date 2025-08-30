@@ -1,23 +1,24 @@
-NOT_FREE_SHOT = (-1, float("inf"))
+from typing import Optional
+from game_class.C_ball import Ball
+from game_class.C_pocket import Pocket
 from game_class.C_ball import Ball
 from game_class.C_table import Table
-from game_class.C_calc import Calculations
-from game_class.C_pocket import Pocket
+from game_class.C_calcBallToBall import CalculationsBallToBall
 import math
 from const_numbers import *
+from game_class.C_calc import Calculations
 
-
-class BestShot:
-    def __init__(self, white: Ball, target: Ball, table: Table):
+class BestShotBallToBall:
+    def __init__(self, white: Ball, target: Ball, target_helper: Ball, table: Table):
         self.white = white
         self.target = target
+        self.target_helper = target_helper
         self.table = table
 
-        # חישוב כיס עם זווית מינימלית
-        calc = Calculations(white, target, table)
-        best_pocket_id, best_angle = calc.min_abs_angle()
+        calc_helper_to_target_to_pocket = Calculations( target_helper, target, table)
+        best_pocket_id, best_angle_from_helper_to_target = calc_helper_to_target_to_pocket.min_abs_angle()
 
-        if (best_pocket_id, best_angle) == NOT_FREE_SHOT:
+        if (best_pocket_id, best_angle_from_helper_to_target) == NOT_FREE_SHOT:
             # לא קיים שוט חוקי
             self.no_valid_shot()
         else:
@@ -25,9 +26,9 @@ class BestShot:
             self.pocket: Pocket = next(
                 p for p in table.pockets if p.id == best_pocket_id
             )
-            self.angle: float = best_angle
+            self.angle_from_helper_to_target: float = best_angle_from_helper_to_target
 
-            if abs(self.angle) > 85:
+            if abs(self.angle_from_helper_to_target) > 85:
                 self.no_valid_shot()
                 return
 
@@ -35,13 +36,13 @@ class BestShot:
             self.dist_target_to_pocket = math.hypot(
                 self.pocket.x_cord - target.x_cord, self.pocket.y_cord - target.y_cord
             )
-            self.dist_white_to_target = math.hypot(
-                target.x_cord - white.x_cord, target.y_cord - white.y_cord
+            self.dist_helper_to_target = math.hypot(
+                target.x_cord - target_helper.x_cord, target.y_cord - target_helper.y_cord
             )
 
-            self.score_angle = self.calculate_score_angle(self.angle)
+            self.score_angle = self.calculate_score_angle(self.angle_from_helper_to_target)
             self.score_distance = self.calculate_score_distance(
-                self.dist_white_to_target, self.dist_target_to_pocket
+                self.dist_helper_to_target, self.dist_target_to_pocket
             )
             self.score = self.score_angle * self.score_distance
             self.valid = True
@@ -50,9 +51,9 @@ class BestShot:
         """מעדכן את מצב השוט לא חוקי"""
         # לא קיים שוט חוקי
         self.pocket: Pocket | None = None
-        self.angle: float = float("inf")
+        self.angle_from_helper_to_target: float = float("inf")
         self.dist_target_to_pocket = float("inf")
-        self.dist_white_to_target = float("inf")
+        self.dist_helper_to_target = float("inf")
         self.score_angle= -1
         self.score_distance = -1
         self.score = -1
@@ -68,9 +69,9 @@ class BestShot:
 
     @staticmethod
     def calculate_score_distance(
-        dist_white_to_target: float, dist_target_to_pocket: float
+        dist_helper_to_target: float, dist_target_to_pocket: float
     ) -> float:
-        norm_white = dist_white_to_target / MAX_WHITE_TO_TARGET
+        norm_white = dist_helper_to_target / MAX_WHITE_TO_TARGET
         norm_target = dist_target_to_pocket / MAX_TARGET_TO_POCKET
         score = 1 - (norm_white + norm_target) / 2  # ממוצע נורמליזציות
         return max(0.0, min(1.0, score))
@@ -84,7 +85,7 @@ class BestShot:
 
     def get_pocket_and_angle(self) -> tuple[int | None, float]:
         """מחזירה tuple עם (pocket_id, angle) או (None, inf) אם אין שוט חוקי"""
-        return (self.pocket.id, self.angle) if self.valid else (None, float("inf"))
+        return (self.pocket.id, self.angle_from_helper_to_target) if self.valid else (None, float("inf"))
 
     def __repr__(self):
         if not self.valid:
@@ -93,9 +94,10 @@ class BestShot:
         return (
             f"BestShot("
             f"target_id={self.target.id}, "
+            f"helper_id={self.target_helper.id}, "
             f"pocket_id={self.pocket.id}, "
-            f"angle={self.angle:.2f}, "
-            f"dist_white_target={self.dist_white_to_target:.2f}, "
+            f"angle={self.angle_from_helper_to_target:.2f}, "
+            f"dist_helper_target={self.dist_helper_to_target:.2f}, "
             f"dist_target_pocket={self.dist_target_to_pocket:.2f}, "
             f"score_angle={self.score_angle:.2f}, "
             f"score_distance={self.score_distance:.3f}, "
