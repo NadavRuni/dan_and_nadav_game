@@ -18,7 +18,7 @@ from game_class.C_lineDrawer import LineDrawer
 
 ANALYSIS_JSON_PATH = "photos/output/img_JSON.json"
 LINE_DRAWER_OUTPUT_PATH = "/Users/nadav/Desktop/dan_and_nadav_game/photos/output/lines.png"
-LINE_DRAWER_INPUT_PATH = "/Users/nadav/Desktop/dan_and_nadav_game/photos/img_start7.jpeg"
+LINE_DRAWER_INPUT_PATH = "/Users/nadav/Desktop/dan_and_nadav_game/photos/img_start.jpeg"
 
 def load_analysis(json_path: str):
     with open(json_path, "r", encoding="utf-8") as f:
