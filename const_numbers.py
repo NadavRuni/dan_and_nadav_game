@@ -2,6 +2,8 @@ import math
 from pathlib import Path
 
 BALL_RADIUS = 3
+BALL_RADIUS_PHOTO = 25  
+POCKET_MARGIN=70
 
 BALL_SPACING = BALL_RADIUS * 2.2
 TABLE_LENGTH = 290
@@ -23,3 +25,4 @@ NOT_FREE_SHOT = "dont have a free shot"
 
 OUTPUT_JSON_PATH = "photos/output/img_JSON.json"
 OUTPUT_IMAGE_PATH = Path("photos/output/img.png")
+OUTPUT_CONTACT_VIEW_PATH = Path("photos/output/img_contact.png")
