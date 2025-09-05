@@ -4,6 +4,15 @@
   <meta charset="UTF-8">
   <title>Shot Analysis</title>
   <style>
+    #image-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      text-align: center;
+      width: 100%;
+    }
+
     body {
       margin: 0;
       font-family: Arial, sans-serif;
@@ -53,22 +62,36 @@
 
   <script>
     async function loadShot() {
-      try {
-        const response = await fetch("http://127.0.0.1:8000/get_output");
-        const data = await response.json();
-        const container = document.getElementById("image-container");
+      const container = document.getElementById("image-container");
+      container.innerHTML = "";
 
-        if (data.output_url) {
-            const img = document.createElement("img");
-  img.src = "http://127.0.0.1:8000" + data.output_url;
-  container.innerHTML = "";
-  container.appendChild(img);
-} else {
-    container.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-}
+      try {
+        // --- התמונה הראשונה ---
+        const response1 = await fetch("http://127.0.0.1:8000/get_output");
+        const data1 = await response1.json();
+
+        if (data1.output_url) {
+          const img1 = document.createElement("img");
+          img1.src = "http://127.0.0.1:8000" + data1.output_url;
+          container.appendChild(img1);
+        } else {
+          container.innerHTML += `<pre>${JSON.stringify(data1, null, 2)}</pre>`;
+        }
+
+        // --- התמונה השנייה (contact) ---
+        const response2 = await fetch("http://127.0.0.1:8000/get_output_contact");
+        const data2 = await response2.json();
+
+        if (data2.output_url) {
+          const img2 = document.createElement("img");
+          img2.src = "http://127.0.0.1:8000" + data2.output_url;
+          container.appendChild(img2);
+        } else {
+          container.innerHTML += `<pre>${JSON.stringify(data2, null, 2)}</pre>`;
+        }
 
       } catch (err) {
-        document.getElementById("image-container").innerHTML = "<p>Error: " + err + "</p>";
+        container.innerHTML = "<p>Error: " + err + "</p>";
       }
     }
 

@@ -137,6 +137,7 @@ def start_build_table_from_img():
     # ציור
     p, lines = draw_table(table, best_shot=best_shot[0])
     line_drawer = LineDrawer(OUTPUT_JSON_PATH, best_shot[0], OUTPUT_IMAGE_PATH)
+    line_drawer.show_contact_hit() # need to be first before draw_lines
     line_drawer.draw_lines()
 
 

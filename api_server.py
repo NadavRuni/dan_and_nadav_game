@@ -5,7 +5,7 @@ from pathlib import Path
 
 from dan.pipe_Line import start_pipe_line
 from dan.build_table_from_image import start_build_table_from_img
-from const_numbers import OUTPUT_IMAGE_PATH
+from const_numbers import OUTPUT_IMAGE_PATH, OUTPUT_CONTACT_VIEW_PATH
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -21,7 +21,7 @@ app.add_middleware(
 )
 
 # Serve files from the uploads folder as static
-app.mount("/static", StaticFiles(directory="uploads"), name="static")
+app.mount("/static", StaticFiles(directory="photos/output"), name="static")
 
 
 # Temporary upload directory
@@ -48,9 +48,18 @@ async def run_pipeline(file: UploadFile = File(...)):
     result = await process_image(str(file_path))
     return result
 
+
 @app.get("/get_output")
 async def get_output():
     if OUTPUT_IMAGE_PATH.exists():
         return {"output_url": f"/static/{OUTPUT_IMAGE_PATH.name}"}
+    else:
+        return {"error": "No output image found"}
+
+
+@app.get("/get_output_contact")
+async def get_output():
+    if OUTPUT_CONTACT_VIEW_PATH.exists():
+        return {"output_url": f"/static/{OUTPUT_CONTACT_VIEW_PATH.name}"}
     else:
         return {"error": "No output image found"}
