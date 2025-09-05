@@ -29,26 +29,19 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 OUTPUT_DIR = Path("photos/output")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-FRONTEND_DIR = Path("frontend/src")  # where index.html lives
+FRONTEND_DIR = Path("frontend/src")  # where index.html and assets live
 
-# Serve static files
+# Serve processed images from /static
 app.mount("/static", StaticFiles(directory=str(OUTPUT_DIR)), name="static")
-app.mount("/frontend", StaticFiles(directory=str(FRONTEND_DIR)), name="frontend")
+
+# Serve your frontend (index.html + CSS/JS/images) directly from /
+app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
 
 
 async def process_image(image_path: str):
     pipeline_result = await start_pipe_line(image_path)
     table_result = start_build_table_from_img()
     return {"pipeline": pipeline_result, "table": table_result}
-
-
-# Root route -> serve index.html
-@app.get("/")
-async def root():
-    index_file = FRONTEND_DIR / "index.html"
-    if index_file.exists():
-        return FileResponse(index_file)
-    return {"message": "index.html not found in frontend/src"}
 
 
 @app.post("/run_pipeline")
