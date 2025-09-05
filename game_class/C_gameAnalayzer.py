@@ -2,6 +2,8 @@ from game_class.C_table import Table
 from game_class.C_bestShot import BestShot
 import math
 from const_numbers import *
+from game_class.C_bestShotBallToBall import BestShotBallToBall
+
 from game_class.C_calc_using_wall import CalculationsWithWall
 from game_class.C_bestShot_use_wall import BestWallShot
 
@@ -15,6 +17,7 @@ class GameAnalayzer:
         מחזירה רשימה ממוינת מהטובה ביותר לפחות.
         אם אין שלוש מכות חוקיות תחזיר כמה שיש.
         """
+
         table = self.table
         white = next(b for b in table.get_balls() if b.type == "white")
         all_shots: list[BestShot] = []
@@ -35,7 +38,11 @@ class GameAnalayzer:
                 # אפשר להכניס לוגיקה מתקדמת לפסים/מלאים
                 continue
             if not self.has_clear_path(white, ball):
-                print("between the white and ball number", ball.id, "dont have a free shot")
+                print(
+                    "between the white and ball number",
+                    ball.id,
+                    "dont have a free shot",
+                )
                 continue
 
             shot = BestShot(white, ball, table)
@@ -48,14 +55,51 @@ class GameAnalayzer:
             sorted_shots = sorted(
                 [s for s in all_shots if s.score is not None],
                 key=lambda s: s.score,
-                reverse=True
+                reverse=True,
             )
-            print("✅ All valid shots:", ", ".join(
-                [f"Ball {s.target.id} (score={s.score:.2f})" for s in sorted_shots]
-            ))
+            print(
+                "✅ All valid shots:",
+                ", ".join(
+                    [f"Ball {s.target.id} (score={s.score:.2f})" for s in sorted_shots]
+                ),
+            )
             return sorted_shots[:3]  # שלושת המכות הכי טובות
         else:
 
+
+
+    def has_clear_path(self, ball1, ball2) -> bool:
+        
+        """
+        בודקת האם יש מסלול פנוי בין שני כדורים (ball1 → ball2).
+        - המסלול הוא מהיקף של ball1 עד היקף של ball2 (לא מרכז-למרכז).
+        - אם כדור אחר מתקרב למסלול פחות מ-(other.radius + SAFE_DISTANCE) → חסימה.
+        """
+        EPS = 1e-6
+
+        ax, ay = ball1.x_cord, ball1.y_cord
+        bx, by = ball2.x_cord, ball2.y_cord
+
+        dx, dy = bx - ax, by - ay
+        seg_len = math.hypot(dx, dy)
+        if seg_len < EPS:
+            # כדורים כמעט באותו מקום – אין מסלול משמעותי
+            return False
+
+        # וקטור יחידה לאורך הקטע
+        ux, uy = dx / seg_len, dy / seg_len
+
+        # "קיצור" הקטע: מהיקף של ball1 עד היקף של ball2
+        axp = ax + ux * ball1.radius
+        ayp = ay + uy * ball1.radius
+        bxp = bx - ux * ball2.radius
+        byp = by - uy * ball2.radius
+
+        dxp, dyp = bxp - axp, byp - ayp
+        seg_len2 = dxp * dxp + dyp * dyp
+        if seg_len2 < EPS:
+            # אחרי קיצוץ הרדיוסים לא נשאר כמעט אורך מסלול
+            return False
             print("❌ No normal shots found.")
             print ("try with the wall")
             return self.find_best_wall_shots(my_ball_type)
@@ -65,16 +109,31 @@ class GameAnalayzer:
             if other.id in (ball1.id, ball2.id):
                 continue
 
-            dist = self.point_segment_distance(
-                other.x_cord, other.y_cord,
-                ball1.x_cord, ball1.y_cord,
-                ball2.x_cord, ball2.y_cord
-            )
-            print(f"Ball {other.id}: dist={dist:.2f}, threshold={other.radius + BALL_RADIUS + SAFE_DISTANCE:.2f}")
+            # הקרנה של נקודת הכדור על הקטע A'B'
+            px, py = other.x_cord, other.y_cord
+            vx, vy = px - axp, py - ayp
+            t = (vx * dxp + vy * dyp) / seg_len2
 
-            if dist <= other.radius + BALL_RADIUS + SAFE_DISTANCE:
+            # צמדה (clamp) לקטע
+            if t <= 0 + EPS:
+                cx, cy = axp, ayp
+            elif t >= 1 - EPS:
+                cx, cy = bxp, byp
+            else:
+                cx, cy = axp + t * dxp, ayp + t * dyp
+
+            # מרחק ממרכז הכדור למסלול
+            dist = math.hypot(px - cx, py - cy)
+
+            # רוחב נדרש לפינוי
+            clearance = other.radius + (SAFE_DISTANCE if 'SAFE_DISTANCE' in globals() else 0.0)
+
+            if dist <= clearance + EPS:
                 return False
+
+
         return True
+
 
     @staticmethod
     def point_segment_distance(px, py, x1, y1, x2, y2):
@@ -125,6 +184,18 @@ class GameAnalayzer:
         """
         return min(x1, x2) <= px <= max(x1, x2) and min(y1, y2) <= py <= max(y1, y2)
 
+    def find_best_overall_shot_ball_to_ball(
+        self, my_ball_type: str = "all"
+    ) -> list[BestShotBallToBall]:
+        """
+        מחשבת את שלושת המכות הכי טובות על פני כל הכדורים בשולחן.
+        מחזירה רשימה ממוינת מהטובה ביותר לפחות.
+        אם אין שלוש מכות חוקיות תחזיר כמה שיש.
+        """
+        table = self.table
+        white = next(b for b in table.get_balls() if b.type == "white")
+        all_shots: list[BestShot] = []
+
     def find_best_wall_shots(self, my_ball_type: str = "all") -> list[BestWallShot]:
         """
         מחפש מכות עם קיר (Wall shots) ומחזיר את שלושת הטובות ביותר.
@@ -143,6 +214,44 @@ class GameAnalayzer:
         else:
             balls = table.get_black()
 
+        for helper_ball in balls:
+            for target_ball in balls:
+                if helper_ball.id == target_ball.id:
+                    continue
+                if target_ball.type == "white" or helper_ball.type == "white":
+                    continue
+                if target_ball.type == "black" or helper_ball.type == "black":
+                    # אפשר להכניס לוגיקה מתקדמת לפסים/מלאים
+                    continue
+                if not self.has_clear_path(white, helper_ball):
+                    print(
+                        "[B2B] between the white and ball number",
+                        helper_ball.id,
+                        "don't have a free shot",
+                    )
+                    continue
+                print("[B2B] found a valid shot between the white and ball number", helper_ball.id , "try to B2B with", target_ball.id)
+                shot = BestShotBallToBall(white, target_ball, helper_ball, table)
+                if not shot.valid:
+                    continue
+                all_shots.append(shot)
+
+        if all_shots:
+            sorted_shots = sorted(
+                [s for s in all_shots if s.score is not None],
+                key=lambda s: s.score,
+                reverse=True,
+            )
+            print(
+                "✅ All valid shots:",
+                ", ".join(
+                    [f"Ball {s.target.id} (score={s.score:.2f})" for s in sorted_shots]
+                ),
+            )
+            return sorted_shots[:3]  # שלושת המכות הכי טובות
+        else:
+            print("❌ No valid shots found.")
+            return []
         for ball in balls:
             if ball.type == "white":
                 continue

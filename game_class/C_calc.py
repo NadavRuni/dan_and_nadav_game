@@ -10,9 +10,8 @@ from .C_ball import Ball
 from .C_pocket import Pocket
 
 
-
 class Calculations:
-    def __init__(self, white: Ball, target: Ball, table: Table ):
+    def __init__(self, white: Ball, target: Ball, table: Table):
         self.white = white
         self.target = target
         self.table = table
@@ -50,13 +49,13 @@ class Calculations:
                 if (self.have_free_shot(pocket)):
                     angles[pocket.id] = [angle_deg]
                 else: angles[pocket.id] = [NOT_FREE_SHOT, angle_deg]
-
             else :
                 angles[pocket.id] = [angle_deg]
 
         print ("[DEBUG]")
         print (angles)
         return angles
+
 
 
 
@@ -117,7 +116,7 @@ class Calculations:
             by = ball.y_cord - target.y_cord
 
             # היטל של הכדור על הקו
-            t = (bx * dx + by * dy) / (dist_target_pocket ** 2)
+            t = (bx * dx + by * dy) / (dist_target_pocket**2)
 
             # בודקים רק אם ההיטל נמצא בין המטרה לחור
             if 0 < t < 1:
@@ -154,7 +153,4 @@ class Calculations:
             return NOT_FREE_SHOT, NOT_FREE_SHOT
 
         return min(valid_angles.items(), key=lambda kv: abs(kv[1]))
-
-
-
 

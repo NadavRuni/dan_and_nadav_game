@@ -20,6 +20,7 @@ class Table:
 
         # initialize 6 pockets (corners + middles of long sides)
         self.pockets: List[Pocket] = [
+
             Pocket(0, 0 + ADD_TO_POCKET, 0 + ADD_TO_POCKET, is_corner=True),            # bottom-left
             Pocket(1, length - ADD_TO_POCKET, 0 + ADD_TO_POCKET, is_corner=True),             # bottom-right
             Pocket(2, length - ADD_TO_POCKET, width - ADD_TO_POCKET, is_corner=True),                # top-right
@@ -38,12 +39,16 @@ class Table:
 
     def get_pockets(self) -> List[Pocket]:
         return self.pockets
+
     def get_balls(self) -> List[Ball]:
         return self.balls
+
     def get_solid(self) -> List[Ball]:
         return [ball for ball in self.balls if ball.type == "solid"]
+
     def get_striped(self) -> List[Ball]:
         return [ball for ball in self.balls if ball.type == "striped"]
+
     def get_black(self) -> List[Ball]:
         return [ball for ball in self.balls if ball.type == "black"]
 
