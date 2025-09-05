@@ -9,7 +9,6 @@ from game_class.C_calc import *
 from typing import List, Optional
 from game_class.C_bestShot  import BestShot  # נניח שזה השם של המחלקה שלך
 
-
 def draw_table(table: Table, lines: Optional[List[Line]] = None, best_shot: Optional[BestShot] = None):
     fig, ax = plt.subplots(figsize=(10, 5))
 
@@ -33,24 +32,13 @@ def draw_table(table: Table, lines: Optional[List[Line]] = None, best_shot: Opti
             ax.plot([x1, x2], [y1, y2],
                     linestyle="--", color="black", linewidth=1.5, zorder=2)
 
-    # ציור לפי best shot
+    # ציור לפי best_shot (כולל wall shot אם קיים)
     if best_shot:
-        # קו לבן → מטרה
-        # ax.plot(
-        #     [best_shot.white.x_cord, best_shot.target.x_cord],
-        #     [best_shot.white.y_cord, best_shot.target.y_cord],
-        #     linestyle="-", color="blue", linewidth=2, zorder=2
-        # )
-        # קו מטרה → כיס
-        ax.plot(
-            [best_shot.target.x_cord, best_shot.pocket.x_cord],
-            [best_shot.target.y_cord, best_shot.pocket.y_cord],
-            linestyle="-", color="red", linewidth=2, zorder=2
-        )
-        draw_contact_line(ax, best_shot.white, best_shot.target, best_shot.pocket)
-        draw_contact_line(ax, best_shot.white, best_shot.target, best_shot.pocket)
-        fig2, ax2 = draw_ball_contact_view(best_shot.white, best_shot.target, best_shot.pocket)
-        fig2.show()
+        for i, ((x1, y1), (x2, y2)) in enumerate(best_shot.get_lines()):
+            color = "blue" if i == 0 else ("orange" if i == 1 else "red")
+            ax.plot([x1, x2], [y1, y2],
+                    linestyle="-", color=color, linewidth=2, zorder=2)
+
     # ציור חורים
     for pocket in table.pockets:
         pocket_circle = plt.Circle(

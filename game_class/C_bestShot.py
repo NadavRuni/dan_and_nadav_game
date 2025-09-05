@@ -17,7 +17,7 @@ class BestShot:
         calc = Calculations(white, target, table)
         best_pocket_id, best_angle = calc.min_abs_angle()
 
-        if (best_pocket_id, best_angle) == NOT_FREE_SHOT:
+        if (best_pocket_id) == NOT_FREE_SHOT:
             # לא קיים שוט חוקי
             self.pocket: Pocket | None = None
             self.angle: float = float("inf")
@@ -55,6 +55,21 @@ class BestShot:
         if abs_angle >= 90:
             return 1
         return max(1, 100 * (1 - abs_angle / 90))
+
+    def get_lines(self) -> list[tuple[tuple[float, float], tuple[float, float]]]:
+        """
+        Default lines for a direct shot:
+          1. white → target
+          2. target → pocket
+        """
+        if not self.valid or self.pocket is None:
+            return []
+
+        line_white_to_target = ((self.white.x_cord, self.white.y_cord),
+                                (self.target.x_cord, self.target.y_cord))
+        line_target_to_pocket = ((self.target.x_cord, self.target.y_cord),
+                                 (self.pocket.x_cord, self.pocket.y_cord))
+        return [line_white_to_target, line_target_to_pocket]
 
 
     @staticmethod

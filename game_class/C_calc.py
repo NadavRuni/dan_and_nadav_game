@@ -1,9 +1,13 @@
 import math
 from typing import List
-from game_class.C_ball import Ball
-from game_class.C_pocket import Pocket
+
+from sympy import false
+
 from game_class.C_table import Table
 from const_numbers import NOT_FREE_SHOT
+import math
+from .C_ball import Ball
+from .C_pocket import Pocket
 
 
 
@@ -11,11 +15,12 @@ class Calculations:
     def __init__(self, white: Ball, target: Ball, table: Table ):
         self.white = white
         self.target = target
+        self.table = table
         self.pockets = table.get_pockets()
         self.balls = table.get_balls()
 
 
-    def angle_to_pockets(self):
+    def angle_to_pockets(self , flag_to_wall: bool = False):
         """
         מחזיר מילון של {pocket_id: angle} שבו הזווית היא ההפרש
         בין הכיוון לבן→מטרה (נחשב כ-0°) לבין הכיוון מטרה→כיס.
@@ -41,11 +46,57 @@ class Calculations:
             # המרה למעלות
             angle_deg = math.degrees(angle_rad)
 
-            if (self.have_free_shot(pocket)):
-                angles[pocket.id] = angle_deg
-            else: angles[pocket.id] = NOT_FREE_SHOT
+            if not flag_to_wall:
+                if (self.have_free_shot(pocket)):
+                    angles[pocket.id] = [angle_deg]
+                else: angles[pocket.id] = [NOT_FREE_SHOT, angle_deg]
 
+            else :
+                angles[pocket.id] = [angle_deg]
+
+        print ("[DEBUG]")
+        print (angles)
         return angles
+
+
+
+    def ball_to_pocket_info(self , ball: Ball, pocket: Pocket) -> dict:
+        """
+        Calculate distance and angle from a ball to a pocket.
+
+        Args:
+            ball (Ball): The ball object
+            pocket (Pocket): The pocket object
+
+        Returns:
+            dict: {
+                "distance": float,   # distance between centers
+                "angle_rad": float,  # angle in radians (0 = right, counter-clockwise positive)
+                "angle_deg": float   # angle in degrees
+            }
+        """
+
+        dx = ball.x_cord - pocket.x_cord
+        dy = ball.y_cord - pocket.y_cord
+
+
+        distance = math.hypot(dx, dy)
+        angle_rad = math.atan2(dy, dx)  # angle of vector (ball → pocket)
+        angle_deg = math.degrees(angle_rad)
+        if (pocket.id==0) and ball.id==1:
+            print("for pocket id:", pocket.id, ", (", pocket.x_cord, ",", pocket.y_cord, ")")
+            print("for ball id:", ball.id, ", (", ball.x_cord, ",", ball.y_cord, ")")
+            print ("distance : ",distance )
+            print ("angle_rad : ",angle_rad )
+
+            print ("angle_deg : ",angle_deg )
+
+
+        return {
+            "distance": distance,
+            "angle_rad": angle_rad,
+            "angle_deg": angle_deg
+        }
 
     def have_free_shot(self , pocket: Pocket) -> bool:
         """
@@ -85,20 +136,25 @@ class Calculations:
 
     def min_abs_angle(self) -> tuple[int, float]:
         """
-        מחזירה את החור עם הזווית הקטנה ביותר בערך מוחלט.
-        אם אין חור חוקי → מחזירה NOT_FREE_SHOT.
+        Returns the pocket with the smallest absolute angle.
+        If there is no valid pocket → returns (NOT_FREE_SHOT, NOT_FREE_SHOT).
+        Now works with angle_to_pockets() that returns:
+            {pocket_id: [angle]} if free
+            {pocket_id: [NOT_FREE_SHOT, angle]} if blocked
         """
         angles = self.angle_to_pockets()
 
-        # סינון ערכים שהם מספרים בלבד
-        valid_angles = {
-            pid: ang for pid, ang in angles.items() if isinstance(ang, (int, float))
-        }
+        valid_angles = {}
+        for pid, values in angles.items():
+            if len(values) == 1 and isinstance(values[0], (int, float)):
+                # Free shot case → take the angle
+                valid_angles[pid] = values[0]
 
         if not valid_angles:
-            return NOT_FREE_SHOT , NOT_FREE_SHOT
+            return NOT_FREE_SHOT, NOT_FREE_SHOT
 
         return min(valid_angles.items(), key=lambda kv: abs(kv[1]))
+
 
 
 

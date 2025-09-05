@@ -2,6 +2,8 @@ from game_class.C_table import Table
 from game_class.C_bestShot import BestShot
 import math
 from const_numbers import *
+from game_class.C_calc_using_wall import CalculationsWithWall
+from game_class.C_bestShot_use_wall import BestWallShot
 
 class GameAnalayzer:
     def __init__(self, table: Table):
@@ -37,7 +39,8 @@ class GameAnalayzer:
                 continue
 
             shot = BestShot(white, ball, table)
-            if not shot.valid:
+
+            if not shot.valid or shot.score<=1:
                 continue
             all_shots.append(shot)
 
@@ -52,32 +55,42 @@ class GameAnalayzer:
             ))
             return sorted_shots[:3]  # שלושת המכות הכי טובות
         else:
-            print("❌ No valid shots found.")
-            return []
 
-    def has_clear_path(self ,ball1, ball2) -> bool:
-        """
-        בודקת האם יש קו ישר בין ball1 ל-ball2 ללא הפרעה מכדורים אחרים.
-        """
+            print("❌ No normal shots found.")
+            print ("try with the wall")
+            return self.find_best_wall_shots(my_ball_type)
 
+    def has_clear_path(self, ball1, ball2) -> bool:
         for other in self.table.get_balls():
             if other.id in (ball1.id, ball2.id):
                 continue
 
-            dist = GameAnalayzer.point_line_distance(
+            dist = self.point_segment_distance(
                 other.x_cord, other.y_cord,
                 ball1.x_cord, ball1.y_cord,
                 ball2.x_cord, ball2.y_cord
             )
+            print(f"Ball {other.id}: dist={dist:.2f}, threshold={other.radius + BALL_RADIUS + SAFE_DISTANCE:.2f}")
 
             if dist <= other.radius + BALL_RADIUS + SAFE_DISTANCE:
-                if GameAnalayzer.is_between(
-                    other.x_cord, other.y_cord,
-                    ball1.x_cord, ball1.y_cord,
-                    ball2.x_cord, ball2.y_cord
-                ):
-                    return False
+                return False
         return True
+
+    @staticmethod
+    def point_segment_distance(px, py, x1, y1, x2, y2):
+        """מרחק מנקודה (px,py) לקטע בין (x1,y1) ל-(x2,y2)"""
+        # וקטור מהתחלה לסוף
+        dx, dy = x2 - x1, y2 - y1
+        if dx == 0 and dy == 0:
+            return math.hypot(px - x1, py - y1)
+
+        # הקרנה של p על הקטע
+        t = ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy)
+        t = max(0, min(1, t))  # מגבילים לקטע בלבד
+        proj_x = x1 + t * dx
+        proj_y = y1 + t * dy
+
+        return math.hypot(px - proj_x, py - proj_y)
 
     @staticmethod
     def point_line_distance(px, py, x1, y1, x2, y2) -> float:
@@ -111,3 +124,48 @@ class GameAnalayzer:
         בודקת אם נקודה (px,py) נמצאת בין שתי נקודות (x1,y1) ו-(x2,y2).
         """
         return min(x1, x2) <= px <= max(x1, x2) and min(y1, y2) <= py <= max(y1, y2)
+
+    def find_best_wall_shots(self, my_ball_type: str = "all") -> list[BestWallShot]:
+        """
+        מחפש מכות עם קיר (Wall shots) ומחזיר את שלושת הטובות ביותר.
+        """
+        print("enter to find_best_wall_shots")
+        table = self.table
+        white = next(b for b in table.get_balls() if b.type == "white")
+        wall_shots: list[BestWallShot] = []
+
+        if my_ball_type == "all":
+            balls = table.get_balls()
+        elif my_ball_type == "solid":
+            balls = table.get_solid()
+        elif my_ball_type == "striped":
+            balls = table.get_striped()
+        else:
+            balls = table.get_black()
+
+        for ball in balls:
+            if ball.type == "white":
+                continue
+
+            calc = CalculationsWithWall(white, ball, table)
+            for pocket in table.get_pockets():
+                wall_shot = BestWallShot(calc, pocket)
+                if wall_shot.valid:
+                    wall_shots.append(wall_shot)
+
+        print ("wall_shot")
+        print (wall_shot)
+
+        if wall_shots:
+            sorted_wall_shots = sorted(
+                [s for s in wall_shots if s.score is not None],
+                key=lambda s: s.score,
+                reverse=True
+            )
+            print("✅ All valid wall shots:", ", ".join(
+                [f"[WALL] Ball {s.target.id} (score={s.score:.2f})" for s in sorted_wall_shots]
+            ))
+            return sorted_wall_shots[:3]
+
+        print("❌ No wall shots found either.")
+        return []
