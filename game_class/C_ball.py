@@ -2,8 +2,16 @@ import math
 from typing import Tuple
 from const_numbers import *
 
+
 class Ball:
-    def __init__(self, ball_id: int, x_cord: float, y_cord: float, ball_type: str, radius: float = BALL_RADIUS):
+    def __init__(
+        self,
+        ball_id: int,
+        x_cord: float,
+        y_cord: float,
+        ball_type: str,
+        radius: float = BALL_RADIUS,
+    ):
         """
         Initialize a Ball object.
 
@@ -36,5 +44,7 @@ class Ball:
         return (self.x_cord, self.y_cord)
 
     def __repr__(self):
-        return (f"Ball(id={self.id}, type={self.type}, "
-                f"pos=({self.x_cord}, {self.y_cord}), radius={self.radius})")
+        return (
+            f"Ball(id={self.id}, type={self.type}, "
+            f"pos=({self.x_cord}, {self.y_cord}), radius={self.radius})"
+        )
