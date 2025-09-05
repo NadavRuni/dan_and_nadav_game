@@ -46,7 +46,6 @@ def main():
     table = Table(TABLE_LENGTH, TABLE_WIDTH, [white, black] + balls)
     draw_table(table)
 
-
     game = GameAnalayzer(table)
     best_shot = game.find_best_overall_shot("striped")
     if len(best_shot) > 0:
@@ -61,15 +60,12 @@ def main():
     draw_table(table, best_shot=best_shot[0])
 
 
-
-
 def dan():
-    
+
     tbl = build_table_from_image(IMAGE_PATH)
     draw_table(tbl)
 
 
 if __name__ == "__main__":
-   # main()
+    # main()
     dan()
-

@@ -37,48 +37,92 @@ def draw_table(
     ax.set_aspect("equal", adjustable="box")
 
     # ציור קווים רגילים
-    final_lines = []   # רשימה שתאחסן את כל הקווים
+    final_lines = []  # רשימה שתאחסן את כל הקווים
 
     # ציור קווים רגילים
     if lines:
         for line in lines:
             (x1, y1), (x2, y2) = line.as_tuple()
-            ax.plot([x1, x2], [y1, y2],
-                    linestyle="--", color="black", linewidth=1.5, zorder=2)
+            ax.plot(
+                [x1, x2],
+                [y1, y2],
+                linestyle="--",
+                color="black",
+                linewidth=1.5,
+                zorder=2,
+            )
             final_lines.append(((x1, y1), (x2, y2)))
 
     # ציור לפי best_shot (כולל wall shot אם קיים)
     if best_shot:
         if isinstance(best_shot, BestShotBallToBall):
-            ax.plot([best_shot.target.x_cord, best_shot.pocket.x_cord],
-                    [best_shot.target.y_cord, best_shot.pocket.y_cord],
-                    linestyle="-", color="red", linewidth=2, zorder=2)
-            final_lines.append(((best_shot.target.x_cord, best_shot.target.y_cord),
-                                (best_shot.pocket.x_cord, best_shot.pocket.y_cord)))
+            ax.plot(
+                [best_shot.target.x_cord, best_shot.pocket.x_cord],
+                [best_shot.target.y_cord, best_shot.pocket.y_cord],
+                linestyle="-",
+                color="red",
+                linewidth=2,
+                zorder=2,
+            )
+            final_lines.append(
+                (
+                    (best_shot.target.x_cord, best_shot.target.y_cord),
+                    (best_shot.pocket.x_cord, best_shot.pocket.y_cord),
+                )
+            )
 
-            draw_contact_line(ax, best_shot.white, best_shot.target_helper, best_shot.target, color="blue")
-            final_lines.append(((best_shot.white.x_cord, best_shot.white.y_cord),
-                                (best_shot.target_helper.x_cord, best_shot.target_helper.y_cord)))
+            draw_contact_line(
+                ax,
+                best_shot.white,
+                best_shot.target_helper,
+                best_shot.target,
+                color="blue",
+            )
+            final_lines.append(
+                (
+                    (best_shot.white.x_cord, best_shot.white.y_cord),
+                    (best_shot.target_helper.x_cord, best_shot.target_helper.y_cord),
+                )
+            )
 
-            draw_contact_line(ax, best_shot.target_helper, best_shot.target, best_shot.pocket)
-            final_lines.append(((best_shot.target_helper.x_cord, best_shot.target_helper.y_cord),
-                                (best_shot.target.x_cord, best_shot.target.y_cord)))
+            draw_contact_line(
+                ax, best_shot.target_helper, best_shot.target, best_shot.pocket
+            )
+            final_lines.append(
+                (
+                    (best_shot.target_helper.x_cord, best_shot.target_helper.y_cord),
+                    (best_shot.target.x_cord, best_shot.target.y_cord),
+                )
+            )
         else:
-            ax.plot([best_shot.target.x_cord, best_shot.pocket.x_cord],
-                    [best_shot.target.y_cord, best_shot.pocket.y_cord],
-                    linestyle="-", color="red", linewidth=2, zorder=2)
-            final_lines.append(((best_shot.target.x_cord, best_shot.target.y_cord),
-                                (best_shot.pocket.x_cord, best_shot.pocket.y_cord)))
+            ax.plot(
+                [best_shot.target.x_cord, best_shot.pocket.x_cord],
+                [best_shot.target.y_cord, best_shot.pocket.y_cord],
+                linestyle="-",
+                color="red",
+                linewidth=2,
+                zorder=2,
+            )
+            final_lines.append(
+                (
+                    (best_shot.target.x_cord, best_shot.target.y_cord),
+                    (best_shot.pocket.x_cord, best_shot.pocket.y_cord),
+                )
+            )
 
             draw_contact_line(ax, best_shot.white, best_shot.target, best_shot.pocket)
-            final_lines.append(((best_shot.white.x_cord, best_shot.white.y_cord),
-                                (best_shot.target.x_cord, best_shot.target.y_cord)))
-
+            final_lines.append(
+                (
+                    (best_shot.white.x_cord, best_shot.white.y_cord),
+                    (best_shot.target.x_cord, best_shot.target.y_cord),
+                )
+            )
 
         for i, ((x1, y1), (x2, y2)) in enumerate(best_shot.get_lines()):
             color = "blue" if i == 0 else ("orange" if i == 1 else "red")
-            ax.plot([x1, x2], [y1, y2],
-                    linestyle="-", color=color, linewidth=2, zorder=2)
+            ax.plot(
+                [x1, x2], [y1, y2], linestyle="-", color=color, linewidth=2, zorder=2
+            )
 
     # ציור חורים
     for pocket in table.pockets:
@@ -115,9 +159,8 @@ def draw_table(
             zorder=5,
         )
 
-    plt.show()
-    return fig , final_lines
-
+    # plt.show()
+    return fig, final_lines
 
 
 def draw_random_table():
@@ -216,7 +259,7 @@ def draw_white_center_black_to_corner():
     print(angles)
 
 
-def draw_contact_line(ax, white, black, pocket , color = "orange"):
+def draw_contact_line(ax, white, black, pocket, color="orange"):
     # וקטור שחור→חור
     vx = pocket.x_cord - black.x_cord
     vy = pocket.y_cord - black.y_cord
@@ -241,6 +284,7 @@ def draw_contact_line(ax, white, black, pocket , color = "orange"):
     # ציור נקודת המגע עצמה
     ax.plot(contact_x, contact_y, "o", color="orange", markersize=6, zorder=6)
 
+
 def draw_contact_line_B2B(ax, white, target_helper, target, pocket):
     # וקטור שחור→חור
     vx = pocket.x_cord - target.x_cord
@@ -257,8 +301,6 @@ def draw_contact_line_B2B(ax, white, target_helper, target, pocket):
     ax.plot(
         [target_helper.x_cord, contact_x],
         [target_helper.y_cord, contact_y],
-
-
         linestyle="--",
         color="blue",
         linewidth=2,
@@ -267,7 +309,6 @@ def draw_contact_line_B2B(ax, white, target_helper, target, pocket):
 
     # ציור נקודת המגע עצמה
     ax.plot(contact_x, contact_y, "o", color="orange", markersize=6, zorder=6)
-
 
 
 def draw_ball_contact_view(white, target, pocket):
@@ -286,14 +327,18 @@ def draw_ball_contact_view(white, target, pocket):
     type_to_color = {
         "white": "white",
         "black": "black",
-        "solid": "blue",     # תוכל לשנות לפי מה שמתאים לך
-        "striped": "red" # דוגמה
+        "solid": "blue",  # תוכל לשנות לפי מה שמתאים לך
+        "striped": "red",  # דוגמה
     }
     face_color = type_to_color.get(target.type, "gray")
 
     # ציור הכדור השחור
     circle_black = plt.Circle(
-        (target.x_cord, target.y_cord), target.radius, color=face_color, ec="white", zorder=3
+        (target.x_cord, target.y_cord),
+        target.radius,
+        color=face_color,
+        ec="white",
+        zorder=3,
     )
     ax.add_patch(circle_black)
 
@@ -305,7 +350,7 @@ def draw_ball_contact_view(white, target, pocket):
         va="center",
         fontsize=14,
         color="black" if face_color != "black" else "white",
-        zorder=4
+        zorder=4,
     )
 
     # חישוב נקודת המגע (שחור→חור)

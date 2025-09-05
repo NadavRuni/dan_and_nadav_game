@@ -18,8 +18,7 @@ class Calculations:
         self.pockets = table.get_pockets()
         self.balls = table.get_balls()
 
-
-    def angle_to_pockets(self , flag_to_wall: bool = False):
+    def angle_to_pockets(self, flag_to_wall: bool = False):
         """
         מחזיר מילון של {pocket_id: angle} שבו הזווית היא ההפרש
         בין הכיוון לבן→מטרה (נחשב כ-0°) לבין הכיוון מטרה→כיס.
@@ -46,20 +45,18 @@ class Calculations:
             angle_deg = math.degrees(angle_rad)
 
             if not flag_to_wall:
-                if (self.have_free_shot(pocket)):
+                if self.have_free_shot(pocket):
                     angles[pocket.id] = [angle_deg]
-                else: angles[pocket.id] = [NOT_FREE_SHOT, angle_deg]
-            else :
+                else:
+                    angles[pocket.id] = [NOT_FREE_SHOT, angle_deg]
+            else:
                 angles[pocket.id] = [angle_deg]
 
-        print ("[DEBUG]")
-        print (angles)
+        print("[DEBUG]")
+        print(angles)
         return angles
 
-
-
-
-    def ball_to_pocket_info(self , ball: Ball, pocket: Pocket) -> dict:
+    def ball_to_pocket_info(self, ball: Ball, pocket: Pocket) -> dict:
         """
         Calculate distance and angle from a ball to a pocket.
 
@@ -78,26 +75,28 @@ class Calculations:
         dx = ball.x_cord - pocket.x_cord
         dy = ball.y_cord - pocket.y_cord
 
-
         distance = math.hypot(dx, dy)
         angle_rad = math.atan2(dy, dx)  # angle of vector (ball → pocket)
         angle_deg = math.degrees(angle_rad)
-        if (pocket.id==0) and ball.id==1:
-            print("for pocket id:", pocket.id, ", (", pocket.x_cord, ",", pocket.y_cord, ")")
+        if (pocket.id == 0) and ball.id == 1:
+            print(
+                "for pocket id:",
+                pocket.id,
+                ", (",
+                pocket.x_cord,
+                ",",
+                pocket.y_cord,
+                ")",
+            )
             print("for ball id:", ball.id, ", (", ball.x_cord, ",", ball.y_cord, ")")
-            print ("distance : ",distance )
-            print ("angle_rad : ",angle_rad )
+            print("distance : ", distance)
+            print("angle_rad : ", angle_rad)
 
-            print ("angle_deg : ",angle_deg )
+            print("angle_deg : ", angle_deg)
 
+        return {"distance": distance, "angle_rad": angle_rad, "angle_deg": angle_deg}
 
-        return {
-            "distance": distance,
-            "angle_rad": angle_rad,
-            "angle_deg": angle_deg
-        }
-
-    def have_free_shot(self , pocket: Pocket) -> bool:
+    def have_free_shot(self, pocket: Pocket) -> bool:
         """
         בודק אם מהכדור המטרה אל חור מסוים יש מסלול פנוי (בלי כדורים שחוסמים).
         """
@@ -153,4 +152,3 @@ class Calculations:
             return NOT_FREE_SHOT, NOT_FREE_SHOT
 
         return min(valid_angles.items(), key=lambda kv: abs(kv[1]))
-

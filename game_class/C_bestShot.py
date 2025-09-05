@@ -55,7 +55,7 @@ class BestShot:
         self.angle: float = float("inf")
         self.dist_target_to_pocket = float("inf")
         self.dist_white_to_target = float("inf")
-        self.score_angle= -1
+        self.score_angle = -1
         self.score_distance = -1
         self.score = -1
         self.valid = False
@@ -68,8 +68,7 @@ class BestShot:
             return 1
         return max(1, 100 * (1 - abs_angle / 90))
 
-
-      def get_lines(self) -> list[tuple[tuple[float, float], tuple[float, float]]]:
+    def get_lines(self) -> list[tuple[tuple[float, float], tuple[float, float]]]:
         """
         Default lines for a direct shot:
           1. white → target
@@ -78,12 +77,15 @@ class BestShot:
         if not self.valid or self.pocket is None:
             return []
 
-        line_white_to_target = ((self.white.x_cord, self.white.y_cord),
-                                (self.target.x_cord, self.target.y_cord))
-        line_target_to_pocket = ((self.target.x_cord, self.target.y_cord),
-                                 (self.pocket.x_cord, self.pocket.y_cord))
+        line_white_to_target = (
+            (self.white.x_cord, self.white.y_cord),
+            (self.target.x_cord, self.target.y_cord),
+        )
+        line_target_to_pocket = (
+            (self.target.x_cord, self.target.y_cord),
+            (self.pocket.x_cord, self.pocket.y_cord),
+        )
         return [line_white_to_target, line_target_to_pocket]
-
 
     @staticmethod
     def calculate_score_distance(

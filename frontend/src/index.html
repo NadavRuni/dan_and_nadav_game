@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Billiard Pipeline</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: radial-gradient(circle at center, #043d16, #021d0b);
+      color: #fff;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .container {
+      background: rgba(20, 50, 20, 0.75);
+      backdrop-filter: blur(10px);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 0 30px rgba(0,255,100,0.3);
+      max-width: 550px;
+      width: 90%;
+      text-align: center;
+      border: 2px solid rgba(0,255,100,0.5);
+      z-index: 2;
+    }
+
+    h1 {
+      margin-bottom: 25px;
+      font-size: 2.5em;
+      color: #00ff80;
+      text-shadow: 0 0 10px #00ff80, 0 0 20px #00ff40;
+      animation: glow 2s infinite alternate;
+    }
+
+    @keyframes glow {
+      from { text-shadow: 0 0 5px #00ff80, 0 0 10px #00ff40; }
+      to   { text-shadow: 0 0 20px #00ff80, 0 0 40px #00ff40; }
+    }
+
+    .file-btn, .camera-btn {
+      display: inline-block;
+      background: radial-gradient(circle at center, #00ff80, #008040);
+      color: #000;
+      font-weight: bold;
+      padding: 14px 30px;
+      font-size: 1.2em;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(0,255,100,0.6);
+      margin: 10px;
+      transition: transform 0.2s ease-in-out, box-shadow 0.3s;
+    }
+
+    .file-btn:hover, .camera-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 30px rgba(0,255,180,0.9);
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .ball-preview {
+      margin-top: 20px;
+    }
+
+    .ball-preview img {
+      max-width: 120px;
+      border-radius: 50%;
+      border: 4px solid #fff;
+      box-shadow: 0 0 20px rgba(0,255,100,0.8);
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎱 Billiard Pipeline 🎱</h1>
+
+    <!-- כפתור העלאת קובץ -->
+    <label for="fileInput" class="file-btn">📂 Choose from Gallery</label>
+    <input type="file" id="fileInput" accept="image/*" onchange="handleFile(this.files[0])">
+
+    <!-- כפתור מצלמה -->
+    <label for="cameraInput" class="camera-btn">📸 Take a Photo</label>
+    <input type="file" id="cameraInput" accept="image/*" capture="environment" onchange="handleFile(this.files[0])">
+
+    <div class="ball-preview" id="preview"></div>
+  </div>
+
+  <script>
+    function previewFile(file) {
+      const preview = document.getElementById("preview");
+      preview.innerHTML = "";
+      if (file) {
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(file);
+        preview.appendChild(img);
+      }
+    }
+
+    async function handleFile(file) {
+      if (!file) return;
+      previewFile(file);
+
+      let formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/run_pipeline", {
+          method: "POST",
+          body: formData
+        });
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        // מעבר אוטומטי לדף הניתוח
+        window.location.href = "analysis.html";
+      } catch (err) {
+        alert("Error: " + err);
+      }
+    }
+  </script>
+</body>
+</html>
