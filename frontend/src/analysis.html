@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shot Analysis</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: radial-gradient(circle at center, #0b6623, #054d1e);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    h1 {
+      margin-bottom: 20px;
+      font-size: 2.5em;
+      color: #ffd700;
+      text-shadow: 2px 2px 5px #000;
+    }
+    img {
+      max-width: 80%;
+      border: 5px solid #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.7);
+      margin-bottom: 20px;
+    }
+    button {
+      background: #ffd700;
+      color: #000;
+      border: none;
+      padding: 12px 25px;
+      font-size: 1.2em;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: transform 0.2s ease-in-out;
+    }
+    button:hover {
+      transform: scale(1.1);
+      background: #ffeb3b;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎱 ניתוח המכה 🎱</h1>
+  <div id="image-container">
+    <p>Loading analyzed shot...</p>
+  </div>
+  <button onclick="goBack()">⬅ חזרה לדף הראשי</button>
+
+  <script>
+    async function loadShot() {
+      try {
+        const response = await fetch("http://127.0.0.1:8000/get_output");
+        const data = await response.json();
+        const container = document.getElementById("image-container");
+
+        if (data.output_url) {
+            const img = document.createElement("img");
+  img.src = "http://127.0.0.1:8000" + data.output_url;
+  container.innerHTML = "";
+  container.appendChild(img);
+} else {
+    container.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+}
+
+      } catch (err) {
+        document.getElementById("image-container").innerHTML = "<p>Error: " + err + "</p>";
+      }
+    }
+
+    function goBack() {
+      window.location.href = "index.html";
+    }
+
+    loadShot();
+  </script>
+</body>
+</html>

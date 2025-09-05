@@ -8,7 +8,7 @@ from game_class.C_gameAnalayzer import GameAnalayzer
 def main():
     # כאן אתה מגדיר את כל הכדורים שאתה רוצה על השולחן
 
-    white = Ball(0, 180,61, "white", BALL_RADIUS)  # כדור לבן
+    white = Ball(0, 180, 61, "white", BALL_RADIUS)  # כדור לבן
     black = Ball(8, 200, 70, "black", BALL_RADIUS)  # כדור שחור במיקום שבחרת
 
     balls = [

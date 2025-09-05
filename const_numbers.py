@@ -1,4 +1,5 @@
 import math
+from pathlib import Path
 
 BALL_RADIUS = 3
 
@@ -8,7 +9,7 @@ TABLE_WIDTH = 145
 
 CORNER_POCKET_RADIUS = 4
 SIDE_POCKET_RADIUS = 4.5
-ADD_TO_POCKET=3.5
+ADD_TO_POCKET = 3.5
 
 SAFE_DISTANCE = BALL_RADIUS * 0.5
 
@@ -19,3 +20,6 @@ MAX_WHITE_TO_TARGET = TABLE_LENGTH / 2
 MAX_TARGET_TO_POCKET = math.hypot(TABLE_LENGTH, TABLE_WIDTH) / 2
 
 NOT_FREE_SHOT = "dont have a free shot"
+
+OUTPUT_JSON_PATH = "photos/output/img_JSON.json"
+OUTPUT_IMAGE_PATH = Path("photos/output/img.png")

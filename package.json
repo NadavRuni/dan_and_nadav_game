@@ -1,0 +1,21 @@
+{
+  "name": "dan_and_nadav_game",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "kill": "lsof -ti:8000 | xargs kill -9 2>/dev/null || true",
+    "all": "npm run kill && .venv/bin/uvicorn api_server:app --reload --port 8000 & sleep 2 && open frontend/src/index.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NadavRuni/dan_and_nadav_game.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NadavRuni/dan_and_nadav_game/issues"
+  },
+  "homepage": "https://github.com/NadavRuni/dan_and_nadav_game#readme"
+}

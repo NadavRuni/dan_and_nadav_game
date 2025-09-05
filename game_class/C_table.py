@@ -20,20 +20,29 @@ class Table:
 
         # initialize 6 pockets (corners + middles of long sides)
         self.pockets: List[Pocket] = [
-
-            Pocket(0, 0 + ADD_TO_POCKET, 0 + ADD_TO_POCKET, is_corner=True),            # bottom-left
-            Pocket(1, length - ADD_TO_POCKET, 0 + ADD_TO_POCKET, is_corner=True),             # bottom-right
-            Pocket(2, length - ADD_TO_POCKET, width - ADD_TO_POCKET, is_corner=True),                # top-right
-            Pocket(3, 0 + ADD_TO_POCKET, width - ADD_TO_POCKET, is_corner=True),               # top-left
-            Pocket(4, length / 2, 0, is_corner=False),         # middle-bottom
-            Pocket(5, length / 2, width, is_corner=False),     # middle-top
+            Pocket(
+                0, 0 + ADD_TO_POCKET, 0 + ADD_TO_POCKET, is_corner=True
+            ),  # bottom-left
+            Pocket(
+                1, length - ADD_TO_POCKET, 0 + ADD_TO_POCKET, is_corner=True
+            ),  # bottom-right
+            Pocket(
+                2, length - ADD_TO_POCKET, width - ADD_TO_POCKET, is_corner=True
+            ),  # top-right
+            Pocket(
+                3, 0 + ADD_TO_POCKET, width - ADD_TO_POCKET, is_corner=True
+            ),  # top-left
+            Pocket(4, length / 2, 0, is_corner=False),  # middle-bottom
+            Pocket(5, length / 2, width, is_corner=False),  # middle-top
         ]
 
     def show_balls(self):
         for ball in self.balls:
             print(ball)
+
     def get_length(self) -> float:
         return self.length
+
     def get_width(self) -> float:
         return self.width
 
