@@ -16,6 +16,7 @@ def draw_table(
     lines: Optional[List[Line]] = None,
     best_shot: Optional[BestShot | BestShotBallToBall] = None,
 ):
+
     fig, ax = plt.subplots(figsize=(10, 5))
 
     # ציור מסגרת השולחן
@@ -46,7 +47,7 @@ def draw_table(
                     linestyle="--", color="black", linewidth=1.5, zorder=2)
             final_lines.append(((x1, y1), (x2, y2)))
 
-    # ציור לפי best shot
+    # ציור לפי best_shot (כולל wall shot אם קיים)
     if best_shot:
         if isinstance(best_shot, BestShotBallToBall):
             ax.plot([best_shot.target.x_cord, best_shot.pocket.x_cord],
@@ -73,7 +74,12 @@ def draw_table(
             final_lines.append(((best_shot.white.x_cord, best_shot.white.y_cord),
                                 (best_shot.target.x_cord, best_shot.target.y_cord)))
 
-# בסוף הפונקציה
+
+        for i, ((x1, y1), (x2, y2)) in enumerate(best_shot.get_lines()):
+            color = "blue" if i == 0 else ("orange" if i == 1 else "red")
+            ax.plot([x1, x2], [y1, y2],
+                    linestyle="-", color=color, linewidth=2, zorder=2)
+
     # ציור חורים
     for pocket in table.pockets:
         pocket_circle = plt.Circle(
