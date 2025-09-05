@@ -25,15 +25,18 @@ OUTPUT_DIR = Path("photos/output")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 BASE_DIR = Path(__file__).resolve().parent
-FRONTEND_DIR = BASE_DIR / "frontend"   # serves index.html and assets
-app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
+FRONTEND_DIR = BASE_DIR / "frontend"
+
+# -------------------------
+# API ROUTES
+# -------------------------
 
 async def process_image(image_path: str):
     pipeline_result = await start_pipe_line(image_path)
     table_result = start_build_table_from_img()
     return {"pipeline": pipeline_result, "table": table_result}
 
-@app.post("api/run_pipeline")
+@app.post("/api/run_pipeline")
 async def run_pipeline(file: UploadFile = File(...)):
     file_path = UPLOAD_DIR / file.filename
     with open(file_path, "wb") as buffer:
@@ -41,17 +44,24 @@ async def run_pipeline(file: UploadFile = File(...)):
     result = await process_image(str(file_path))
     return result
 
-@app.get("api/get_output")
+@app.get("/api/get_output")
 async def get_output():
     if OUTPUT_IMAGE_PATH.exists():
         return {"output_url": f"/static/{OUTPUT_IMAGE_PATH.name}"}
     return {"error": "No output image found"}
 
-@app.get("api/get_output_contact")
+@app.get("/api/get_output_contact")
 async def get_output_contact():
     if OUTPUT_CONTACT_VIEW_PATH.exists():
         return {"output_url": f"/static/{OUTPUT_CONTACT_VIEW_PATH.name}"}
     return {"error": "No output contact image found"}
 
+# -------------------------
+# STATIC FILES
+# -------------------------
+
 # serve processed images separately
 app.mount("/static", StaticFiles(directory=str(OUTPUT_DIR)), name="static")
+
+# serve frontend last, so it doesn’t override /api/*
+app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")

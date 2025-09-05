@@ -117,19 +117,25 @@
       formData.append("file", file);
 
       try {
-        const response = await fetch("api/run_pipeline", {
+        const response = await fetch("/api/run_pipeline", {
           method: "POST",
           body: formData
         });
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
-        // מעבר אוטומטי לדף הניתוח
+
+        // ✅ Wait for backend to finish processing before moving on
+        const result = await response.json();
+        console.log("Pipeline finished:", result);
+
+        // Now go to analysis page
         window.location.href = "analysis.html";
       } catch (err) {
         alert("Error: " + err);
       }
     }
+
   </script>
 </body>
 </html>
