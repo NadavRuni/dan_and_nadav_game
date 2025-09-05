@@ -33,7 +33,7 @@ async def process_image(image_path: str):
     table_result = start_build_table_from_img()
     return {"pipeline": pipeline_result, "table": table_result}
 
-@app.post("/run_pipeline")
+@app.post("api/run_pipeline")
 async def run_pipeline(file: UploadFile = File(...)):
     file_path = UPLOAD_DIR / file.filename
     with open(file_path, "wb") as buffer:
@@ -41,13 +41,13 @@ async def run_pipeline(file: UploadFile = File(...)):
     result = await process_image(str(file_path))
     return result
 
-@app.get("/get_output")
+@app.get("api/get_output")
 async def get_output():
     if OUTPUT_IMAGE_PATH.exists():
         return {"output_url": f"/static/{OUTPUT_IMAGE_PATH.name}"}
     return {"error": "No output image found"}
 
-@app.get("/get_output_contact")
+@app.get("api/get_output_contact")
 async def get_output_contact():
     if OUTPUT_CONTACT_VIEW_PATH.exists():
         return {"output_url": f"/static/{OUTPUT_CONTACT_VIEW_PATH.name}"}
