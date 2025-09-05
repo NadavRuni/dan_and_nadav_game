@@ -19,14 +19,14 @@ def main():
     balls = []
     colors = [
         ("red", "solid"),
-        ("blue", "striped"),
+        ("blue", "solid"),
         ("green", "solid"),
-        ("yellow", "striped"),
+        ("yellow", "solid"),
         ("orange", "solid"),
-        ("purple", "striped"),
-        ("brown", "solid"),
+        ("purple", "solid"),
+        ("brown", "striped"),
         ("pink", "striped"),
-        ("cyan", "solid"),
+        ("cyan", "striped"),
         ("magenta", "striped"),
         ("lime", "solid"),
         ("teal", "striped"),
@@ -41,19 +41,20 @@ def main():
 
     # יצירת שולחן עם 16 כדורים
     table = Table(TABLE_LENGTH, TABLE_WIDTH, [white, black] + balls)
+    draw_table(table)
+
 
     game = GameAnalayzer(table)
     best_shot = game.find_best_overall_shot("striped")
     if len(best_shot) > 0:
         print("best shot is:", best_shot[0])
+        draw_table(table, best_shot=best_shot[0])
     if len(best_shot) > 1:
         print("second best shot is:", best_shot[1])
     if len(best_shot) > 2:
         print("third best shot is:", best_shot[2])
 
-    # ציור
-    draw_table(table, best_shot=best_shot[0])
-    draw_table(table)
+
 
 
 
