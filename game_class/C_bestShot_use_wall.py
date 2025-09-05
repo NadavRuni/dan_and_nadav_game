@@ -22,14 +22,13 @@ class BestWallShot(BestShot):
 
         # β = from wall calculation
         beta_dict = calc.angle_to_pockets_use_wall()
-        print("self.pocket ",self.pocket)
-        print ("this is beta dict: " ,beta_dict)
-        self.angle , (dir_x, dir_y) = beta_dict.get(pocket, (0.0 , (0.0 , 0.0)))
+        print("self.pocket ", self.pocket)
+        print("this is beta dict: ", beta_dict)
+        self.angle, (dir_x, dir_y) = beta_dict.get(pocket, (0.0, (0.0, 0.0)))
 
         self.point_with_the_wall = (dir_x, dir_y)
-        self.valid =not self.has_obstacle_on_lines()
+        self.valid = not self.has_obstacle_on_lines()
 
-        
     @staticmethod
     def point_segment_distance(px, py, x1, y1, x2, y2) -> float:
         dx, dy = x2 - x1, y2 - y1
@@ -41,7 +40,7 @@ class BestWallShot(BestShot):
         proj_x = x1 + t * dx
         proj_y = y1 + t * dy
         return math.hypot(px - proj_x, py - proj_y)
-    
+
     def has_obstacle_on_lines(self) -> bool:
         """
         Check if there are any balls (excluding white & target)
@@ -53,7 +52,9 @@ class BestWallShot(BestShot):
                 continue
 
             for (x1, y1), (x2, y2) in lines:
-                dist = self.point_segment_distance(ball.x_cord, ball.y_cord, x1, y1, x2, y2)
+                dist = self.point_segment_distance(
+                    ball.x_cord, ball.y_cord, x1, y1, x2, y2
+                )
                 if dist <= ball.radius + BALL_RADIUS + SAFE_DISTANCE:
                     return True
         return False
@@ -68,21 +69,27 @@ class BestWallShot(BestShot):
         # if not self.valid or self.pocket is None:
         #     return []
 
-        line_white_to_target = ((self.white.x_cord, self.white.y_cord),
-                                (self.target.x_cord, self.target.y_cord))
+        line_white_to_target = (
+            (self.white.x_cord, self.white.y_cord),
+            (self.target.x_cord, self.target.y_cord),
+        )
 
-        line_target_to_wall = ((self.target.x_cord, self.target.y_cord),
-                               self.point_with_the_wall)
+        line_target_to_wall = (
+            (self.target.x_cord, self.target.y_cord),
+            self.point_with_the_wall,
+        )
 
-        line_wall_to_pocket = (self.point_with_the_wall,
-                               (self.pocket.x_cord, self.pocket.y_cord))
+        line_wall_to_pocket = (
+            self.point_with_the_wall,
+            (self.pocket.x_cord, self.pocket.y_cord),
+        )
 
         return [line_white_to_target, line_target_to_wall, line_wall_to_pocket]
+
     def __repr__(self):
         base = super().__repr__()
         return (
-            base +
-            f" [WALL SHOT] "
+            base + f" [WALL SHOT] "
             f"angle={self.angle:.1f}°, "
             f"pocket.id={self.pocket.id}, "
             f"impact_point={self.point_with_the_wall}"

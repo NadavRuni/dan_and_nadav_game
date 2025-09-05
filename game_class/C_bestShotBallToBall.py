@@ -8,6 +8,7 @@ import math
 from const_numbers import *
 from game_class.C_calc import Calculations
 
+
 class BestShotBallToBall:
     def __init__(self, white: Ball, target: Ball, target_helper: Ball, table: Table):
         self.white = white
@@ -15,8 +16,10 @@ class BestShotBallToBall:
         self.target_helper = target_helper
         self.table = table
 
-        calc_helper_to_target_to_pocket = Calculations( target_helper, target, table)
-        best_pocket_id, best_angle_from_helper_to_target = calc_helper_to_target_to_pocket.min_abs_angle()
+        calc_helper_to_target_to_pocket = Calculations(target_helper, target, table)
+        best_pocket_id, best_angle_from_helper_to_target = (
+            calc_helper_to_target_to_pocket.min_abs_angle()
+        )
 
         if (best_pocket_id, best_angle_from_helper_to_target) == NOT_FREE_SHOT:
             # לא קיים שוט חוקי
@@ -37,10 +40,13 @@ class BestShotBallToBall:
                 self.pocket.x_cord - target.x_cord, self.pocket.y_cord - target.y_cord
             )
             self.dist_helper_to_target = math.hypot(
-                target.x_cord - target_helper.x_cord, target.y_cord - target_helper.y_cord
+                target.x_cord - target_helper.x_cord,
+                target.y_cord - target_helper.y_cord,
             )
 
-            self.score_angle = self.calculate_score_angle(self.angle_from_helper_to_target)
+            self.score_angle = self.calculate_score_angle(
+                self.angle_from_helper_to_target
+            )
             self.score_distance = self.calculate_score_distance(
                 self.dist_helper_to_target, self.dist_target_to_pocket
             )
@@ -54,7 +60,7 @@ class BestShotBallToBall:
         self.angle_from_helper_to_target: float = float("inf")
         self.dist_target_to_pocket = float("inf")
         self.dist_helper_to_target = float("inf")
-        self.score_angle= -1
+        self.score_angle = -1
         self.score_distance = -1
         self.score = -1
         self.valid = False
@@ -85,7 +91,11 @@ class BestShotBallToBall:
 
     def get_pocket_and_angle(self) -> tuple[int | None, float]:
         """מחזירה tuple עם (pocket_id, angle) או (None, inf) אם אין שוט חוקי"""
-        return (self.pocket.id, self.angle_from_helper_to_target) if self.valid else (None, float("inf"))
+        return (
+            (self.pocket.id, self.angle_from_helper_to_target)
+            if self.valid
+            else (None, float("inf"))
+        )
 
     def __repr__(self):
         if not self.valid:

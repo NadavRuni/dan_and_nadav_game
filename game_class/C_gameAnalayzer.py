@@ -7,6 +7,7 @@ from game_class.C_bestShotBallToBall import BestShotBallToBall
 from game_class.C_calc_using_wall import CalculationsWithWall
 from game_class.C_bestShot_use_wall import BestWallShot
 
+
 class GameAnalayzer:
     def __init__(self, table: Table):
         self.table = table
@@ -47,7 +48,7 @@ class GameAnalayzer:
 
             shot = BestShot(white, ball, table)
 
-            if not shot.valid or shot.score<=1:
+            if not shot.valid or shot.score <= 1:
                 continue
             all_shots.append(shot)
 
@@ -65,11 +66,9 @@ class GameAnalayzer:
             )
             return sorted_shots[:3]  # שלושת המכות הכי טובות
         else:
-
-
+            return []  # need to add mor logic here
 
     def has_clear_path(self, ball1, ball2) -> bool:
-        
         """
         בודקת האם יש מסלול פנוי בין שני כדורים (ball1 → ball2).
         - המסלול הוא מהיקף של ball1 עד היקף של ball2 (לא מרכז-למרכז).
@@ -100,40 +99,7 @@ class GameAnalayzer:
         if seg_len2 < EPS:
             # אחרי קיצוץ הרדיוסים לא נשאר כמעט אורך מסלול
             return False
-            print("❌ No normal shots found.")
-            print ("try with the wall")
-            return self.find_best_wall_shots(my_ball_type)
-
-    def has_clear_path(self, ball1, ball2) -> bool:
-        for other in self.table.get_balls():
-            if other.id in (ball1.id, ball2.id):
-                continue
-
-            # הקרנה של נקודת הכדור על הקטע A'B'
-            px, py = other.x_cord, other.y_cord
-            vx, vy = px - axp, py - ayp
-            t = (vx * dxp + vy * dyp) / seg_len2
-
-            # צמדה (clamp) לקטע
-            if t <= 0 + EPS:
-                cx, cy = axp, ayp
-            elif t >= 1 - EPS:
-                cx, cy = bxp, byp
-            else:
-                cx, cy = axp + t * dxp, ayp + t * dyp
-
-            # מרחק ממרכז הכדור למסלול
-            dist = math.hypot(px - cx, py - cy)
-
-            # רוחב נדרש לפינוי
-            clearance = other.radius + (SAFE_DISTANCE if 'SAFE_DISTANCE' in globals() else 0.0)
-
-            if dist <= clearance + EPS:
-                return False
-
-
         return True
-
 
     @staticmethod
     def point_segment_distance(px, py, x1, y1, x2, y2):
@@ -230,7 +196,12 @@ class GameAnalayzer:
                         "don't have a free shot",
                     )
                     continue
-                print("[B2B] found a valid shot between the white and ball number", helper_ball.id , "try to B2B with", target_ball.id)
+                print(
+                    "[B2B] found a valid shot between the white and ball number",
+                    helper_ball.id,
+                    "try to B2B with",
+                    target_ball.id,
+                )
                 shot = BestShotBallToBall(white, target_ball, helper_ball, table)
                 if not shot.valid:
                     continue
@@ -262,18 +233,24 @@ class GameAnalayzer:
                 if wall_shot.valid:
                     wall_shots.append(wall_shot)
 
-        print ("wall_shot")
-        print (wall_shot)
+        print("wall_shot")
+        print(wall_shot)
 
         if wall_shots:
             sorted_wall_shots = sorted(
                 [s for s in wall_shots if s.score is not None],
                 key=lambda s: s.score,
-                reverse=True
+                reverse=True,
             )
-            print("✅ All valid wall shots:", ", ".join(
-                [f"[WALL] Ball {s.target.id} (score={s.score:.2f})" for s in sorted_wall_shots]
-            ))
+            print(
+                "✅ All valid wall shots:",
+                ", ".join(
+                    [
+                        f"[WALL] Ball {s.target.id} (score={s.score:.2f})"
+                        for s in sorted_wall_shots
+                    ]
+                ),
+            )
             return sorted_wall_shots[:3]
 
         print("❌ No wall shots found either.")
