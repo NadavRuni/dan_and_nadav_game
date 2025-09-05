@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Billiard Pipeline</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: radial-gradient(circle at center, #0b6623, #054d1e);
+      color: #fff;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      background: #1b5e20;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.7);
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      border: 5px solid #3e2723;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      font-size: 2em;
+      color: #ffd700; /* זהב */
+      text-shadow: 2px 2px 5px #000;
+    }
+
+    label {
+      display: block;
+      margin: 15px 0 5px;
+      font-weight: bold;
+    }
+
+    input[type="file"], input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      margin-bottom: 15px;
+      font-size: 1em;
+    }
+
+    button {
+      background: linear-gradient(45deg, #e53935, #d81b60, #8e24aa, #3949ab, #1e88e5, #43a047, #fdd835, #fb8c00, #6d4c41);
+      background-size: 400%;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      font-size: 1.2em;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: transform 0.2s ease-in-out;
+      animation: rainbow 8s linear infinite;
+    }
+
+    button:hover {
+      transform: scale(1.1);
+    }
+
+    @keyframes rainbow {
+      0% {background-position: 0%;}
+      100% {background-position: 400%;}
+    }
+
+    pre {
+      background: #263238;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: left;
+      color: #00e676;
+      font-size: 0.9em;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .ball-preview {
+      margin-top: 20px;
+    }
+
+    .ball-preview img {
+      max-width: 100px;
+      border-radius: 50%;
+      border: 3px solid #fff;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎱 Billiard Pipeline 🎱</h1>
+
+    <label>Upload an image:</label>
+    <input type="file" id="fileInput" accept="image/*">
+
+    <label>Or enter image path:</label>
+    <input type="text" id="pathInput" placeholder="e.g. photos/img_start.jpeg">
+
+    <button onclick="sendRequest()">Send</button>
+
+    <h2>Result:</h2>
+    <pre id="result">Waiting...</pre>
+
+    <div class="ball-preview" id="preview"></div>
+  </div>
+
+  <script>
+    function previewFile(file) {
+      const preview = document.getElementById("preview");
+      preview.innerHTML = "";
+      if (file) {
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(file);
+        preview.appendChild(img);
+      }
+    }
+
+    async function sendRequest() {
+      const fileInput = document.getElementById("fileInput");
+      const pathInput = document.getElementById("pathInput").value.trim();
+      const resultBox = document.getElementById("result");
+
+      let formData = new FormData();
+
+      if (fileInput.files.length > 0) {
+        formData.append("file", fileInput.files[0]);
+        previewFile(fileInput.files[0]);
+      } else if (pathInput) {
+        resultBox.textContent = "Path mode is not implemented yet — please use file upload.";
+        return;
+      } else {
+        alert("Please upload a file or enter a path");
+        return;
+      }
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/run_pipeline", {
+          method: "POST",
+          body: formData
+        });
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        window.location.href = "analysis.html";
+      } catch (err) {
+        resultBox.textContent = "Error: " + err;
+      }
+    }
+  </script>
+</body>
+</html>
