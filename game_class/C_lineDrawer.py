@@ -56,11 +56,14 @@ class LineDrawer:
 
     def draw_lines(self, color_target=(255, 0, 0), color_white=(0, 0, 255), width=3) -> str:
         """
-        מצייר קו מההיקף של הכדור הלבן → היקף המטרה,
-        וקו מההיקף של המטרה → קצת לפני הכיס.
+        מצייר את המסלול הפיזיקלי הנכון:
+        לבן → נקודת מגע על המטרה
+        מטרה (היקף בצד של הכיס) → כיס
+        עם קווים מקווקווים.
         """
+
         draw = ImageDraw.Draw(self.img)
-        print("Drawing lines...")
+        print("Drawing contact-based dashed lines...")
         print(f"  White ID: {self.best_shot.white.id}")
         print(f"  Target ID: {self.best_shot.target.id}")
         print(f"  Pocket ID: {self.best_shot.pocket.id}")
@@ -72,45 +75,62 @@ class LineDrawer:
         if not (white_px and target_px and pocket_px):
             raise ValueError("❌ Missing ball or pocket coordinates")
 
-        # --- לבן → מטרה ---
-        dx, dy = target_px[0] - white_px[0], target_px[1] - white_px[1]
-        dist = math.hypot(dx, dy)
-        ux, uy = dx / dist, dy / dist
+        # --- חישוב נקודת המגע על המטרה לפי הכיס ---
+        dx_p, dy_p = pocket_px[0] - target_px[0], pocket_px[1] - target_px[1]
+        dist_p = math.hypot(dx_p, dy_p)
+        ux_p, uy_p = dx_p / dist_p, dy_p / dist_p
 
-        # התחלה: היקף הלבן
-        start_white = (
-            white_px[0] + ux * BALL_RADIUS_PHOTO,
-            white_px[1] + uy * BALL_RADIUS_PHOTO,
-        )
-
-        # סיום: היקף המטרה בצד שפונה ללב
+        # נקודת מגע על ההיקף (בצד שפונה לכיס)
         contact_target = (
-            target_px[0] - ux * BALL_RADIUS_PHOTO,
-            target_px[1] - uy * BALL_RADIUS_PHOTO,
+            target_px[0] - ux_p * BALL_RADIUS_PHOTO,
+            target_px[1] - uy_p * BALL_RADIUS_PHOTO,
         )
 
-        draw.line([start_white, contact_target], fill=color_white, width=width)
+        # --- קו לבן → נקודת מגע ---
+        dx_w, dy_w = contact_target[0] - white_px[0], contact_target[1] - white_px[1]
+        dist_w = math.hypot(dx_w, dy_w)
+        ux_w, uy_w = dx_w / dist_w, dy_w / dist_w
 
-        # --- מטרה → כיס ---
-        dx2, dy2 = pocket_px[0] - target_px[0], pocket_px[1] - target_px[1]
-        dist2 = math.hypot(dx2, dy2)
-        ux2, uy2 = dx2 / dist2, dy2 / dist2
+        start_white = (
+            white_px[0] + ux_w * BALL_RADIUS_PHOTO,
+            white_px[1] + uy_w * BALL_RADIUS_PHOTO,
+        )
 
-        # התחלה: היקף המטרה בצד שפונה לכיס
+        def draw_dashed_line(draw, start, end, fill, width=3, dash_length=15, gap_length=10):
+            x1, y1 = start
+            x2, y2 = end
+            total_length = math.hypot(x2 - x1, y2 - y1)
+            dx, dy = (x2 - x1) / total_length, (y2 - y1) / total_length
+
+            pos = 0
+            while pos < total_length:
+                x_start = x1 + dx * pos
+                y_start = y1 + dy * pos
+                pos += dash_length
+                if pos > total_length:
+                    pos = total_length
+                x_end = x1 + dx * pos
+                y_end = y1 + dy * pos
+                draw.line([(x_start, y_start), (x_end, y_end)], fill=fill, width=width)
+                pos += gap_length
+
+        # לבן → נקודת מגע
+        draw_dashed_line(draw, start_white, contact_target, fill=color_white, width=width)
+
+        # --- מטרה (צד שפונה לכיס) → כיס ---
         start_target = (
-            target_px[0] + ux2 * BALL_RADIUS_PHOTO,
-            target_px[1] + uy2 * BALL_RADIUS_PHOTO,
+            target_px[0] + ux_p * BALL_RADIUS_PHOTO,
+            target_px[1] + uy_p * BALL_RADIUS_PHOTO,
         )
-
         pocket_before = (
-            pocket_px[0] - ux2 * POCKET_MARGIN,
-            pocket_px[1] - uy2 * POCKET_MARGIN,
+            pocket_px[0] - ux_p * POCKET_MARGIN,
+            pocket_px[1] - uy_p * POCKET_MARGIN,
         )
-
-        draw.line([start_target, pocket_before], fill=color_target, width=width)
+        draw_dashed_line(draw, start_target, pocket_before, fill=color_target, width=width)
 
         self.img.save(self.output_path, quality=95)
         return self.output_path
+
 
 
 
