@@ -212,3 +212,4 @@ yolov8n.pt
 **.jpg
 **.yaml
 **.cache
+uploads/**
