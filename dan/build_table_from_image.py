@@ -16,6 +16,9 @@ from game_class.C_draw import draw_table
 from game_class.C_gameAnalayzer import GameAnalayzer
 from game_class.C_lineDrawer import LineDrawer
 from const_numbers import OUTPUT_JSON_PATH, OUTPUT_IMAGE_PATH
+from game_class.C_bestShot import BestShot
+from game_class.C_bestShotBallToBall import BestShotBallToBall
+from game_class.C_bestShot_use_wall import BestWallShot
 
 
 def load_analysis(json_path: str):
@@ -138,7 +141,13 @@ def start_build_table_from_img():
     p, lines = draw_table(table, best_shot=best_shot[0])
     line_drawer = LineDrawer(OUTPUT_JSON_PATH, best_shot[0], OUTPUT_IMAGE_PATH)
     line_drawer.show_contact_hit() # need to be first before draw_lines
-    line_drawer.draw_lines()
+    if (isinstance(best_shot[0],BestWallShot)):
+        print("Drawing wall-based shot lines...")
+        line_drawer.draw_lines_with_wall(
+            (best_shot[0].point_with_the_wall[0], best_shot[0].point_with_the_wall[1])
+        )
+    else :
+        line_drawer.draw_lines()
 
 
 if __name__ == "__main__":

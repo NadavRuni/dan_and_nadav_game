@@ -28,6 +28,9 @@ class BestWallShot(BestShot):
 
         self.point_with_the_wall = (dir_x, dir_y)
         self.valid = not self.has_obstacle_on_lines()
+        if self.valid:
+            self.score = self.score_shot()
+            
 
     @staticmethod
     def point_segment_distance(px, py, x1, y1, x2, y2) -> float:
@@ -94,3 +97,68 @@ class BestWallShot(BestShot):
             f"pocket.id={self.pocket.id}, "
             f"impact_point={self.point_with_the_wall}"
         )
+    import math
+
+    def score_shot(self) -> float:
+        """
+        מחשב ציון בין -1 ל-50 עבור מכה:
+        - זווית קטנה בין קו 1 ל-2 = יותר טוב
+        - מרחק כולל קצר = יותר טוב
+        """
+
+        lines = self.get_lines()
+        if len(lines) != 3:
+            return -1
+
+        def vector(p1, p2):
+            return (p2[0] - p1[0], p2[1] - p1[1])
+
+        def length(v):
+            return math.hypot(v[0], v[1])
+
+        def angle_between(v1, v2):
+            dot = v1[0]*v2[0] + v1[1]*v2[1]
+            norm1 = length(v1)
+            norm2 = length(v2)
+            if norm1 == 0 or norm2 == 0:
+                return 180
+            cos_theta = max(-1, min(1, dot / (norm1 * norm2)))
+            return math.degrees(math.acos(cos_theta))
+
+        # וקטורים לכל קו
+        v1 = vector(*lines[0])  # white -> target
+        v2 = vector(*lines[1])  # target -> wall
+        v3 = vector(*lines[2])  # wall -> pocket
+
+        # זווית בין הקו הראשון לשני
+        angle1 = angle_between(v1, v2)
+
+        # אם המכה לא הגיונית (זווית קיצונית)
+        if angle1 > 170:  # כמעט ישר לקיר
+            return -1
+
+        # מרחק כולל
+        dist_total = sum(length(vector(*line)) for line in lines)
+
+        # ----------------
+        # ניקוד לפי זווית
+        # ----------------
+        # 0° = הכי טוב, 170° = גרוע
+        angle_score = max(0, (170 - angle1) / 170)  # מנורמל ל־0–1
+
+        # ----------------
+        # ניקוד לפי מרחק
+        # ----------------
+        # מניחים שמכה רגילה לא תהיה מעל 300 יחידות
+        max_reasonable_dist = 300
+        dist_score = max(0, 1 - (dist_total / max_reasonable_dist))  # קצר = יותר טוב
+
+        # ----------------
+        # משקלול
+        # ----------------
+        final_score = (0.7 * angle_score + 0.3 * dist_score)  # בין 0 ל-1
+
+        # מיפוי ל־[1, 50]
+        score = 1 + final_score * 49
+        return round(score, 2)
+

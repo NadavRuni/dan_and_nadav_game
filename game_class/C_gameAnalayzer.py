@@ -50,6 +50,8 @@ class GameAnalayzer:
 
             if not shot.valid or shot.score <= 1:
                 continue
+
+            print ( "found a valid shot between the white and ball number", ball.id, "score:", shot.score)
             all_shots.append(shot)
 
         if all_shots:
@@ -59,14 +61,17 @@ class GameAnalayzer:
                 reverse=True,
             )
             print(
-                "✅ All valid shots:",
+                "✅ All valid normal shots:",
                 ", ".join(
                     [f"Ball {s.target.id} (score={s.score:.2f})" for s in sorted_shots]
                 ),
             )
             return sorted_shots[:3]  # שלושת המכות הכי טובות
         else:
-            return []  # need to add mor logic here
+            print ("❌ No valid normal shots found.")
+            all_wall_shots = self.find_best_wall_shots( my_ball_type)
+
+            return all_wall_shots  # need to add mor logic here
 
     def has_clear_path(self, ball1, ball2) -> bool:
         """
@@ -171,6 +176,8 @@ class GameAnalayzer:
         white = next(b for b in table.get_balls() if b.type == "white")
         wall_shots: list[BestWallShot] = []
 
+        all_shots: list[BestShot] = []
+
         if my_ball_type == "all":
             balls = table.get_balls()
         elif my_ball_type == "solid":
@@ -187,7 +194,6 @@ class GameAnalayzer:
                 if target_ball.type == "white" or helper_ball.type == "white":
                     continue
                 if target_ball.type == "black" or helper_ball.type == "black":
-                    # אפשר להכניס לוגיקה מתקדמת לפסים/מלאים
                     continue
                 if not self.has_clear_path(white, helper_ball):
                     print(
@@ -207,7 +213,7 @@ class GameAnalayzer:
                     continue
                 all_shots.append(shot)
 
-        if all_shots:
+        if all_shots and FORSE_WALL_SHOT==False:
             sorted_shots = sorted(
                 [s for s in all_shots if s.score is not None],
                 key=lambda s: s.score,
@@ -220,38 +226,38 @@ class GameAnalayzer:
                 ),
             )
             return sorted_shots[:3]  # שלושת המכות הכי טובות
-        else:
-            print("❌ No valid shots found.")
+        else: #this is the wall shot logic
+            print("STARTING WALL SHOT LOGIC")
+            for ball in balls:
+                if ball.type == "white":
+                    continue
+
+                calc = CalculationsWithWall(white, ball, table)
+                for pocket in table.get_pockets():
+                    wall_shot = BestWallShot(calc, pocket)
+                    if wall_shot.valid:
+                        wall_shots.append(wall_shot)
+
+            print("wall_shot")
+            print(wall_shot)
+
+            if wall_shots:
+                sorted_wall_shots = sorted(
+                    [s for s in wall_shots if s.score is not None],
+                    key=lambda s: s.score,
+                    reverse=True,
+                )
+                print(
+                    "✅ All valid wall shots:",
+                    ", ".join(
+                        [
+                            f"[WALL] Ball {s.target.id} (score={s.score:.2f})"
+                            for s in sorted_wall_shots
+                        ]
+                    ),
+                )
+                return sorted_wall_shots[:3]
+
+            print("❌ No wall shots found either.")
             return []
-        for ball in balls:
-            if ball.type == "white":
-                continue
 
-            calc = CalculationsWithWall(white, ball, table)
-            for pocket in table.get_pockets():
-                wall_shot = BestWallShot(calc, pocket)
-                if wall_shot.valid:
-                    wall_shots.append(wall_shot)
-
-        print("wall_shot")
-        print(wall_shot)
-
-        if wall_shots:
-            sorted_wall_shots = sorted(
-                [s for s in wall_shots if s.score is not None],
-                key=lambda s: s.score,
-                reverse=True,
-            )
-            print(
-                "✅ All valid wall shots:",
-                ", ".join(
-                    [
-                        f"[WALL] Ball {s.target.id} (score={s.score:.2f})"
-                        for s in sorted_wall_shots
-                    ]
-                ),
-            )
-            return sorted_wall_shots[:3]
-
-        print("❌ No wall shots found either.")
-        return []
