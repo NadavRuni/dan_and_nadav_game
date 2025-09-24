@@ -9,6 +9,7 @@ from game_class.C_calc import *
 from typing import List, Optional
 from game_class.C_bestShot import BestShot  # נניח שזה השם של המחלקה שלך
 from game_class.C_bestShotBallToBall import BestShotBallToBall
+from game_class.C_bestShot_use_wall import BestWallShot
 
 
 def draw_table(
@@ -55,7 +56,10 @@ def draw_table(
 
     # ציור לפי best_shot (כולל wall shot אם קיים)
     if best_shot:
-        if isinstance(best_shot, BestShotBallToBall):
+        print (isinstance(best_shot, BestWallShot))
+        if best_shot.angle>90 or not isinstance(best_shot, BestWallShot):
+            print("Best shot is BestWallShot draw the line later")
+        elif isinstance(best_shot, BestShotBallToBall):
             ax.plot(
                 [best_shot.target.x_cord, best_shot.pocket.x_cord],
                 [best_shot.target.y_cord, best_shot.pocket.y_cord],
@@ -159,13 +163,12 @@ def draw_table(
             zorder=5,
         )
 
-    # plt.show()
+    plt.show()
     return fig, final_lines
 
 
 def draw_random_table():
     """יוצר שולחן חדש עם כדורים מפוזרים אקראית ומצייר אותו"""
-
     balls = []
     for i in range(16):
         if i == 0:
@@ -260,6 +263,7 @@ def draw_white_center_black_to_corner():
 
 
 def draw_contact_line(ax, white, black, pocket, color="orange"):
+    print ("Drawing contact line...")
     # וקטור שחור→חור
     vx = pocket.x_cord - black.x_cord
     vy = pocket.y_cord - black.y_cord
@@ -280,10 +284,9 @@ def draw_contact_line(ax, white, black, pocket, color="orange"):
         linewidth=2,
         zorder=2,
     )
-
+    print("Contact line drawn.[]")
     # ציור נקודת המגע עצמה
     ax.plot(contact_x, contact_y, "o", color="orange", markersize=6, zorder=6)
-
 
 def draw_contact_line_B2B(ax, white, target_helper, target, pocket):
     # וקטור שחור→חור

@@ -29,7 +29,6 @@ class CalculationsWithWall(Calculations):
         angle_using_wall_dict = {}
         for pocket in self.pockets:
             if pocket.id == 0 or pocket.id == 1 or pocket.id == 2 or pocket.id == 3:
-                print("hiiii")
                 angle_using_wall_dict[pocket] = self.wall_shot_angle_to_pocket(pocket)
         return angle_using_wall_dict
 
