@@ -3,7 +3,7 @@ from PIL import Image, ImageDraw
 import json, os
 import math
 from pathlib import Path
-from const_numbers import OUTPUT_CONTACT_VIEW_PATH , BALL_RADIUS_PHOTO, POCKET_MARGIN
+from const_numbers import *
 
 
 class LineDrawer:
@@ -28,6 +28,9 @@ class LineDrawer:
         self.balls = meta.get("balls", [])
         print("[DEBUG] Loaded balls:", [b["index"] for b in self.balls])
         self.pockets = meta.get("pockets_px", {})
+
+        # ✅ טוען את הגודל של השולחן בפיקסלים
+        self.table_size_px = meta.get("table_size_px", {"width_px": 0, "height_px": 0})
 
         self.img = Image.open(self.input_path).convert("RGB")
         base_dir = os.getcwd()
@@ -131,9 +134,6 @@ class LineDrawer:
         self.img.save(self.output_path, quality=95)
         return self.output_path
 
-
-
-
     def show_contact_hit(
         self, ball_radius: int = BALL_RADIUS_PHOTO-3, color=(255, 0, 0), size: int = 8, crop_size: int = 120
     ) -> str:
@@ -189,3 +189,111 @@ class LineDrawer:
             f"[DEBUG] Contact-to-pocket point drawn at ({contact_x:.2f}, {contact_y:.2f}), zoom saved."
         )
         return str(OUTPUT_CONTACT_VIEW_PATH)
+        
+    def table_to_px(self, x: float, y: float) -> tuple[float, float]:
+        """
+        ממיר נקודה מיחידות שולחן (x,y) לפיקסלים בתמונה.
+        - x=0,y=0  => פינה שמאל-תחתון (BL)
+        - x=TABLE_LENGTH,y=0 => פינה ימין-תחתון (BR)
+        - x=0,y=TABLE_WIDTH  => פינה שמאל-עליון (TL)
+        - x=TABLE_LENGTH,y=TABLE_WIDTH => פינה ימין-עליון (TR)
+        """
+        u = x / TABLE_LENGTH
+        v = y / TABLE_WIDTH
+
+        width_px = self.table_size_px["width_px"]
+        height_px = self.table_size_px["height_px"]
+
+        px = u * width_px
+        py = height_px - (v * height_px)  # היפוך כי בתמונה y=0 זה למעלה
+        return (px, py)
+
+    def draw_lines_with_wall(
+        self,
+        wall_point: tuple[float, float],   # ביחידות שולחן (x,y)
+        color_target=(255, 0, 0),
+        color_white=(0, 0, 255),
+        color_wall=(0, 255, 0),
+        width=3,
+    ) -> str:
+        """
+        מצייר 3 קווים מקווקווים על התמונה:
+        1) לבן → מטרה
+        2) מטרה → קיר
+        3) קיר → חור
+
+        wall_point מתקבל ביחידות שולחן (290x145) ולכן מומר לפיקסלים.
+        """
+
+        def v_sub(a, b): return (a[0]-b[0], a[1]-b[1])
+        def v_add(a, b): return (a[0]+b[0], a[1]+b[1])
+        def v_len(v): return math.hypot(v[0], v[1])
+        def v_unit(v):
+            L = v_len(v)
+            return (0.0, 0.0) if L == 0 else (v[0]/L, v[1]/L)
+        def v_scale(v, s): return (v[0]*s, v[1]*s)
+
+        def draw_dashed_line(draw, start, end, fill, width=3, dash_length=15, gap_length=10):
+            x1, y1 = start
+            x2, y2 = end
+            total_length = math.hypot(x2 - x1, y2 - y1)
+            if total_length == 0:
+                return
+            dx, dy = (x2 - x1) / total_length, (y2 - y1) / total_length
+            pos = 0.0
+            while pos < total_length:
+                x_start = x1 + dx * pos
+                y_start = y1 + dy * pos
+                pos += dash_length
+                if pos > total_length:
+                    pos = total_length
+                x_end = x1 + dx * pos
+                y_end = y1 + dy * pos
+                draw.line([(x_start, y_start), (x_end, y_end)], fill=fill, width=width)
+                pos += gap_length
+
+        # --- נקודות הכדורים/כיס (כבר בפיקסלים) ---
+        white_c   = self.get_ball_px(self.best_shot.white.id)
+        target_c  = self.get_ball_px(self.best_shot.target.id)
+        pocket_c  = self.get_pocket_px(self.best_shot.pocket.id)
+
+        # --- נקודת הקיר (המרה) ---
+        wall_px = self.table_to_px(wall_point[0], wall_point[1])
+        tw_dir = v_unit(v_sub(wall_px, target_c))  
+        wall_px = v_add(wall_px, v_scale(tw_dir, -WALL_MARGIN))
+
+        if not (white_c and target_c and pocket_c and wall_px):
+            raise ValueError("❌ Missing coordinates for white/target/pocket/wall")
+
+        draw = ImageDraw.Draw(self.img)
+
+        print("=== Drawing Debug Info ===")
+        print(f"White center   = {white_c}")
+        print(f"Target center  = {target_c}")
+        print(f"Pocket center  = {pocket_c}")
+        print(f"Wall point (table) = {wall_point}")
+        print(f"Wall point (px)    = {wall_px}")
+
+        # --- 1) לבן → מטרה ---
+        wt_dir = v_unit(v_sub(target_c, white_c))
+        start_white   = v_add(white_c,  v_scale(wt_dir, BALL_RADIUS_PHOTO))
+        end_on_target = v_add(target_c, v_scale(wt_dir, -BALL_RADIUS_PHOTO))
+        print(f"Line 1: White edge {start_white} → Target edge {end_on_target}")
+        draw_dashed_line(draw, start_white, end_on_target, fill=color_white, width=width)
+
+        # --- 2) מטרה → קיר ---
+        tw_dir = v_unit(v_sub(wall_px, target_c))
+        start_target_wall = v_add(target_c, v_scale(tw_dir, BALL_RADIUS_PHOTO))
+        print(f"Line 2: Target edge {start_target_wall} → Wall {wall_px}")
+        draw_dashed_line(draw, start_target_wall, wall_px, fill=color_target, width=width)
+
+        # --- 3) קיר → חור ---
+        wp_dir = v_unit(v_sub(pocket_c, wall_px))
+        pocket_before = v_add(pocket_c, v_scale(wp_dir, -POCKET_MARGIN))
+        print(f"Line 3: Wall {wall_px} → Pocket-before {pocket_before}")
+        draw_dashed_line(draw, wall_px, pocket_before, fill=color_wall, width=width)
+
+        print("=== Finished Drawing ===")
+
+        self.img.save(self.output_path, quality=95)
+        return self.output_path

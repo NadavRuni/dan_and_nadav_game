@@ -52,7 +52,7 @@ class Calculations:
             else:
                 angles[pocket.id] = [angle_deg]
 
-        print("[DEBUG]")
+        print("[DEBUG] angles")
         print(angles)
         return angles
 
