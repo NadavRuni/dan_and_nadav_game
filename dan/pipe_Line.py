@@ -597,6 +597,8 @@ def image_recognizer(stage, IMAGE_PATH):
 
     # --- ציור + JSON ---
     ann = img.copy()
+    print("Drawing final annotations...")
+    print(ann)
     for i, b in enumerate(f_boxes):
         t = types[i]
         color = (0, 255, 0)
@@ -690,6 +692,7 @@ def main():
 
 async def start_pipe_line(image_path: str):
     print("start_pipe_line", image_path)
+    
     img = cv2.imread(image_path)
     if img is None:
         raise FileNotFoundError(f"Image not found: {image_path}")
