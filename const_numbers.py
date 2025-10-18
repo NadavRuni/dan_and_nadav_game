@@ -4,6 +4,7 @@ from pathlib import Path
 BALL_RADIUS = 3
 BALL_RADIUS_PHOTO = 20  
 POCKET_MARGIN=60
+WALL_MARGIN=100
 
 BALL_SPACING = BALL_RADIUS * 2.2
 TABLE_LENGTH = 290
@@ -27,4 +28,4 @@ OUTPUT_JSON_PATH = "photos/output/img_JSON.json"
 OUTPUT_IMAGE_PATH = Path("photos/output/img.png")
 OUTPUT_CONTACT_VIEW_PATH = Path("photos/output/img_contact.png")
 
-FORSE_WALL_SHOT = True
+FORSE_WALL_SHOT = False
