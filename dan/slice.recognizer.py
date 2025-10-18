@@ -4,12 +4,7 @@ import numpy as np
 import os
 import json
 
-# ====== PATHS (ללא CLI): ======
-IMAGE_PATH = (
-    "/Users/danbenzvi/Desktop/dan_nadav_game/dan_and_nadav_game/dan/images/table-11.jpg"
-)
-OUTPUT_ANN_PATH = "/Users/danbenzvi/Desktop/dan_nadav_game/dan_and_nadav_game/dan/output/table-11-annotated.jpg"
-OUTPUT_JSON_PATH = "/Users/danbenzvi/Desktop/dan_nadav_game/dan_and_nadav_game/dan/output/analysis-table-11.json"
+
 
 # ====== YOLO / Hough ======
 MODEL_PATH = "yolov8n.pt"
@@ -191,71 +186,3 @@ def save_annotated(img, boxes, types, origin_pocket, out_path):
         )
     cv2.imwrite(out_path, ann)
 
-
-# ===================== MAIN (Simplified and Robust) =====================
-def main():
-    img = cv2.imread(IMAGE_PATH)
-    if img is None:
-        raise FileNotFoundError(f"Image not found: {IMAGE_PATH}")
-    H, W = img.shape[:2]
-
-    # --- SINGLE, POWERFUL DETECTION PASS ON THE ENTIRE IMAGE ---
-    print("Running a single detection pass on the full image...")
-    boxes, centers, radii = detect_balls_in_image(img)
-
-    # --- FILTER OUT BALLS IN POCKETS ---
-    pockets_cand = detect_pocket_candidates(img)
-    if pockets_cand:
-        boxes, centers, radii = remove_balls_in_pockets(
-            centers, radii, boxes, pockets_cand
-        )
-
-    # --- CLASSIFY WHITE & BLACK USING THE ROBUST LAB METHOD ---
-    w_idx, b_idx = classify_white_black_lab(img, centers, radii)
-
-    # --- BUILD FINAL LIST OF BALLS ---
-    types = []
-    for i in range(len(centers)):
-        if i == w_idx:
-            types.append("white")
-        elif i == b_idx:
-            types.append("black")
-        else:
-            types.append("other")
-
-    print(f"Detection complete. Found {len(types)} balls.")
-    if w_idx is not None:
-        print(f"  - White ball identified at index {w_idx}")
-    if b_idx is not None:
-        print(f"  - Black ball identified at index {b_idx}")
-
-    # --- PREPARE AND SAVE OUTPUT ---
-    bl_guess = pick_nearest(pockets_cand, (0.0 * W, 1.0 * H))
-    blx, bly, blr = (
-        map(float, bl_guess) if bl_guess else (0.0, float(H - 1), 0.03 * min(W, H))
-    )
-
-    balls_json = [
-        {"index": i, "type": t, "x_px": float(cx - blx), "y_px": float(bly - cy)}
-        for i, ((cx, cy), t) in enumerate(zip(centers, types))
-    ]
-
-    result = {
-        "image_path": IMAGE_PATH,
-        "origin_px": {"x": blx, "y": bly},
-        "pockets_px": {"0": {"x": blx, "y": bly, "r": blr}},
-        "table_size_px": {"width_px": float(W), "height_px": float(H)},
-        "balls": balls_json,
-    }
-
-    os.makedirs(os.path.dirname(OUTPUT_JSON_PATH), exist_ok=True)
-    with open(OUTPUT_JSON_PATH, "w", encoding="utf-8") as f:
-        json.dump(result, f, ensure_ascii=False, indent=2)
-
-    save_annotated(img, boxes, types, (blx, bly, blr), OUTPUT_ANN_PATH)
-    print(f"\n[OK] Analysis JSON saved to: {OUTPUT_JSON_PATH}")
-    print(f"[OK] Annotated image saved to: {OUTPUT_ANN_PATH}")
-
-
-if __name__ == "__main__":
-    main()

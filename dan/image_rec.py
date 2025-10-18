@@ -3,13 +3,9 @@ from ultralytics import YOLO
 import numpy as np
 import os
 import json
+from const_numbers import *
 
-# ====== PATHS (ללא CLI): ======
-IMAGE_PATH = (
-    "/Users/danbenzvi/Desktop/dan_nadav_game/dan_and_nadav_game/dan/images/table-13.jpg"
-)
-OUTPUT_ANN_PATH = "/Users/danbenzvi/Desktop/dan_nadav_game/dan_and_nadav_game/dan/output/table-13-annotated.jpg"
-OUTPUT_JSON_PATH = "/Users/danbenzvi/Desktop/dan_nadav_game/dan_and_nadav_game/dan/output/analysis-table-13.json"
+
 
 # ====== YOLO / Hough ======
 MODEL_PATH = "yolov8n.pt"
@@ -529,122 +525,122 @@ def save_annotated(img, boxes, types, origin_pocket, out_path):
     cv2.imwrite(out_path, ann)
 
 
-# ===================== MAIN =====================
-def main():
-    img = cv2.imread(IMAGE_PATH)
-    if img is None:
-        raise FileNotFoundError(f"Image not found: {IMAGE_PATH}")
-    H, W = img.shape[:2]
+# # ===================== MAIN =====================
+# def main():
+#     img = cv2.imread(IMAGE_PATH)
+#     if img is None:
+#         raise FileNotFoundError(f"Image not found: {IMAGE_PATH}")
+#     H, W = img.shape[:2]
 
-    # 1) detect balls
-    yolo_boxes, yolo_scores = yolo_detect(img)
-    h_boxes, h_scores, h_radii = hough_fallback(img, yolo_boxes)
-    all_boxes = yolo_boxes + h_boxes
-    all_scores = yolo_scores + h_scores
-    all_radii = [est_radius_from_box(b) for b in yolo_boxes] + h_radii
+#     # 1) detect balls
+#     yolo_boxes, yolo_scores = yolo_detect(img)
+#     h_boxes, h_scores, h_radii = hough_fallback(img, yolo_boxes)
+#     all_boxes = yolo_boxes + h_boxes
+#     all_scores = yolo_scores + h_scores
+#     all_radii = [est_radius_from_box(b) for b in yolo_boxes] + h_radii
 
-    # 1.1 כתומים חסרים
-    min_r = int(max(6, 0.009 * min(H, W)))
-    max_r = int(max(min_r + 6, 0.018 * min(H, W)))
-    add_boxes, add_scores, add_r = add_missing_orange_candidates(
-        img, all_boxes, min_r, max_r
-    )
-    all_boxes += add_boxes
-    all_scores += add_scores
-    all_radii += add_r
+#     # 1.1 כתומים חסרים
+#     min_r = int(max(6, 0.009 * min(H, W)))
+#     max_r = int(max(min_r + 6, 0.018 * min(H, W)))
+#     add_boxes, add_scores, add_r = add_missing_orange_candidates(
+#         img, all_boxes, min_r, max_r
+#     )
+#     all_boxes += add_boxes
+#     all_scores += add_scores
+#     all_radii += add_r
 
-    # >>> 1.2 הזרקת מועמד שחור ע"י Hough גלובלי (הקוד הקטן שלך)
-    black_center_hint = None
-    blk_cand = detect_black_global_candidate(img, all_boxes)
-    if blk_cand is not None:
-        bx, sc, rr, center_hint = blk_cand
-        all_boxes.append(bx)
-        all_scores.append(sc)
-        all_radii.append(rr)
-        black_center_hint = center_hint
-    # <<< סוף ההזרקה
+#     # >>> 1.2 הזרקת מועמד שחור ע"י Hough גלובלי (הקוד הקטן שלך)
+#     black_center_hint = None
+#     blk_cand = detect_black_global_candidate(img, all_boxes)
+#     if blk_cand is not None:
+#         bx, sc, rr, center_hint = blk_cand
+#         all_boxes.append(bx)
+#         all_scores.append(sc)
+#         all_radii.append(rr)
+#         black_center_hint = center_hint
+#     # <<< סוף ההזרקה
 
-    f_boxes, f_scores, f_radii = filter_and_limit(img, all_boxes, all_scores, all_radii)
-    centers = boxes_to_centers(f_boxes)
+#     f_boxes, f_scores, f_radii = filter_and_limit(img, all_boxes, all_scores, all_radii)
+#     centers = boxes_to_centers(f_boxes)
 
-    # 2) כיסים + BL origin
-    pockets_cand = detect_pocket_candidates(img)
-    bl_guess = pick_nearest(pockets_cand, (0.0 * W, 1.0 * H))
-    if bl_guess is None:
-        blx, bly, blr = 0.0, float(H - 1), 0.03 * min(W, H)
-    else:
-        blx, bly, blr = map(float, bl_guess)
+#     # 2) כיסים + BL origin
+#     pockets_cand = detect_pocket_candidates(img)
+#     bl_guess = pick_nearest(pockets_cand, (0.0 * W, 1.0 * H))
+#     if bl_guess is None:
+#         blx, bly, blr = 0.0, float(H - 1), 0.03 * min(W, H)
+#     else:
+#         blx, bly, blr = map(float, bl_guess)
 
-    # 3) הסרת כדורים בתוך כיסים
-    if pockets_cand:
-        keep_idx = remove_balls_in_pockets(
-            centers, f_radii, pockets_cand, factor=POCKET_INCLUSION_FACTOR
-        )
-        f_boxes = [f_boxes[i] for i in keep_idx]
-        f_scores = [f_scores[i] for i in keep_idx]
-        f_radii = [f_radii[i] for i in keep_idx]
-        centers = [centers[i] for i in keep_idx]
+#     # 3) הסרת כדורים בתוך כיסים
+#     if pockets_cand:
+#         keep_idx = remove_balls_in_pockets(
+#             centers, f_radii, pockets_cand, factor=POCKET_INCLUSION_FACTOR
+#         )
+#         f_boxes = [f_boxes[i] for i in keep_idx]
+#         f_scores = [f_scores[i] for i in keep_idx]
+#         f_radii = [f_radii[i] for i in keep_idx]
+#         centers = [centers[i] for i in keep_idx]
 
-    # >>> 3.1 מציאת אינדקס הכדור השחור שהוזרק (אם הוחדר)
-    forced_black_idx = None
-    if black_center_hint is not None and centers:
-        bx, by = black_center_hint
-        d2 = [(cx - bx) ** 2 + (cy - by) ** 2 for (cx, cy) in centers]
-        forced_black_idx = int(np.argmin(d2))
-    # <<<
+#     # >>> 3.1 מציאת אינדקס הכדור השחור שהוזרק (אם הוחדר)
+#     forced_black_idx = None
+#     if black_center_hint is not None and centers:
+#         bx, by = black_center_hint
+#         d2 = [(cx - bx) ** 2 + (cy - by) ** 2 for (cx, cy) in centers]
+#         forced_black_idx = int(np.argmin(d2))
+#     # <<<
 
-    # 4) סיווג
-    w_idx, b_idx, o_idx, stats, _ = classify_white_black_orange(img, centers, f_radii)
+#     # 4) סיווג
+#     w_idx, b_idx, o_idx, stats, _ = classify_white_black_orange(img, centers, f_radii)
 
-    # >>> 4.1 אם מצאנו שחור גלובלי – נכפה אותו
-    if forced_black_idx is not None:
-        b_idx = forced_black_idx
-        # דאג שלא יתנגש עם הלבן
-        if w_idx is not None and w_idx == b_idx and stats:
-            white_scores = [st["frac_white"] - 0.35 * st["hue_var"] for st in stats]
-            order_w = list(np.argsort(-np.array(white_scores)))
-            for cand in order_w:
-                if cand != b_idx:
-                    w_idx = int(cand)
-                    break
-    # <<<
+#     # >>> 4.1 אם מצאנו שחור גלובלי – נכפה אותו
+#     if forced_black_idx is not None:
+#         b_idx = forced_black_idx
+#         # דאג שלא יתנגש עם הלבן
+#         if w_idx is not None and w_idx == b_idx and stats:
+#             white_scores = [st["frac_white"] - 0.35 * st["hue_var"] for st in stats]
+#             order_w = list(np.argsort(-np.array(white_scores)))
+#             for cand in order_w:
+#                 if cand != b_idx:
+#                     w_idx = int(cand)
+#                     break
+#     # <<<
 
-    types = []
-    for i in range(len(centers)):
-        if i == w_idx:
-            types.append("white")
-        elif i == b_idx:
-            types.append("black")
-        elif i == o_idx and stats[i]["frac_orange"] > 0.25:
-            types.append("orange")
-        else:
-            types.append("other")
+#     types = []
+#     for i in range(len(centers)):
+#         if i == w_idx:
+#             types.append("white")
+#         elif i == b_idx:
+#             types.append("black")
+#         elif i == o_idx and stats[i]["frac_orange"] > 0.25:
+#             types.append("orange")
+#         else:
+#             types.append("other")
 
-    # 5) JSON (קואורדינטות יחסית ל-BL, y למעלה)
-    balls_json = []
-    for i, ((cx, cy), t) in enumerate(zip(centers, types)):
-        balls_json.append(
-            {"index": i, "type": t, "x_px": float(cx - blx), "y_px": float(bly - cy)}
-        )
+#     # 5) JSON (קואורדינטות יחסית ל-BL, y למעלה)
+#     balls_json = []
+#     for i, ((cx, cy), t) in enumerate(zip(centers, types)):
+#         balls_json.append(
+#             {"index": i, "type": t, "x_px": float(cx - blx), "y_px": float(bly - cy)}
+#         )
 
-    result = {
-        "image_path": IMAGE_PATH,
-        "origin_px": {"x": float(blx), "y": float(bly)},
-        "pockets_px": {
-            "0": {"x": float(blx), "y": float(bly), "r": float(blr)}
-        },  # BL בלבד
-        "table_size_px": {"width_px": float(W), "height_px": float(H)},
-        "balls": balls_json,
-    }
+#     result = {
+#         "image_path": IMAGE_PATH,
+#         "origin_px": {"x": float(blx), "y": float(bly)},
+#         "pockets_px": {
+#             "0": {"x": float(blx), "y": float(bly), "r": float(blr)}
+#         },  # BL בלבד
+#         "table_size_px": {"width_px": float(W), "height_px": float(H)},
+#         "balls": balls_json,
+#     }
 
-    os.makedirs(os.path.dirname(OUTPUT_JSON_PATH), exist_ok=True)
-    with open(OUTPUT_JSON_PATH, "w", encoding="utf-8") as f:
-        json.dump(result, f, ensure_ascii=False, indent=2)
+#     os.makedirs(os.path.dirname(OUTPUT_JSON_PATH), exist_ok=True)
+#     with open(OUTPUT_JSON_PATH, "w", encoding="utf-8") as f:
+#         json.dump(result, f, ensure_ascii=False, indent=2)
 
-    save_annotated(img, f_boxes, types, (blx, bly, blr), OUTPUT_ANN_PATH)
-    print(f"[OK] Analysis JSON saved to: {OUTPUT_JSON_PATH}")
-    print(f"[OK] Annotated image saved to: {OUTPUT_ANN_PATH}")
+#     save_annotated(img, f_boxes, types, (blx, bly, blr), OUTPUT_ANN_PATH)
+#     print(f"[OK] Analysis JSON saved to: {OUTPUT_JSON_PATH}")
+#     print(f"[OK] Annotated image saved to: {OUTPUT_ANN_PATH}")
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
