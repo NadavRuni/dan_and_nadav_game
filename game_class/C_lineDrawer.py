@@ -29,6 +29,9 @@ class LineDrawer:
         print("[DEBUG] Loaded balls:", [b["index"] for b in self.balls])
         self.pockets = meta.get("pockets_px", {})
 
+        # ✅ טוען את הגודל של השולחן בפיקסלים
+        self.table_size_px = meta.get("table_size_px", {"width_px": 0, "height_px": 0})
+
         self.img = Image.open(self.input_path).convert("RGB")
         base_dir = os.getcwd()
         self.output_path = os.path.join(
@@ -131,9 +134,6 @@ class LineDrawer:
         self.img.save(self.output_path, quality=95)
         return self.output_path
 
-
-
-
     def show_contact_hit(
         self, ball_radius: int = BALL_RADIUS_PHOTO-3, color=(255, 0, 0), size: int = 8, crop_size: int = 120
     ) -> str:
@@ -208,7 +208,6 @@ class LineDrawer:
         py = height_px - (v * height_px)  # היפוך כי בתמונה y=0 זה למעלה
         return (px, py)
 
-
     def draw_lines_with_wall(
         self,
         wall_point: tuple[float, float],   # ביחידות שולחן (x,y)
@@ -259,7 +258,9 @@ class LineDrawer:
         pocket_c  = self.get_pocket_px(self.best_shot.pocket.id)
 
         # --- נקודת הקיר (המרה) ---
-        wall_px   = self.table_to_px(wall_point[0], wall_point[1])
+        wall_px = self.table_to_px(wall_point[0], wall_point[1])
+        tw_dir = v_unit(v_sub(wall_px, target_c))  
+        wall_px = v_add(wall_px, v_scale(tw_dir, -WALL_MARGIN))
 
         if not (white_c and target_c and pocket_c and wall_px):
             raise ValueError("❌ Missing coordinates for white/target/pocket/wall")
