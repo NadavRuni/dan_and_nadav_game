@@ -93,12 +93,27 @@ class BestShot:
 
     @staticmethod
     def calculate_score_distance(
-        dist_white_to_target: float, dist_target_to_pocket: float
-    ) -> float:
+    dist_white_to_target: float,
+    dist_target_to_pocket: float,
+    weight_target_to_pocket: float = 0.7,  # משקל גבוה יותר למרחק מהחור
+) -> float:
+        """
+        מחשב ניקוד על בסיס מרחקים, עם דגש חזק יותר על המרחק מהמטרה אל החור.
+        ככל שהמרחקים קצרים יותר → הניקוד גבוה יותר.
+        """
+        # נרמול
         norm_white = dist_white_to_target / MAX_WHITE_TO_TARGET
         norm_target = dist_target_to_pocket / MAX_TARGET_TO_POCKET
-        score = 1 - (norm_white + norm_target) / 2  # ממוצע נורמליזציות
+
+        # שילוב עם משקל
+        weighted_avg = (
+            (1 - weight_target_to_pocket) * norm_white
+            + weight_target_to_pocket * norm_target
+        )
+
+        score = 1 - weighted_avg
         return max(0.0, min(1.0, score))
+
 
     def get_pocket(self) -> int | None:
         """מחזירה את ה־ID של הכיס שנבחר, או None אם אין שוט חוקי"""
