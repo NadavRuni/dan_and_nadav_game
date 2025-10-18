@@ -126,6 +126,7 @@ def build_table_from_analysis(analysis: dict):
 def start_build_table_from_img():
 
     analysis = load_analysis(OUTPUT_JSON_PATH)
+    
     table = build_table_from_analysis(analysis)
     print(f"Built table with {len(table.balls)} balls from {OUTPUT_JSON_PATH}")
     game = GameAnalayzer(table)
