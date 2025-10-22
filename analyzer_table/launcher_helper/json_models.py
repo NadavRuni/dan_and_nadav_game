@@ -1,12 +1,64 @@
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from typing import List, Tuple, Dict
 import json
+
+@dataclass
+class White_Score:
+    white_score_test_1: float = 0.0
+    white_score_test_2: float = 0.0
+    white_score_test_3: float = 0.0
+    white_score_test_4: float = 0.0
+    white_score_test_5: float = 0.0
+
+@dataclass
+class Black_Score:
+    black_score_test_1: float = 0.0
+    black_score_test_2: float = 0.0
+    black_score_test_3: float = 0.0
+    black_score_test_4: float = 0.0
+    black_score_test_5: float = 0.0
+
+@dataclass
+class Solid_Score:
+    solid_score_test_1: float = 0.0
+    solid_score_test_2: float = 0.0
+    solid_score_test_3: float = 0.0
+    solid_score_test_4: float = 0.0
+    solid_score_test_5: float = 0.0
+
+@dataclass
+class Striped_Score:
+    striped_score_test_1: float = 0.0
+    striped_score_test_2: float = 0.0
+    striped_score_test_3: float = 0.0
+    striped_score_test_4: float = 0.0
+    striped_score_test_5: float = 0.0
+
+@dataclass
+class Color_Score:
+    white_score : White_Score =field(default_factory=White_Score)
+    black_score : Black_Score = field(default_factory=Black_Score)
+    solid_score : Solid_Score = field(default_factory=Solid_Score)
+    striped_score : Striped_Score = field(default_factory=Striped_Score)
+
+@dataclass
+class Ball_Color:
+    WHITE = "white"
+    BLACK = "black"
+    SOLID = "solid"
+    STRIPED = "striped"
+    UNDEFINED = "undefined"
 
 @dataclass
 class Ball:
     center: Tuple[int, int]
     radius: int
+    color_score: Color_Score = field(default_factory=Color_Score)
+    final_color: Ball_Color = Ball_Color.UNDEFINED
+    single_ball_path: str = ""
 
+    
+    
 @dataclass
 class Rectangle:
     top_left: Tuple[int, int]
