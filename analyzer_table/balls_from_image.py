@@ -4,17 +4,15 @@ from analyzer_table.detect_ball.draw_utils import draw_balls_on_image
 from analyzer_table.detect_ball.Debugger import Debugger
 from analyzer_table.detect_ball.detect_table import find_table_rectangle
 from analyzer_table.launcher_helper.black_and_white_launcher import run_ball_detection
-from dataclasses import dataclass
 from typing import Tuple, List, Optional
 import cv2
 import numpy as np
 import os
+from analyzer_table.launcher_helper.json_models import Ball
+from analyzer_table.ball_from_image_helper import crop_and_save_balls 
 
 
-@dataclass
-class Ball:
-    center: Tuple[int, int]
-    radius: int
+
 
 
 def analyze_ball_brightness(image_path: str, balls: List[Ball], output_dir: str = "out/balls") -> Tuple[Optional[Ball], Optional[Ball]]:
@@ -114,6 +112,17 @@ def full_analyzer_pipeline(image_path: str) -> Tuple[List[Ball], Optional[Ball],
     # שלב 4: מיון וסיכום
     sorted_balls = sorted(merged_photo.balls, key=lambda b: b.center[0])
     Debugger.log(f"📦 Total unique balls: {len(sorted_balls)}")
+
+    crop_and_save_balls(image_path, sorted_balls)
+    Debugger.log(f"✂️ Cropped and saved individual ball images.")
+    for i, ball in enumerate(sorted_balls, 1):
+        Debugger.log(f"   - Ball #{i}: Center={ball.center}, Radius={ball.radius}, Color={ball.final_color} ")
+        Debugger.log(f"path to ball image: {ball.single_ball_path}")
+
+
+    #dan all data!!!!
+
+
 
     # שלב 5: זיהוי הכדור הלבן והשחור
     white_ball ,black_ball =analyze_ball_brightness(image_path, sorted_balls, os.path.join(out_dir, "balls"))
