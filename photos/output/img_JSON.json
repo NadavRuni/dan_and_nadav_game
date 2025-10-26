@@ -1,120 +1,36 @@
 {
-  "image_path": "uploads/WhatsApp Image 2025-10-18 at 12.30.17 (1).jpeg",
-  "origin_px": {
-    "x": 40.0,
-    "y": 658.0
-  },
-  "pockets_px": {
-    "TL": {
-      "x": 40.0,
-      "y": 39.0
-    },
-    "TM": {
-      "x": 634.0,
-      "y": 39.0
-    },
-    "TR": {
-      "x": 1228.0,
-      "y": 39.0
-    },
-    "BL": {
-      "x": 40.0,
-      "y": 658.0
-    },
-    "BM": {
-      "x": 634.0,
-      "y": 658.0
-    },
-    "BR": {
-      "x": 1228.0,
-      "y": 658.0
-    }
-  },
-  "table_rect_units": {
-    "width": 2.0,
-    "height": 1.0
-  },
-  "homography_img2table": [
-    [
-      0.0016835016835016834,
-      0.0,
-      -0.06734006734006721
-    ],
-    [
-      0.0,
-      0.00161550888529887,
-      -0.06300484652665612
-    ],
-    [
-      0.0,
-      0.0,
-      1.0
-    ]
-  ],
-  "table_size_px": {
-    "width_px": 1280.0,
-    "height_px": 703.0
+  "image_path": "uploads/table-12.jpg",
+  "image_size_px": {
+    "width": 1280.0,
+    "height": 703.0
   },
   "balls": [
     {
       "index": 0,
-      "type": "other",
+      "type": "undefined",
       "center_px": {
         "x": 238.0,
         "y": 334.0
       },
-      "rel_to_BL_px": {
-        "x": 198.0,
-        "y": 324.0
-      },
-      "table_uv": {
-        "u": 0.1666666716337204,
-        "v": 0.47657510638237
-      },
-      "table_xy_units": {
-        "x": 0.3333333432674408,
-        "y": 0.47657510638237
-      }
+      "radius_px": 16.0
     },
     {
       "index": 1,
-      "type": "other",
+      "type": "undefined",
       "center_px": {
         "x": 507.0,
         "y": 537.0
       },
-      "rel_to_BL_px": {
-        "x": 467.0,
-        "y": 121.0
-      },
-      "table_uv": {
-        "u": 0.3930976390838623,
-        "v": 0.8045234084129333
-      },
-      "table_xy_units": {
-        "x": 0.7861952781677246,
-        "y": 0.8045234084129333
-      }
+      "radius_px": 12.0
     },
     {
       "index": 2,
-      "type": "other",
+      "type": "undefined",
       "center_px": {
         "x": 556.0,
         "y": 286.0
       },
-      "rel_to_BL_px": {
-        "x": 516.0,
-        "y": 372.0
-      },
-      "table_uv": {
-        "u": 0.4343434274196625,
-        "v": 0.3990306854248047
-      },
-      "table_xy_units": {
-        "x": 0.868686854839325,
-        "y": 0.3990306854248047
-      }
+      "radius_px": 11.0
     },
     {
       "index": 3,
@@ -123,98 +39,43 @@
         "x": 566.0,
         "y": 94.0
       },
-      "rel_to_BL_px": {
-        "x": 526.0,
-        "y": 564.0
-      },
-      "table_uv": {
-        "u": 0.4427609443664551,
-        "v": 0.08885298669338226
-      },
-      "table_xy_units": {
-        "x": 0.8855218887329102,
-        "y": 0.08885298669338226
-      }
+      "radius_px": 12.0
     },
     {
       "index": 4,
-      "type": "other",
+      "type": "undefined",
       "center_px": {
         "x": 571.0,
         "y": 369.0
       },
-      "rel_to_BL_px": {
-        "x": 531.0,
-        "y": 289.0
-      },
-      "table_uv": {
-        "u": 0.4469696879386902,
-        "v": 0.533117949962616
-      },
-      "table_xy_units": {
-        "x": 0.8939393758773804,
-        "y": 0.533117949962616
-      }
+      "radius_px": 15.0
     },
     {
       "index": 5,
-      "type": "other",
+      "type": "undefined",
       "center_px": {
         "x": 748.0,
         "y": 154.0
       },
-      "rel_to_BL_px": {
-        "x": 708.0,
-        "y": 504.0
-      },
-      "table_uv": {
-        "u": 0.5959596037864685,
-        "v": 0.1857835203409195
-      },
-      "table_xy_units": {
-        "x": 1.191919207572937,
-        "y": 0.1857835203409195
-      }
+      "radius_px": 12.0
     },
     {
       "index": 6,
-      "type": "other",
+      "type": "undefined",
       "center_px": {
         "x": 852.0,
         "y": 366.0
       },
-      "rel_to_BL_px": {
-        "x": 812.0,
-        "y": 292.0
-      },
-      "table_uv": {
-        "u": 0.683501660823822,
-        "v": 0.5282713770866394
-      },
-      "table_xy_units": {
-        "x": 1.367003321647644,
-        "y": 0.5282713770866394
-      }
+      "radius_px": 12.0
     },
     {
       "index": 7,
-      "type": "other",
+      "type": "undefined",
       "center_px": {
         "x": 896.0,
         "y": 594.0
       },
-      "rel_to_BL_px": {
-        "x": 856.0,
-        "y": 64.0
-      },
-      "table_uv": {
-        "u": 0.7205387353897095,
-        "v": 0.8966074585914612
-      },
-      "table_xy_units": {
-        "x": 1.441077470779419,
-        "y": 0.8966074585914612
-      }
+      "radius_px": 11.0
     },
     {
       "index": 8,
@@ -223,146 +84,171 @@
         "x": 918.0,
         "y": 342.0
       },
-      "rel_to_BL_px": {
-        "x": 878.0,
-        "y": 316.0
-      },
-      "table_uv": {
-        "u": 0.7390572428703308,
-        "v": 0.48949918150901794
-      },
-      "table_xy_units": {
-        "x": 1.4781144857406616,
-        "y": 0.48949918150901794
-      }
+      "radius_px": 12.0
     },
     {
       "index": 9,
-      "type": "other",
+      "type": "undefined",
       "center_px": {
         "x": 996.0,
         "y": 414.0
       },
-      "rel_to_BL_px": {
-        "x": 956.0,
-        "y": 244.0
-      },
-      "table_uv": {
-        "u": 0.804713785648346,
-        "v": 0.6058158278465271
-      },
-      "table_xy_units": {
-        "x": 1.609427571296692,
-        "y": 0.6058158278465271
-      }
+      "radius_px": 11.0
     },
     {
       "index": 10,
-      "type": "other",
+      "type": "undefined",
       "center_px": {
         "x": 1001.0,
         "y": 140.0
       },
-      "rel_to_BL_px": {
-        "x": 961.0,
-        "y": 518.0
-      },
-      "table_uv": {
-        "u": 0.808922529220581,
-        "v": 0.16316640377044678
-      },
-      "table_xy_units": {
-        "x": 1.617845058441162,
-        "y": 0.16316640377044678
-      }
+      "radius_px": 18.0
     },
     {
       "index": 11,
-      "type": "other",
+      "type": "undefined",
       "center_px": {
         "x": 1014.0,
         "y": 352.0
       },
-      "rel_to_BL_px": {
-        "x": 974.0,
-        "y": 306.0
-      },
-      "table_uv": {
-        "u": 0.819865345954895,
-        "v": 0.5056542754173279
-      },
-      "table_xy_units": {
-        "x": 1.63973069190979,
-        "y": 0.5056542754173279
-      }
+      "radius_px": 13.0
     },
     {
       "index": 12,
-      "type": "other",
+      "type": "undefined",
       "center_px": {
         "x": 1042.0,
         "y": 444.0
       },
-      "rel_to_BL_px": {
-        "x": 1002.0,
-        "y": 214.0
-      },
-      "table_uv": {
-        "u": 0.8434343338012695,
-        "v": 0.6542810797691345
-      },
-      "table_xy_units": {
-        "x": 1.686868667602539,
-        "y": 0.6542810797691345
-      }
+      "radius_px": 14.0
     },
     {
       "index": 13,
-      "type": "other",
+      "type": "undefined",
       "center_px": {
         "x": 1104.0,
         "y": 550.0
       },
-      "rel_to_BL_px": {
-        "x": 1064.0,
-        "y": 108.0
-      },
-      "table_uv": {
-        "u": 0.8956229090690613,
-        "v": 0.8255250453948975
-      },
-      "table_xy_units": {
-        "x": 1.7912458181381226,
-        "y": 0.8255250453948975
-      }
+      "radius_px": 11.0
     },
     {
       "index": 14,
-      "type": "other",
+      "type": "undefined",
       "center_px": {
         "x": 1184.0,
         "y": 104.0
       },
-      "rel_to_BL_px": {
-        "x": 1144.0,
-        "y": 554.0
-      },
-      "table_uv": {
-        "u": 0.9629629850387573,
-        "v": 0.1050080806016922
-      },
-      "table_xy_units": {
-        "x": 1.9259259700775146,
-        "y": 0.1050080806016922
-      }
+      "radius_px": 18.0
     }
   ],
   "white_ball": {
-    "x": 918.0,
-    "y": 342.0
+    "center": [
+      918,
+      342
+    ],
+    "radius": 12,
+    "color_score": {
+      "white_score": {
+        "white_score_test_1": 0.0,
+        "white_score_test_2": 0.0,
+        "white_score_test_3": 0.0,
+        "white_score_test_4": 0.0,
+        "white_score_test_5": 0.0
+      },
+      "black_score": {
+        "black_score_test_1": 0.0,
+        "black_score_test_2": 0.0,
+        "black_score_test_3": 0.0,
+        "black_score_test_4": 0.0,
+        "black_score_test_5": 0.0
+      },
+      "solid_score": {
+        "solid_score_test_1": 0.0,
+        "solid_score_test_2": 0.0,
+        "solid_score_test_3": 0.0,
+        "solid_score_test_4": 0.0,
+        "solid_score_test_5": 0.0
+      },
+      "striped_score": {
+        "striped_score_test_1": 0.0,
+        "striped_score_test_2": 0.0,
+        "striped_score_test_3": 0.0,
+        "striped_score_test_4": 0.0,
+        "striped_score_test_5": 0.0
+      }
+    },
+    "final_color": "undefined",
+    "single_ball_path": "out/balls/ball_9_918_342.png"
   },
   "black_ball": {
-    "x": 566.0,
-    "y": 94.0
+    "center": [
+      566,
+      94
+    ],
+    "radius": 12,
+    "color_score": {
+      "white_score": {
+        "white_score_test_1": 0.0,
+        "white_score_test_2": 0.0,
+        "white_score_test_3": 0.0,
+        "white_score_test_4": 0.0,
+        "white_score_test_5": 0.0
+      },
+      "black_score": {
+        "black_score_test_1": 0.0,
+        "black_score_test_2": 0.0,
+        "black_score_test_3": 0.0,
+        "black_score_test_4": 0.0,
+        "black_score_test_5": 0.0
+      },
+      "solid_score": {
+        "solid_score_test_1": 0.0,
+        "solid_score_test_2": 0.0,
+        "solid_score_test_3": 0.0,
+        "solid_score_test_4": 0.0,
+        "solid_score_test_5": 0.0
+      },
+      "striped_score": {
+        "striped_score_test_1": 0.0,
+        "striped_score_test_2": 0.0,
+        "striped_score_test_3": 0.0,
+        "striped_score_test_4": 0.0,
+        "striped_score_test_5": 0.0
+      }
+    },
+    "final_color": "undefined",
+    "single_ball_path": "out/balls/ball_4_566_94.png"
+  },
+  "pockets": {
+    "TL": {
+      "x": 40.0,
+      "y": 39.0,
+      "radius": 60.0
+    },
+    "TM": {
+      "x": 634.0,
+      "y": 39.0,
+      "radius": 60.0
+    },
+    "TR": {
+      "x": 1228.0,
+      "y": 39.0,
+      "radius": 60.0
+    },
+    "BL": {
+      "x": 40.0,
+      "y": 658.0,
+      "radius": 60.0
+    },
+    "BM": {
+      "x": 634.0,
+      "y": 658.0,
+      "radius": 60.0
+    },
+    "BR": {
+      "x": 1228.0,
+      "y": 658.0,
+      "radius": 60.0
+    }
   }
 }

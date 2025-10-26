@@ -1,5 +1,5 @@
 from dataclasses import dataclass, asdict, field
-from typing import List, Tuple, Dict
+from typing import List, Optional, Tuple, Dict
 import json
 
 @dataclass
@@ -57,7 +57,53 @@ class Ball:
     final_color: Ball_Color = Ball_Color.UNDEFINED
     single_ball_path: str = ""
 
-    
+@dataclass
+class Pockets_img_paths:
+    top_left_path: str =""
+    top_right_path: str =""
+    bottom_left_path: str =""
+    bottom_right_path: str =""
+    top_middle_path: str =""
+    buttom_middle_path: str =""
+
+@dataclass
+class Pocket_Location_On_Table:
+    top_left: str ="TL"
+    top_right: str ="TR"
+    bottom_left: str ="BL"
+    bottom_right: str ="BR"
+    top_middle: str ="TM"
+    buttom_middle: str ="BM"
+    unknown: str ="UNKNOWN"
+
+
+@dataclass
+class Pocket :
+    pocket_id : int
+    pocket_center :Tuple[int,int]
+    pocker_radius : int
+    pocket_img_path : str
+    pocket_img_cordinates_on_table : Tuple[int,int] 
+    pocket_loacation_on_table : Pocket_Location_On_Table = Pocket_Location_On_Table.unknown
+
+
+
+@dataclass
+class table_pockets:
+    pockets_img_paths: Pockets_img_paths = field(default_factory=Pockets_img_paths)
+    pocket_list: List[Pocket] = field(default_factory=list)
+
+
+
+
+@dataclass
+class AnalyzerResult:
+    black: Optional[Ball] = None
+    white: Optional[Ball] = None
+    Pockets: table_pockets = field(default_factory=table_pockets)
+    balls: List[Ball] = field(default_factory=list)
+
+
     
 @dataclass
 class Rectangle:
@@ -65,6 +111,8 @@ class Rectangle:
     top_right: Tuple[int, int]
     bottom_left: Tuple[int, int]
     bottom_right: Tuple[int, int]
+
+
 
 @dataclass
 class Origin:

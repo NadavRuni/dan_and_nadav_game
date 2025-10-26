@@ -1,9 +1,13 @@
+from dataclasses import asdict
 import cv2
 from ultralytics import YOLO
 import numpy as np
 import os, json
 from const_numbers import OUTPUT_JSON_PATH
 from analyzer_table.balls_from_image import full_analyzer_pipeline
+from analyzer_table.launcher_helper.json_models import Ball , table_pockets , AnalyzerResult
+from analyzer_table.detect_ball.Debugger import Debugger
+
 
 
 
@@ -414,8 +418,6 @@ def white_recognizer(stage):
     dbg = img.copy()
     if best:
         draw_rect_label(dbg, best["box"], "white", (255, 255, 0))
-    cv2.imwrite(OUTPUT_WHITE_ANN, dbg)
-    print("save OUTPUT_WHITE_ANN", OUTPUT_WHITE_ANN)
 
     stage["white"] = best
     return stage
@@ -470,145 +472,88 @@ def black_recognizer(stage):
     dbg = img.copy()
     if best:
         draw_rect_label(dbg, best["box"], "black", (255, 0, 255))
-    cv2.imwrite(OUTPUT_BLACK_ANN, dbg)
 
     stage["black"] = best
     return stage
-def image_recognizer(IMAGE_PATH):
+
+from dataclasses import asdict
+import cv2, os, json
+import numpy as np
+from analyzer_table.launcher_helper.json_models import AnalyzerResult, table_pockets
+from analyzer_table.detect_ball.Debugger import Debugger
+from const_numbers import OUTPUT_JSON_PATH
+
+
+def image_recognizer(IMAGE_PATH: str) -> dict:
     """
-    הפונקציה מפעילה את full_analyzer_pipeline על תמונה (לפי path),
-    מחשבת את מיקום הכיסים לפי מלבן השולחן שהפייפליין מחזיר (Rectangle),
-    ומייצרת קובץ JSON בפורמט הקבוע.
+    🎯 מבצעת ניתוח תמונה מלא ומחזירה תוצאה בפורמט JSON.
+    משתמשת רק ב־AnalyzerResult (balls, pockets, white, black) — ללא table_box.
     """
 
-    # --- 1) הפעלת ניתוח מלא על הקובץ ---
-    analyzer_result = full_analyzer_pipeline(IMAGE_PATH)
-    balls_data = analyzer_result.get("balls", [])
-    white_ball = analyzer_result.get("white")
-    black_ball = analyzer_result.get("black")
-    table_box = analyzer_result.get("table_box")
+    Debugger.log(f"🚀 Starting image recognition for: {IMAGE_PATH}")
 
-    if table_box is None:
-        raise ValueError("❌ full_analyzer_pipeline לא החזירה table_box תקין (צפוי Rectangle)")
+    # === 1) הפעלת הפייפליין הראשי ===
+    analyzer_result: AnalyzerResult = full_analyzer_pipeline(IMAGE_PATH)
+    if not isinstance(analyzer_result, AnalyzerResult):
+        raise TypeError("❌ full_analyzer_pipeline חייב להחזיר AnalyzerResult")
 
-    # --- 2) הפיכת Rectangle לפורמט פינות ---
-    TL = tuple(table_box["top_left"])
-    TR = tuple(table_box["top_right"])
-    BL = tuple(table_box["bottom_left"])
-    BR = tuple(table_box["bottom_right"])
+    balls_data = analyzer_result.balls
+    white_ball = analyzer_result.white
+    black_ball = analyzer_result.black
+    all_pockets: table_pockets = analyzer_result.Pockets
 
-    # חורים אמצעיים (אמצע בין הפינות)
-    TM = ((TL[0] + TR[0]) / 2, (TL[1] + TR[1]) / 2)
-    BM = ((BL[0] + BR[0]) / 2, (BL[1] + BR[1]) / 2)
-
-    six = {
-        "TL": TL, "TM": TM, "TR": TR,
-        "BL": BL, "BM": BM, "BR": BR,
-    }
-    origin_xy = BL
-    blx, bly = origin_xy
-
-    # --- 3) קריאת התמונה ---
+    # === 2) קריאת התמונה ===
     img = cv2.imread(IMAGE_PATH)
     if img is None:
         raise FileNotFoundError(f"❌ לא ניתן לקרוא את התמונה מהנתיב: {IMAGE_PATH}")
     H, W = img.shape[:2]
-    blr = 0.03 * min(W, H)
 
-    # --- 4) חילוץ נתוני הכדורים ---
-    centers = np.array([b.center for b in balls_data], dtype=np.float32)
-    types = [getattr(b, "type", "other") for b in balls_data]
-
-
-    # --- 5) חישוב הומוגרפיה בסיסית (2x1 מטר) ---
-    src_pts = np.float32([BL, BR, TR, TL])
-    dst_pts = np.float32([[0, 1], [2, 1], [2, 0], [0, 0]])
-    H_img2tab, _ = cv2.findHomography(src_pts, dst_pts)
-
-    if H_img2tab is not None and len(centers) > 0:
-        uv = cv2.perspectiveTransform(centers.reshape(-1, 1, 2), H_img2tab).reshape(-1, 2)
-        uv_norm = uv / np.array([[2.0, 1.0]])
-    else:
-        uv = np.zeros((len(centers), 2), dtype=np.float32)
-        uv_norm = np.zeros_like(uv)
-
-    # --- 6) ציור ---
-    ann = img.copy()
-    print("🖼️ Drawing final annotations...")
-
-    # ציור כדורים
-    for i, ball in enumerate(balls_data):
-        t = types[i]
-        color = (0, 255, 0)
-        if t == "white":
-            color = (255, 255, 0)
-        elif t == "black":
-            color = (255, 0, 255)
-        cx, cy = map(int, centers[i])
-        cv2.circle(ann, (cx, cy), 10, color, 2)
-        cv2.putText(ann, t, (cx + 5, cy - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
-
-    # ציור כיסים
-    for name, (px, py) in six.items():
-        cv2.circle(ann, (int(px), int(py)), 8, (0, 128, 255), 2)
-        cv2.putText(
-            ann, name, (int(px) + 6, int(py) - 6),
-            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 128, 255), 1,
-        )
-
-    # ציור origin
-    cv2.circle(ann, (int(blx), int(bly)), int(blr), (0, 165, 255), 2)
-    cv2.putText(
-        ann, "Origin (BL)", (int(blx) + 6, int(bly) - 6),
-        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 165, 255), 2,
-    )
-
-
-    # --- 7) בניית JSON ---
+    # === 3) בניית רשימת כדורים ===
     balls_json = []
-    for i, ((cx, cy), t) in enumerate(zip(centers, types)):
-        print("Processing ball", i, "type", t, "center", (cx, cy))  
-        print("white" , white_ball)
-        if (cx == white_ball["x"]) and (cy == white_ball["y"]):
-            print("This is the white ball")
-            t = "white"
+    for i, ball in enumerate(balls_data):
+        cx, cy = map(float, ball.center)
+        color_type = getattr(ball, "final_color", "unknown")
 
-        if (cx == black_ball["x"]) and (cy == black_ball["y"]):
-            print("This is the black ball")
-            t = "black"
+        if white_ball and (cx == white_ball.center[0] and cy == white_ball.center[1]):
+            color_type = "white"
+        elif black_ball and (cx == black_ball.center[0] and cy == black_ball.center[1]):
+            color_type = "black"
 
-        rec = {
+        record = {
             "index": i,
-            "type": t,
-            "center_px": {"x": float(cx), "y": float(cy)},
-            "rel_to_BL_px": {"x": float(cx - blx), "y": float(bly - cy)},
+            "type": color_type,
+            "center_px": {"x": cx, "y": cy},
+            "radius_px": float(ball.radius),
         }
-        if uv_norm.size > 0:
-            rec["table_uv"] = {"u": float(uv_norm[i, 0]), "v": float(uv_norm[i, 1])}
-            rec["table_xy_units"] = {"x": float(uv[i, 0]), "y": float(uv[i, 1])}
-        balls_json.append(rec)
+        balls_json.append(record)
 
+    # === 4) בניית מיקומי כיסים מתוך ה־table_pockets ===
+    pockets_json = {}
+    for pocket in all_pockets.pocket_list:
+        label = pocket.pocket_loacation_on_table
+        pockets_json[label] = {
+            "x": float(pocket.pocket_img_cordinates_on_table[0]),
+            "y": float(pocket.pocket_img_cordinates_on_table[1]),
+            "radius": float(pocket.pocker_radius),
+        }
+
+    # === 5) יצירת התוצאה הסופית ===
     result = {
         "image_path": IMAGE_PATH,
-        "origin_px": {"x": float(blx), "y": float(bly)},
-        "pockets_px": {k: {"x": float(v[0]), "y": float(v[1])} for k, v in six.items()},
-        "table_rect_units": {"width": 2.0, "height": 1.0},
-        "homography_img2table": H_img2tab.tolist() if H_img2tab is not None else None,
-        "table_size_px": {"width_px": float(W), "height_px": float(H)},
+        "image_size_px": {"width": float(W), "height": float(H)},
         "balls": balls_json,
-        "white_ball": {"x": float(white_ball["x"]), "y": float(white_ball["y"])} if white_ball else None,
-        "black_ball": {"x": float(black_ball["x"]), "y": float(black_ball["y"])} if black_ball else None,
+        "white_ball": asdict(white_ball) if white_ball else None,
+        "black_ball": asdict(black_ball) if black_ball else None,
+        "pockets": pockets_json,
     }
 
+    # === 6) כתיבה ל־JSON ===
     os.makedirs(os.path.dirname(OUTPUT_JSON_PATH), exist_ok=True)
     with open(OUTPUT_JSON_PATH, "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
 
-    print(f"[✅] Analysis JSON saved to:  {OUTPUT_JSON_PATH}")
-
+    Debugger.log(f"✅ JSON saved successfully → {OUTPUT_JSON_PATH}")
     return result
-
-
 
 # =========================================================
 #                         MAIN

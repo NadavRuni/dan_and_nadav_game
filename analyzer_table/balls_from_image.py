@@ -8,8 +8,10 @@ from typing import Tuple, List, Optional
 import cv2
 import numpy as np
 import os
-from analyzer_table.launcher_helper.json_models import Ball
+from analyzer_table.launcher_helper.json_models import Ball , table_pockets , AnalyzerResult
 from analyzer_table.ball_from_image_helper import crop_and_save_balls 
+from analyzer_table.launcher_helper.pocket.pocket_detect import analyze_table_pockets
+from analyzer_table.launcher_helper.pocket.pocket_cycle import mark_pocket_circles
 
 
 
@@ -77,7 +79,7 @@ def analyze_ball_brightness(image_path: str, balls: List[Ball], output_dir: str 
 
 from typing import List, Tuple, Optional
 
-def full_analyzer_pipeline(image_path: str) -> Tuple[List[Ball], Optional[Ball], Optional[Ball]]:
+def full_analyzer_pipeline(image_path: str) -> AnalyzerResult:
     """
     🧩 פונקציה מרכזית שמריצה את כל תהליך הזיהוי והמיזוג.
     קלט:  נתיב לתמונה אחת.
@@ -93,6 +95,11 @@ def full_analyzer_pipeline(image_path: str) -> Tuple[List[Ball], Optional[Ball],
     sub_photos, main_photo = run_full_analysis(image_path)
     black_and_white_ball_list = run_ball_detection(image_path)
     table_rectangle = find_table_rectangle(image_path)
+  
+    
+    all_pocket : table_pockets = analyze_table_pockets(image_path, table_rectangle)
+  
+    
 
     if not sub_photos or not main_photo:
         Debugger.error("❌ Analysis failed or no data returned.")
@@ -106,7 +113,8 @@ def full_analyzer_pipeline(image_path: str) -> Tuple[List[Ball], Optional[Ball],
 
     # שלב 3: ציור סופי
     output_final_path = os.path.join(out_dir, "final_detected.png")
-    draw_balls_on_image(merged_photo, image_path, output_final_path, table_rectangle)
+
+    draw_balls_on_image(merged_photo, image_path, output_final_path, table_rectangle , all_pockets=all_pocket)
     Debugger.log(f"🖼️ Final image saved to {output_final_path}")
 
     # שלב 4: מיון וסיכום
@@ -128,6 +136,7 @@ def full_analyzer_pipeline(image_path: str) -> Tuple[List[Ball], Optional[Ball],
     white_ball ,black_ball =analyze_ball_brightness(image_path, sorted_balls, os.path.join(out_dir, "balls"))
 
 
+
     if white_ball:
         Debugger.log(f"⚪ White ball found at {white_ball.center}")
     else:
@@ -137,24 +146,17 @@ def full_analyzer_pipeline(image_path: str) -> Tuple[List[Ball], Optional[Ball],
         Debugger.log(f"⚫ Black ball found at {black_ball.center}")
     else:
         Debugger.warn("⚫ Black ball not found")
+    
+    analyzerResult = AnalyzerResult(
+        Pockets=all_pocket,
+        balls=sorted_balls,
+        black=black_ball,
+        white=white_ball,
+    )
+    return analyzerResult
 
-    return {
-    "balls": sorted_balls,
-    "black": {
-        "x": float(black_ball.center[0]),
-        "y": float(black_ball.center[1]),
-    } if black_ball else None,
-    "white": {
-        "x": float(white_ball.center[0]),
-        "y": float(white_ball.center[1]),
-    } if white_ball else None,
-    "table_box": {
-        "top_left": table_rectangle.top_left,
-        "top_right": table_rectangle.top_right,
-        "bottom_left": table_rectangle.bottom_left,
-        "bottom_right": table_rectangle.bottom_right,
-    },
-}
+    
+
 
 
 
