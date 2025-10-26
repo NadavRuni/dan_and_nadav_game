@@ -514,17 +514,13 @@ def image_recognizer(IMAGE_PATH: str) -> dict:
         cx, cy = map(float, ball.center)
         color_type = getattr(ball, "final_color", "unknown")
 
-        if white_ball and (cx == white_ball.center[0] and cy == white_ball.center[1]):
-            color_type = "white"
-        elif black_ball and (cx == black_ball.center[0] and cy == black_ball.center[1]):
-            color_type = "black"
-
         record = {
             "index": i,
             "type": color_type,
             "center_px": {"x": cx, "y": cy},
             "radius_px": float(ball.radius),
         }
+        print("record", record)
         balls_json.append(record)
 
     # === 4) בניית מיקומי כיסים מתוך ה־table_pockets ===

@@ -12,9 +12,17 @@ from analyzer_table.launcher_helper.json_models import Ball , table_pockets , An
 from analyzer_table.ball_from_image_helper import crop_and_save_balls 
 from analyzer_table.launcher_helper.pocket.pocket_detect import analyze_table_pockets
 from analyzer_table.launcher_helper.pocket.pocket_cycle import mark_pocket_circles
+from analyzer_table.predict.models.predict import update_undefined_balls
 
 
 
+
+def insert_black_and_white_balls(balls: List[Ball], black_ball: Ball, white_ball: Ball) :
+    for ball in balls:
+        if ball.center == black_ball.center :
+            ball.final_color = "black"
+        elif ball.center == white_ball.center :
+            ball.final_color = "white"
 
 
 def analyze_ball_brightness(image_path: str, balls: List[Ball], output_dir: str = "out/balls") -> Tuple[Optional[Ball], Optional[Ball]]:
@@ -134,7 +142,10 @@ def full_analyzer_pipeline(image_path: str) -> AnalyzerResult:
 
     # שלב 5: זיהוי הכדור הלבן והשחור
     white_ball ,black_ball =analyze_ball_brightness(image_path, sorted_balls, os.path.join(out_dir, "balls"))
-
+ 
+    
+    insert_black_and_white_balls(sorted_balls, black_ball, white_ball) 
+    update_undefined_balls(sorted_balls)
 
 
     if white_ball:
@@ -153,6 +164,7 @@ def full_analyzer_pipeline(image_path: str) -> AnalyzerResult:
         black=black_ball,
         white=white_ball,
     )
+    Debugger.log("✅ Full analyzer pipeline completed successfully.")
     return analyzerResult
 
     

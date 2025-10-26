@@ -5,25 +5,7 @@ from torchvision import models, transforms
 from PIL import Image
 from dataclasses import dataclass
 from typing import Tuple, List
-
-# ===========================
-# ⚙️ מחלקות נתונים
-# ===========================
-@dataclass
-class Ball_Color:
-    WHITE = "white"
-    BLACK = "black"
-    SOLID = "solid"
-    STRIPED = "striped"
-    UNDEFINED = "undefined"
-
-@dataclass
-class Ball:
-    center: Tuple[int, int]
-    radius: int
-    single_ball_path: str = ""
-    final_color: str = Ball_Color.UNDEFINED
-
+from analyzer_table.launcher_helper.json_models import Ball_Color , Ball
 
 # ===========================
 # 🧠 פונקציה אחת - עדכון כדורים
@@ -36,7 +18,7 @@ def update_undefined_balls(balls: List[Ball]) -> None:
       והכרעה בין solid / striped
     """
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    MODELS_DIR = os.path.join(BASE_DIR, "models")
+    MODELS_DIR = os.path.join(BASE_DIR)
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     MODEL_WEIGHTS = {

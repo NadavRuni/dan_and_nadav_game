@@ -7,7 +7,7 @@
   "balls": [
     {
       "index": 0,
-      "type": "undefined",
+      "type": "solid",
       "center_px": {
         "x": 238.0,
         "y": 334.0
@@ -16,7 +16,7 @@
     },
     {
       "index": 1,
-      "type": "undefined",
+      "type": "striped",
       "center_px": {
         "x": 507.0,
         "y": 537.0
@@ -25,7 +25,7 @@
     },
     {
       "index": 2,
-      "type": "undefined",
+      "type": "striped",
       "center_px": {
         "x": 556.0,
         "y": 286.0
@@ -43,7 +43,7 @@
     },
     {
       "index": 4,
-      "type": "undefined",
+      "type": "striped",
       "center_px": {
         "x": 571.0,
         "y": 369.0
@@ -52,7 +52,7 @@
     },
     {
       "index": 5,
-      "type": "undefined",
+      "type": "striped",
       "center_px": {
         "x": 748.0,
         "y": 154.0
@@ -61,7 +61,7 @@
     },
     {
       "index": 6,
-      "type": "undefined",
+      "type": "striped",
       "center_px": {
         "x": 852.0,
         "y": 366.0
@@ -70,7 +70,7 @@
     },
     {
       "index": 7,
-      "type": "undefined",
+      "type": "striped",
       "center_px": {
         "x": 896.0,
         "y": 594.0
@@ -88,7 +88,7 @@
     },
     {
       "index": 9,
-      "type": "undefined",
+      "type": "solid",
       "center_px": {
         "x": 996.0,
         "y": 414.0
@@ -97,7 +97,7 @@
     },
     {
       "index": 10,
-      "type": "undefined",
+      "type": "solid",
       "center_px": {
         "x": 1001.0,
         "y": 140.0
@@ -106,7 +106,7 @@
     },
     {
       "index": 11,
-      "type": "undefined",
+      "type": "striped",
       "center_px": {
         "x": 1014.0,
         "y": 352.0
@@ -115,7 +115,7 @@
     },
     {
       "index": 12,
-      "type": "undefined",
+      "type": "solid",
       "center_px": {
         "x": 1042.0,
         "y": 444.0
@@ -124,7 +124,7 @@
     },
     {
       "index": 13,
-      "type": "undefined",
+      "type": "solid",
       "center_px": {
         "x": 1104.0,
         "y": 550.0
@@ -133,7 +133,7 @@
     },
     {
       "index": 14,
-      "type": "undefined",
+      "type": "solid",
       "center_px": {
         "x": 1184.0,
         "y": 104.0
@@ -177,7 +177,7 @@
         "striped_score_test_5": 0.0
       }
     },
-    "final_color": "undefined",
+    "final_color": "white",
     "single_ball_path": "out/balls/ball_9_918_342.png"
   },
   "black_ball": {
@@ -216,7 +216,7 @@
         "striped_score_test_5": 0.0
       }
     },
-    "final_color": "undefined",
+    "final_color": "black",
     "single_ball_path": "out/balls/ball_4_566_94.png"
   },
   "pockets": {

@@ -47,6 +47,8 @@ def build_table_from_analysis(analysis: dict):
     balls = []
     next_id = 1
     used_ids = set([0, 8])
+    print("[build] building table from analysis...")
+    print (analysis.get("balls", []))
 
     for b in analysis.get("balls", []):
         btype = b.get("type", "other")
@@ -54,55 +56,49 @@ def build_table_from_analysis(analysis: dict):
 
         x_game = y_game = None
 
-        # ---- עדיפות 1: table_uv (הכי מדויק כי כבר תוקנה פרספקטיבה) ----
-        uv = b.get("table_uv")
-        if uv is not None and "u" in uv and "v" in uv:
-            has_uv = True
-            u = float(uv["u"])
-            v = float(uv["v"])
-            # מערכת המשחק היא Bottom-Left, וה-uv הגיעו עם Top-Left ⇒ להפוך את v
-            x_game = u * TABLE_LENGTH
-            y_game = (1.0 - v) * TABLE_WIDTH
-            x_game = clamp_to_table(x_game, TABLE_LENGTH)
-            y_game = clamp_to_table(y_game, TABLE_WIDTH)
-
-        # ---- עדיפות 2: rel_to_BL_px (מה-pipeline החדש; Δ מ-BL בפיקסלים) ----
-        if x_game is None or y_game is None:
-            rel = b.get("rel_to_BL_px")
-            if rel is not None and ("x" in rel and "y" in rel):
-                x_px = float(rel["x"])
-                y_px = float(rel["y"])
-                x_game = clamp_to_table(x_px * sx, TABLE_LENGTH)
-                y_game = clamp_to_table(y_px * sy, TABLE_WIDTH)
-
-        # ---- עדיפות 3: x_px/y_px (תמיכה לאחור ב-JSON הישן) ----
-        if (x_game is None or y_game is None) and ("x_px" in b and "y_px" in b):
-            x_px = float(b["x_px"])
-            y_px = float(b["y_px"])
-            x_game = clamp_to_table(x_px * sx, TABLE_LENGTH)
-            y_game = clamp_to_table(y_px * sy, TABLE_WIDTH)
-
-        # ---- עדיפות 4: center_px + origin_px (נבנה Δ עצמאית אם צריך) ----
-        if (x_game is None or y_game is None) and (
-            "center_px" in b and "origin_px" in analysis
-        ):
+                # ---- עדיפות 4 (חדשה): center_px בלבד ----
+        if (x_game is None or y_game is None) and "center_px" in b:
+            # נשלוף את מיקום הכדור במערכת הפיקסלים
             cx = float(b["center_px"]["x"])
             cy = float(b["center_px"]["y"])
-            ox = float(analysis["origin_px"]["x"])
-            oy = float(analysis["origin_px"]["y"])
-            x_px = cx - ox
-            y_px = oy - cy  # ציר Y הפוך בפיקסלים → למעלה חיובי
-            x_game = clamp_to_table(x_px * sx, TABLE_LENGTH)
-            y_game = clamp_to_table(y_px * sy, TABLE_WIDTH)
+
+            # --- נחשב סקלות המרה אם לא חושבו קודם ---
+            # נשתמש תחילה בגבולות מהכיסים אם קיימים (מדויק יותר)
+            pockets = analysis.get("pockets", {})
+            if pockets and "BL" in pockets and "TR" in pockets:
+                x_min = pockets["BL"]["x"]
+                y_min = pockets["TR"]["y"]
+                x_max = pockets["TR"]["x"]
+                y_max = pockets["BL"]["y"]
+
+                table_width_px = x_max - x_min
+                table_height_px = y_max - y_min
+
+                sx = TABLE_LENGTH / max(1.0, table_width_px)
+                sy = TABLE_WIDTH / max(1.0, table_height_px)
+
+                # נחשב מיקום יחסי לפי גבולות השולחן
+                x_game = clamp_to_table((cx - x_min) * sx, TABLE_LENGTH)
+                # ציר Y בפיקסלים הפוך, לכן נשתמש ב־(y_max - cy)
+                y_game = clamp_to_table((y_max - cy) * sy, TABLE_WIDTH)
+
+                print(f"[build] using pocket-based mapping for ball id={bid}")
+            else:
+                # fallback — אם אין מידע על כיסים
+                sx = TABLE_LENGTH / max(1.0, width_px)
+                sy = TABLE_WIDTH / max(1.0, height_px)
+
+                # נשתמש בהיפוך פשוט של הציר האנכי
+                x_game = clamp_to_table(cx * sx, TABLE_LENGTH)
+                y_game = clamp_to_table((height_px - cy) * sy, TABLE_WIDTH)
+
+                print(f"[build] using fallback image-size mapping for ball id={bid}")
+
 
         # אם עדיין אין ערכים — דלג על הכדור
         if x_game is None or y_game is None:
+            print(f"[build] warning: skipping ball id={bid} due to missing position")
             continue
-
-        # מזהה/טיפוס
-        if btype != "white" and btype != "black":
-            used_ids.add(bid)
-            btype = "solid"
 
         balls.append(
             Ball(
@@ -113,6 +109,8 @@ def build_table_from_analysis(analysis: dict):
                 radius=BALL_RADIUS,
             )
         )
+        print (f"[build] added ball id={bid}, type={btype}, pos=({x_game:.1f}, {y_game:.1f}")
+        
 
     # אפשרי: לוג קטן כדי להבין באיזה נתיב השתמשנו
     if has_uv:
@@ -126,9 +124,12 @@ def build_table_from_analysis(analysis: dict):
 def start_build_table_from_img():
 
     analysis = load_analysis(OUTPUT_JSON_PATH)
+    print(f"Loaded analysis from {OUTPUT_JSON_PATH}")
     
     table = build_table_from_analysis(analysis)
     print(f"Built table with {len(table.balls)} balls from {OUTPUT_JSON_PATH}")
+    draw_table(table)
+
     game = GameAnalayzer(table)
     best_shot = game.find_best_overall_shot("solid")
     if len(best_shot) > 0:

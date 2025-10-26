@@ -21,13 +21,20 @@ class LineDrawer:
         if not self.input_path or not os.path.exists(self.input_path):
             raise FileNotFoundError(f"❌ image not found: {self.input_path}")
 
-        self.origin_px = (float(meta["origin_px"]["x"]), float(meta["origin_px"]["y"]))
+        origin_data = meta.get("origin_px")
+        if origin_data:
+            self.origin_px = (float(origin_data["x"]), float(origin_data["y"]))
+        else:
+            # fallback — נשתמש בנקודת התחלה (0,0)
+            self.origin_px = (0.0, 0.0)
+            print("[LineDrawer] ⚠️ Missing origin_px in JSON, using (0,0) as fallback")
         self.table_rect_units = meta.get(
             "table_rect_units", {"width": 2.0, "height": 1.0}
         )
         self.balls = meta.get("balls", [])
         print("[DEBUG] Loaded balls:", [b["index"] for b in self.balls])
-        self.pockets = meta.get("pockets_px", {})
+        self.pockets = meta.get("pockets", {})
+        print("[DEBUG] Loaded pockets:", self.pockets.keys())
 
         # ✅ טוען את הגודל של השולחן בפיקסלים
         self.table_size_px = meta.get("table_size_px", {"width_px": 0, "height_px": 0})
@@ -51,8 +58,12 @@ class LineDrawer:
     def get_pocket_px(self, pocket_id: int) -> Tuple[float, float] | None:
         """מאחזר מיקום כיס לפי id (0..5)."""
         mapping = ["BL", "BR", "TR", "TL", "BM", "TM"]
+        print("Getting pocket px for pocket_id:", pocket_id)
         if 0 <= pocket_id < len(mapping):
             name = mapping[pocket_id]
+            print("Mapped pocket name:", name)
+            print ("Available pockets:", self.pockets.keys())
+            print ("Pocket data:", self.pockets[name])
             if name in self.pockets and self.pockets[name]:
                 return (self.pockets[name]["x"], self.pockets[name]["y"])
         return None
@@ -142,8 +153,11 @@ class LineDrawer:
         חותך (zoom-in) סביב הכדור המטרה ושומר לנתיב OUTPUT_CONTACT_VIEW_PATH.
         """
         # נקודות פיקסלים
+        print("Drawing contact-to-pocket point...")
         target_px = self.get_ball_px(self.best_shot.target.id)
+        print("target_px", target_px)
         pocket_px = self.get_pocket_px(self.best_shot.pocket.id)
+        print("pocket_px", pocket_px)
 
         if not target_px or not pocket_px:
             raise ValueError("❌ Missing target or pocket positions for contact hit")
