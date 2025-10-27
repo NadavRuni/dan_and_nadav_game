@@ -29,3 +29,7 @@ OUTPUT_IMAGE_PATH = Path("photos/output/img.png")
 OUTPUT_CONTACT_VIEW_PATH = Path("photos/output/img_contact.png")
 
 FORSE_WALL_SHOT = False
+
+
+
+MIN_CONFIDENCE = 40 
