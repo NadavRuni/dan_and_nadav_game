@@ -3,7 +3,7 @@ from ultralytics import YOLO
 import numpy as np
 import os, json
 from const_numbers import OUTPUT_JSON_PATH
-from analyzer_table.balls_from_image import full_analyzer_pipeline
+from analyzer_table.balls_from_image import full_analyzer_pipeline 
 
 
 
@@ -21,8 +21,7 @@ MAX_BALLS = 16
 MIN_RADIUS_REL = 0.010
 MIN_RADIUS_PX_OVERRIDE = None
 
-POCKET_INCLUSION_FACTOR = 1.05  # factor for pocket inclusion
-
+POCKET_INCLUSION_FACTOR = 1.05  # factor for pocket inclusionע
 
 # ---------------- Utils ----------------
 def iou_xyxy(a, b):
