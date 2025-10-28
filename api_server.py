@@ -115,6 +115,19 @@ async def get_image(path: str):
         return JSONResponse({"error": f"Image not found: {file_path}"}, status_code=404)
     return FileResponse(str(file_path))
 
+@app.get("/api/get_output")
+async def get_output():
+    if OUTPUT_IMAGE_PATH.exists():
+        return {"output_url": f"/static/{OUTPUT_IMAGE_PATH.name}"}
+    return {"error": "No output image found"}
+
+@app.get("/api/get_output_contact")
+async def get_output_contact():
+    if OUTPUT_CONTACT_VIEW_PATH.exists():
+        return {"output_url": f"/static/{OUTPUT_CONTACT_VIEW_PATH.name}"}
+    return {"error": "No output contact image found"}
+
+
 
 # Static
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")

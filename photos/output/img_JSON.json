@@ -1,154 +1,41 @@
 {
-  "image_path": "uploads/test3.jpeg",
+  "image_path": "uploads/test1.jpeg",
   "image_size_px": {
-    "width": 5432.0,
-    "height": 3337.0
+    "width": 3578.0,
+    "height": 1986.0
   },
-  "balls": [
-    {
-      "index": 0,
-      "type": "solid",
-      "center_px": {
-        "x": 1690.0,
-        "y": 1450.0
-      },
-      "radius_px": 60.0
-    },
-    {
-      "index": 1,
-      "type": "white",
-      "center_px": {
-        "x": 1982.0,
-        "y": 2122.0
-      },
-      "radius_px": 54.0
-    },
-    {
-      "index": 2,
-      "type": "black",
-      "center_px": {
-        "x": 2534.0,
-        "y": 1400.0
-      },
-      "radius_px": 56.0
-    },
-    {
-      "index": 3,
-      "type": "solid",
-      "center_px": {
-        "x": 2722.0,
-        "y": 2218.0
-      },
-      "radius_px": 55.0
-    }
-  ],
-  "white_ball": {
-    "center": [
-      1982,
-      2122
-    ],
-    "radius": 54,
-    "color_score": {
-      "white_score": {
-        "white_score_test_1": 0.0,
-        "white_score_test_2": 0.0,
-        "white_score_test_3": 0.0,
-        "white_score_test_4": 0.0,
-        "white_score_test_5": 0.0
-      },
-      "black_score": {
-        "black_score_test_1": 0.0,
-        "black_score_test_2": 0.0,
-        "black_score_test_3": 0.0,
-        "black_score_test_4": 0.0,
-        "black_score_test_5": 0.0
-      },
-      "solid_score": {
-        "solid_score_test_1": 0.0,
-        "solid_score_test_2": 0.0,
-        "solid_score_test_3": 0.0,
-        "solid_score_test_4": 0.0,
-        "solid_score_test_5": 0.0
-      },
-      "striped_score": {
-        "striped_score_test_1": 0.0,
-        "striped_score_test_2": 0.0,
-        "striped_score_test_3": 0.0,
-        "striped_score_test_4": 0.0,
-        "striped_score_test_5": 0.0
-      }
-    },
-    "final_color": "white",
-    "single_ball_path": "out/balls/ball_2_1982_2122.png"
-  },
-  "black_ball": {
-    "center": [
-      2534,
-      1400
-    ],
-    "radius": 56,
-    "color_score": {
-      "white_score": {
-        "white_score_test_1": 0.0,
-        "white_score_test_2": 0.0,
-        "white_score_test_3": 0.0,
-        "white_score_test_4": 0.0,
-        "white_score_test_5": 0.0
-      },
-      "black_score": {
-        "black_score_test_1": 0.0,
-        "black_score_test_2": 0.0,
-        "black_score_test_3": 0.0,
-        "black_score_test_4": 0.0,
-        "black_score_test_5": 0.0
-      },
-      "solid_score": {
-        "solid_score_test_1": 0.0,
-        "solid_score_test_2": 0.0,
-        "solid_score_test_3": 0.0,
-        "solid_score_test_4": 0.0,
-        "solid_score_test_5": 0.0
-      },
-      "striped_score": {
-        "striped_score_test_1": 0.0,
-        "striped_score_test_2": 0.0,
-        "striped_score_test_3": 0.0,
-        "striped_score_test_4": 0.0,
-        "striped_score_test_5": 0.0
-      }
-    },
-    "final_color": "black",
-    "single_ball_path": "out/balls/ball_3_2534_1400.png"
-  },
+  "balls": [],
+  "white_ball": null,
+  "black_ball": null,
   "pockets": {
     "TL": {
-      "x": 168.0,
-      "y": 388.0,
+      "x": 507.0,
+      "y": 229.0,
       "radius": 30.0
     },
     "TM": {
-      "x": 2713.0,
-      "y": 534.0,
+      "x": 1885.0,
+      "y": 301.0,
       "radius": 30.0
     },
     "TR": {
-      "x": 5258.0,
-      "y": 680.0,
+      "x": 3264.0,
+      "y": 373.0,
       "radius": 30.0
     },
     "BL": {
-      "x": 242.0,
-      "y": 2776.0,
+      "x": 227.0,
+      "y": 1566.0,
       "radius": 30.0
     },
     "BM": {
-      "x": 2600.0,
-      "y": 2870.0,
+      "x": 1769.0,
+      "y": 1692.0,
       "radius": 30.0
     },
     "BR": {
-      "x": 4959.0,
-      "y": 2965.0,
+      "x": 3312.0,
+      "y": 1818.0,
       "radius": 30.0
     }
   }
