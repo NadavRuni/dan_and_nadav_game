@@ -166,9 +166,48 @@ def full_analyzer_pipeline(image_path: str) -> AnalyzerResult:
 
 
     #dan all data!!!!
+    from analyzer_table.ball_type_score.build_suites import (
+    build_white_suite, build_black_suite
+    )
+    from analyzer_table.ball_type_score.run_scores import score_balls
+    from analyzer_table.launcher_helper.score_helper.common import _white_avg, _black_avg, assert_scored
 
 
+    white_suite = build_white_suite() # test suite for white balls
+    black_suite = build_black_suite() # test suite for black balls
+    #solid_suite = build_solid_suite() # test suite for solid balls
+    #striped_suite = build_striped_suite() # test suite for striped balls
 
+    score_balls(sorted_balls, white_suite, black_suite)
+    assert_scored(sorted_balls)
+
+
+    ### יצירת תיקייה לשמירת כדורים
+    ### בשביל לבדוק את הכדורים הלבנים והשחורים
+     ### for debug 
+    out_balls_dir = os.path.join(out_dir, "balls")
+    os.makedirs(out_balls_dir, exist_ok=True)
+    
+    whitest_ball = max(sorted_balls, key=_white_avg, default=None)
+    blackest_ball = max(sorted_balls, key=_black_avg, default=None)
+
+
+    if whitest_ball and os.path.exists(whitest_ball.single_ball_path):
+        whitest_img = cv2.imread(whitest_ball.single_ball_path, cv2.IMREAD_COLOR)
+        if whitest_img is not None:
+            cv2.imwrite(os.path.join(out_balls_dir, "white.png"), whitest_img)
+            Debugger.log(f"✅ Saved whitest ball image to {os.path.join(out_balls_dir, 'white.png')}")
+
+    if blackest_ball and os.path.exists(blackest_ball.single_ball_path):
+        blackest_img = cv2.imread(blackest_ball.single_ball_path, cv2.IMREAD_COLOR)
+        if blackest_img is not None:
+            cv2.imwrite(os.path.join(out_balls_dir, "black.png"), blackest_img)
+            Debugger.log(f"✅ Saved blackest ball image to {os.path.join(out_balls_dir, 'black.png')}")
+
+   
+##########################################################################################################################################################################################
+
+    
     # שלב 5: זיהוי הכדור הלבן והשחור
     white_ball ,black_ball =analyze_ball_brightness(image_path, sorted_balls, os.path.join(out_dir, "balls"))
  
@@ -177,13 +216,13 @@ def full_analyzer_pipeline(image_path: str) -> AnalyzerResult:
     update_undefined_balls(sorted_balls)
 
 
-    if white_ball:
-        Debugger.log(f"⚪ White ball found at {white_ball.center}")
+    if whitest_ball:
+        Debugger.log(f"⚪ White ball found at {whitest_ball.center}")
     else:
         Debugger.warn("⚪ White ball not found")
 
-    if black_ball:
-        Debugger.log(f"⚫ Black ball found at {black_ball.center}")
+    if blackest_ball:
+        Debugger.log(f"⚫ Black ball found at {blackest_ball.center}")
     else:
         Debugger.warn("⚫ Black ball not found")
     

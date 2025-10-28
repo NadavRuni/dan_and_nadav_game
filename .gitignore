@@ -214,3 +214,14 @@ yolov8n.pt
 **.yaml
 **.cache
 uploads/**
+Billiard-Balls--1/
+out/balls/
+analyzer_table/out/
+Billiard-Balls--1/
+out/balls/
+analyzer_table/out/
+Billiard-Balls--1/
+out/balls/
+analyzer_table/out/
+Billiard-Balls--1/
+out/
