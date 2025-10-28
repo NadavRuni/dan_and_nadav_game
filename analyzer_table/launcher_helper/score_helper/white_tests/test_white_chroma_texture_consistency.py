@@ -18,7 +18,7 @@ def run(ball: Ball) -> float:
     if img is None:
         return 0.0
     
-    mask = get_circle_mask(img)
+    mask = get_circle_mask(img,ball.center, ball.radius)
     if np.count_nonzero(mask) == 0:
         return 0.0
 

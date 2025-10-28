@@ -29,20 +29,31 @@ def preprocess_roi(roi_gray):
     return blur
 
 
-def edge_support_ratio(edges, cx, cy, r, step_deg=10, tol=2.5):
-    """בודק כמה מהנקודות על ההיקף באמת נופלות על קצוות"""
-    H, W = edges.shape[:2]
-    ok, total = 0, 0
-    for a in range(0, 360, step_deg):
-        total += 1
-        rad = np.deg2rad(a)
-        x = int(cx + r * np.cos(rad))
-        y = int(cy + r * np.sin(rad))
-        x1, y1 = max(0, x - int(tol)), max(0, y - int(tol))
-        x2, y2 = min(W - 1, x + int(tol)), min(H - 1, y + int(tol))
-        if edges[y1:y2 + 1, x1:x2 + 1].max() > 0:
-            ok += 1
-    return ok / max(1, total)
+def edge_support_ratio(edges, cx, cy, r):
+    # edges: תמונת קצוות בינארית (numpy array)
+    h, w = edges.shape[:2]
+    r = int(max(1, r))
+    cx, cy = int(cx), int(cy)
+
+    # חלון קטן מסביב למעגל
+    pad = 1
+    x1 = max(0, cx - r - pad)
+    x2 = min(w - 1, cx + r + pad)
+    y1 = max(0, cy - r - pad)
+    y2 = min(h - 1, cy + r + pad)
+
+    # אם החלון לא תקין/ריק – אין תמיכה
+    if x2 < x1 or y2 < y1:
+        return 0.0
+
+    roi = edges[y1:y2+1, x1:x2+1]
+    if roi.size == 0:
+        return 0.0
+    if roi.max() == 0:
+        return 0.0
+
+    support_ratio = float(roi.sum() > 0)  # או roi.mean()/255 אם edges הוא 0/255
+    return support_ratio
 
 
 def refine_with_hough(gray, x, y, w, h, pad=20):
@@ -55,6 +66,8 @@ def refine_with_hough(gray, x, y, w, h, pad=20):
     roi = gray[y1:y2, x1:x2]
     if roi.size == 0:
         return None
+    if roi.max() ==0:
+        return 0.0
 
     roi_prep = preprocess_roi(roi)
     edges = cv2.Canny(roi_prep, 60, 160)
