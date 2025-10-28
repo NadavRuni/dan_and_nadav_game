@@ -10,7 +10,7 @@
       font-family: Arial, sans-serif;
       text-align: center;
       margin: 0;
-      overflow-x: hidden;
+      overflow-x: auto;
     }
 
     h1 {
@@ -30,7 +30,8 @@
       box-shadow: 0 0 20px rgba(0,255,100,0.6);
       border-radius: 10px;
       cursor: crosshair;
-      max-width: 90vw;
+      /* ✅ רק תצוגת max-width כדי לא לפגוע ביחס, הקנבס עצמו נשאר בגודל מלא */
+      max-width: 95vw;
       height: auto;
     }
 
@@ -116,32 +117,33 @@
     img.onload = () => {
       console.log("🖼 Image loaded:", img.width, "x", img.height);
 
-      // ✅ הגבלת גודל עם שמירה על יחס
-      const MAX_WIDTH = 900;
-      const scale = Math.min(1, MAX_WIDTH / img.width);
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
+      // ❗ לא נוגעים ב-scale — שומרים גודל מלא
+      canvas.width = img.width;
+      canvas.height = img.height;
 
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      console.log(`📐 Applied scale = ${scale.toFixed(2)} (canvas: ${canvas.width}x${canvas.height})`);
+      ctx.drawImage(img, 0, 0);
+      console.log(`📐 Canvas size = ${canvas.width}x${canvas.height}`);
     };
 
     img.src = "/" + imagePath;
 
     canvas.addEventListener("click", (e) => {
       const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
+
       points.push({ x, y });
+      console.log(`🖱 Clicked at: (${x.toFixed(2)}, ${y.toFixed(2)})`);
       drawPoints();
     });
 
     function drawPoints() {
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
       ctx.fillStyle = "red";
       ctx.lineWidth = 3;
-      for (let i = 0; i < points.length; i++) {
-        const p = points[i];
+      for (const p of points) {
         ctx.beginPath();
         ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
         ctx.fill();
@@ -164,8 +166,7 @@
 
     function showLoading(show) {
       const overlay = document.getElementById("loading");
-      if (show) overlay.classList.add("active");
-      else overlay.classList.remove("active");
+      overlay.classList.toggle("active", show);
     }
 
     async function submitPoints() {

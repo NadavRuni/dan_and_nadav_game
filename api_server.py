@@ -6,10 +6,11 @@ from fastapi.middleware.cors import CORSMiddleware
 import shutil
 import asyncio
 import os
+import json
 from dan.detect_table_rectangle import detect_table_rectangle  # פונקציה חדשה
 from dan.pipe_Line import start_pipe_line
 from dan.build_table_from_image import start_build_table_from_img
-from const_numbers import OUTPUT_IMAGE_PATH, OUTPUT_CONTACT_VIEW_PATH
+from const_numbers import OUTPUT_IMAGE_PATH, OUTPUT_CONTACT_VIEW_PATH ,RECTANGLE_JSON_PATH
 
 app = FastAPI()
 # מחיקה אוטומטית של קובץ ניווט ישן בזמן עליית השרת
@@ -85,14 +86,17 @@ async def confirm_rectangle(data: dict):
     -> מריץ עכשיו את ה-pipeline המלא.
     """
     try:
-        rect_path = Path(BASE_DIR / "rectangles_cache.json")
-        rect_path.write_text(str(data), encoding="utf-8")
+        print("[DEBUG] Received rectangle confirmation data:", data)
+        rect_path = Path(BASE_DIR / RECTANGLE_JSON_PATH)
+        print("[DEBUG] Writing rectangle data to:", rect_path)
+        rect_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
         image_path = data.get("image_path")
         if not image_path:
             return JSONResponse({"error": "Missing image_path"}, status_code=400)
 
         # עכשיו נריץ את ה-pipeline המלא
+        print("[DEBUG] Starting full pipeline for image:", image_path)
         pipeline_result = await start_pipe_line(image_path)
         table_result = start_build_table_from_img()
 

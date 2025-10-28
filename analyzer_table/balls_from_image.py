@@ -1,3 +1,5 @@
+import json
+from pathlib import Path
 from analyzer_table.detect_ball.analyzer_runner import run_full_analysis
 from analyzer_table.detect_ball.merge_utils import mergeData
 from analyzer_table.detect_ball.draw_utils import draw_balls_on_image
@@ -14,6 +16,10 @@ from analyzer_table.launcher_helper.pocket.pocket_detect import analyze_table_po
 from analyzer_table.launcher_helper.pocket.pocket_cycle import mark_pocket_circles
 from analyzer_table.predict.models.predict import update_undefined_balls
 from analyzer_table.table.table import confirm_or_correct_rectangle
+from const_numbers import BASE_DIR, RECTANGLE_JSON_PATH
+from analyzer_table.launcher_helper.json_models import Rectangle
+from analyzer_table.table.rectangle import parse_rectangle_from_data
+
 
 
 
@@ -99,16 +105,29 @@ def full_analyzer_pipeline(image_path: str) -> AnalyzerResult:
     base_dir = os.path.dirname(__file__)
     out_dir = os.path.join(base_dir, "out")
     os.makedirs(out_dir, exist_ok=True)
-    table_rectangle = find_table_rectangle(image_path)
-    table_rectangle = confirm_or_correct_rectangle(image_path, table_rectangle)
+
+    rect_path = Path(BASE_DIR / RECTANGLE_JSON_PATH)
+    if rect_path.exists():
+        try:
+            with open(rect_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            print(f"[DEBUG] Loaded existing data: {data}")
+
+            table_rectangle = parse_rectangle_from_data(data)
+        except Exception as e:
+            print(f"[DEBUG] Failed to read existing file ({e}), creating empty one.")
+            data = {}
+            table_rectangle = find_table_rectangle(image_path)
+
+    else:
+        print("[DEBUG] File not found — creating new rectangle.")
+        data = {}
+        table_rectangle = find_table_rectangle(image_path)
+
 
     # שלב 1: ניתוח מלא
     sub_photos, main_photo = run_full_analysis(image_path)
     black_and_white_ball_list = run_ball_detection(image_path)
-    table_rectangle = find_table_rectangle(image_path)
-
-
-    table_rectangle = confirm_or_correct_rectangle(image_path, table_rectangle)
 
     if table_rectangle is None:
         Debugger.error("❌ Table rectangle not confirmed or selected.")

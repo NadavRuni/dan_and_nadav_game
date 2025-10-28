@@ -5,8 +5,8 @@ import cv2
 import numpy as np
 
 # קבועים לקביעת גבולות מיזוג
-MERGE_MAX_X_DIFF = 15     # מרחק מותר בציר X
-MERGE_MAX_Y_DIFF = 15     # מרחק מותר בציר Y
+MERGE_MAX_X_DIFF = 50     # מרחק מותר בציר X
+MERGE_MAX_Y_DIFF = 50     # מרחק מותר בציר Y
 def mergeData(main_photo: PhotoData, sub_photos: list[PhotoData], black_and_white_list: list[Ball],  table_rectangle: Rectangle) -> PhotoData:
     """
     מאחד את כל הכדורים מהתמונה הראשית וכל שאר התמונות.
@@ -16,16 +16,24 @@ def mergeData(main_photo: PhotoData, sub_photos: list[PhotoData], black_and_whit
     Debugger.log("🔄 Starting mergeData process with table filtering")
 
     # === שלב 1: אתחול רשימת הכדורים מהתמונה הראשית ===
-    merged_balls = [Ball(center=b.center, radius=b.radius) for b in main_photo.balls]
+
+    main_balls = [Ball(center=b.center, radius=b.radius) for b in main_photo.balls]
+    merged_balls = []
+    for b in main_balls:
+        if not is_inside_table(b , table_rectangle):
+            Debugger.log(f"Skipping ball at {b.center} from main image (outside table)")
+            continue
+
+        if _ball_exists(merged_balls, b):
+            Debugger.log(f"Skipping duplicate ball at {b.center} from main image")
+            continue
+        Debugger.log(f"Adding ball at {b.center} with radius {b.radius} from main image")
+        merged_balls.append(Ball(center=b.center, radius=b.radius))
+
+
+
     Debugger.log(f"Initialized with {len(merged_balls)} balls from main image")
 
-    # === שלב 2: חישוב גבולות השולחן לפי המלבן ===
-    min_x = min(table_rectangle.top_left[0], table_rectangle.bottom_left[0])
-    max_x = max(table_rectangle.top_right[0], table_rectangle.bottom_right[0])
-    min_y = min(table_rectangle.top_left[1], table_rectangle.top_right[1])
-    max_y = max(table_rectangle.bottom_left[1], table_rectangle.bottom_right[1])
-
-        
     
     # === שלב 3: איחוד כל הכדורים משאר התמונות ===
     added, skipped, duplicates = 0, 0, 0
@@ -39,7 +47,7 @@ def mergeData(main_photo: PhotoData, sub_photos: list[PhotoData], black_and_whit
             if _ball_exists(merged_balls, b):
                 duplicates += 1
                 continue
-
+            Debugger.log(f"Adding ball at {b.center} with radius {b.radius} from sub-image")
             merged_balls.append(Ball(center=b.center, radius=b.radius))
             added += 1
 
@@ -95,50 +103,48 @@ def mergeData(main_photo: PhotoData, sub_photos: list[PhotoData], black_and_whit
 
 def _ball_exists(merged_balls: list[Ball], new_ball: Ball) -> bool:
     """בודק אם כדור כבר קיים (לפי קרבה גאומטרית ברדיוס ובמיקום)."""
-     
+
     for existing in merged_balls:
 
         dx = abs(existing.center[0] - new_ball.center[0])
         dy = abs(existing.center[1] - new_ball.center[1])
 
-
-
         # אם הם קרובים מאוד — נחשב אותו כדור
         if dx <= MERGE_MAX_X_DIFF and dy <= MERGE_MAX_Y_DIFF :
-
             return True
+        
     return False
 def is_inside_table(ball: Ball, rect: Rectangle) -> bool:
     """
-    בודקת אם כל הכדור נמצא בתוך גבולות המלבן.
-    מערכת OpenCV: (0,0) = שמאל-למעלה, Y גדל כלפי מטה.
+    בודקת אם מרכז הכדור נמצא בתוך המלבן (נטוי).
+    מבוסס על אלגוריתם Point-in-Polygon (ray casting).
     """
     x, y = ball.center
-    r = ball.radius
 
-    # --- גבולות לפי מערכת קואורדינטות של OpenCV ---
-    min_x = min(rect.top_left[0], rect.bottom_left[0])     # שמאל
-    max_x = max(rect.top_right[0], rect.bottom_right[0])   # ימין
-    min_y = min(rect.top_left[1], rect.top_right[1])       # למעלה
-    max_y = max(rect.bottom_left[1], rect.bottom_right[1]) # למטה
+    # 4 נקודות המלבן
+    polygon = [
+        rect.top_left,
+        rect.top_right,
+        rect.bottom_right,
+        rect.bottom_left
+    ]
 
+    # אלגוריתם ray casting
+    inside = False
+    n = len(polygon)
+    for i in range(n):
+        x1, y1 = polygon[i]
+        x2, y2 = polygon[(i + 1) % n]
+        if ((y1 > y) != (y2 > y)) and (x < (x2 - x1) * (y - y1) / (y2 - y1 + 1e-9) + x1):
+            inside = not inside
 
-# --- קבוע בטיחות (למשל 5 פיקסלים) ---
-    safety_margin = 10
-
-    # --- בדיקה שהכדור כולו בתוך הגבולות ---
-    inside_x = (min_x + r + safety_margin) < x < (max_x - r - safety_margin)
-    inside_y = (min_y + r + safety_margin) < y < (max_y - r - safety_margin)
-    inside = inside_x and inside_y
-
-    # 🎯 Debugging
     if inside:
-            Debugger.log(
-                f"🟢 INSIDE ball r={r} → center=({x}, {y}) | bounds X:[{min_x},{max_x}] Y:[{min_y},{max_y}]"
-            )
+        Debugger.log(
+            f"🟢 INSIDE ball center=({x}, {y}) r={ball.radius} within polygon {polygon}"
+        )
     else:
-            Debugger.warn(
-                f"🔴 OUTSIDE ball r={r} → center=({x}, {y}) | bounds X:[{min_x},{max_x}] Y:[{min_y},{max_y}]"
-            )
+        Debugger.warn(
+            f"🔴 OUTSIDE ball center=({x}, {y}) r={ball.radius} polygon={polygon}"
+        )
 
     return inside
