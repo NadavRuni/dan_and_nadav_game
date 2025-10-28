@@ -13,6 +13,7 @@ from analyzer_table.ball_from_image_helper import crop_and_save_balls
 from analyzer_table.launcher_helper.pocket.pocket_detect import analyze_table_pockets
 from analyzer_table.launcher_helper.pocket.pocket_cycle import mark_pocket_circles
 from analyzer_table.predict.models.predict import update_undefined_balls
+from analyzer_table.table.table import confirm_or_correct_rectangle
 
 
 
@@ -98,14 +99,23 @@ def full_analyzer_pipeline(image_path: str) -> AnalyzerResult:
     base_dir = os.path.dirname(__file__)
     out_dir = os.path.join(base_dir, "out")
     os.makedirs(out_dir, exist_ok=True)
+    table_rectangle = find_table_rectangle(image_path)
+    table_rectangle = confirm_or_correct_rectangle(image_path, table_rectangle)
 
     # שלב 1: ניתוח מלא
     sub_photos, main_photo = run_full_analysis(image_path)
     black_and_white_ball_list = run_ball_detection(image_path)
     table_rectangle = find_table_rectangle(image_path)
-  
+
+
+    table_rectangle = confirm_or_correct_rectangle(image_path, table_rectangle)
+
+    if table_rectangle is None:
+        Debugger.error("❌ Table rectangle not confirmed or selected.")
+        return []
     
     all_pocket : table_pockets = analyze_table_pockets(image_path, table_rectangle)
+    Debugger.log(f"path : {all_pocket.pockets_img_paths}")
   
     
 

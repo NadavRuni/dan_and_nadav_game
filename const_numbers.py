@@ -30,4 +30,4 @@ OUTPUT_CONTACT_VIEW_PATH = Path("photos/output/img_contact.png")
 
 FORSE_WALL_SHOT = False
 
-CROP_HALF_SIZE = 60
+CROP_HALF_SIZE = 30

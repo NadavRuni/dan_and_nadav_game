@@ -38,7 +38,7 @@ class GameAnalayzer:
             if ball.type == "black" and len(table.get_balls()) > 2:
                 # אפשר להכניס לוגיקה מתקדמת לפסים/מלאים
                 continue
-            if not self.has_clear_path(white, ball):
+            if not self.has_clear_path(white, ball , balls):
                 print(
                     "between the white and ball number",
                     ball.id,
@@ -73,37 +73,61 @@ class GameAnalayzer:
 
             return all_wall_shots  # need to add mor logic here
 
-    def has_clear_path(self, ball1, ball2) -> bool:
+
+    def has_clear_path(self, ball1, ball2, all_balls, SAFE_DISTANCE=3.0) -> bool:
         """
-        בודקת האם יש מסלול פנוי בין שני כדורים (ball1 → ball2).
-        - המסלול הוא מהיקף של ball1 עד היקף של ball2 (לא מרכז-למרכז).
-        - אם כדור אחר מתקרב למסלול פחות מ-(other.radius + SAFE_DISTANCE) → חסימה.
+        בודקת אם יש מסלול פנוי בין שני כדורים (מהיקף ל-היקף).
+        אם כדור אחר נמצא במרחק קטן מ-(radius + SAFE_DISTANCE) מהקו → חסום.
         """
         EPS = 1e-6
-
         ax, ay = ball1.x_cord, ball1.y_cord
         bx, by = ball2.x_cord, ball2.y_cord
 
         dx, dy = bx - ax, by - ay
         seg_len = math.hypot(dx, dy)
         if seg_len < EPS:
-            # כדורים כמעט באותו מקום – אין מסלול משמעותי
+            # שני כדורים כמעט באותו מקום
             return False
 
-        # וקטור יחידה לאורך הקטע
+        # וקטור יחידה
         ux, uy = dx / seg_len, dy / seg_len
 
-        # "קיצור" הקטע: מהיקף של ball1 עד היקף של ball2
+        # מקצרים את הקטע מהיקף להיקף
         axp = ax + ux * ball1.radius
         ayp = ay + uy * ball1.radius
         bxp = bx - ux * ball2.radius
         byp = by - uy * ball2.radius
 
-        dxp, dyp = bxp - axp, byp - ayp
-        seg_len2 = dxp * dxp + dyp * dyp
-        if seg_len2 < EPS:
-            # אחרי קיצוץ הרדיוסים לא נשאר כמעט אורך מסלול
-            return False
+        # בדוק כל כדור אחר
+        for other in all_balls:
+            if other is ball1 or other is ball2:
+                continue
+
+            # הקרנה של הכדור השלישי על הקו
+            vx, vy = other.x_cord - axp, other.y_cord - ayp
+            line_dx, line_dy = bxp - axp, byp - ayp
+            line_len_sq = line_dx**2 + line_dy**2
+            if line_len_sq < EPS:
+                continue
+
+            # t הוא מיקום הכדור ביחס לקו (0 בתחילת הקטע, 1 בסוף)
+            t = (vx * line_dx + vy * line_dy) / line_len_sq
+            if t < 0 or t > 1:
+                # מחוץ לקטע, לא רלוונטי
+                continue
+
+            # נקודה הקרובה ביותר על הקו
+            closest_x = axp + t * line_dx
+            closest_y = ayp + t * line_dy
+
+            # מרחק מהכדור לקו
+            dist = math.hypot(other.x_cord - closest_x, other.y_cord - closest_y)
+
+            # אם קרוב מדי → חסום
+            if dist <= other.radius + SAFE_DISTANCE:
+                return False
+
+        # אין אף כדור שחוסם
         return True
 
     @staticmethod
@@ -173,7 +197,7 @@ class GameAnalayzer:
         """
         print("enter to find_best_wall_shots")
         table = self.table
-        white = next(b for b in table.get_balls() if b.type == "white")
+        white  = next(b for b in table.get_balls() if b.type == "white")
         wall_shots: list[BestWallShot] = []
 
         all_shots: list[BestShot] = []
