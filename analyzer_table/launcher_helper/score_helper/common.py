@@ -1,7 +1,91 @@
 # analyzer_table/score_helper/common.py
 import os
-import cv2
+import cv2 
 from analyzer_table.launcher_helper.json_models import Ball
+from typing import List
+import numpy as np
+
+
+
+
+
+__all__ = [
+    "clamp_0_100",
+    "norm_0_100",
+    "to_hsv",
+    "get_circle_mask",
+    "get_annulus_mask",
+    "_white_avg",
+    "_black_avg",
+    "get_ball_image",
+    "clear_ball_image",
+    "assert_scored",
+]
+
+# analyzer_table/launcher_helper/score_helper/common.py
+import os
+import cv2
+import numpy as np
+from analyzer_table.launcher_helper.json_models import Ball
+from typing import List, Tuple
+
+# ... כל הקוד הקיים שלך ...
+
+import numpy as np
+import cv2
+from typing import Tuple, Optional
+# ... שאר הייבואים והקוד ...
+
+def get_circle_mask(
+    img,
+    center: Optional[Tuple[int, int]] = None,
+    radius: Optional[float] = None,
+    padding: int = 0,
+):
+    """
+    מחזיר מסכת מעגל (0/255) בגודל img.
+    תאימות לאחור: אם center/radius לא נמסרו, ישתמש במרכז התמונה וברדיוס יחסי.
+    """
+    if img is None:
+        return None
+
+    h, w = img.shape[:2]
+    mask = np.zeros((h, w), dtype=np.uint8)
+
+    if center is None or radius is None:
+        # תאימות לאחור לקריאות ישנות: מעגל במרכז התמונה
+        cx, cy = w // 2, h // 2
+        # רדיוס "בטוח": ~45% מהמימד הקטן
+        r = int(0.45 * min(h, w))
+    else:
+        cx, cy = int(center[0]), int(center[1])
+        r = int(max(0, radius))
+
+    r = int(r + max(0, padding))
+    cx = max(0, min(w - 1, cx))
+    cy = max(0, min(h - 1, cy))
+
+    if r > 0:
+        cv2.circle(mask, (cx, cy), r, 255, thickness=-1)
+
+    return mask
+
+
+def get_ball_circle_mask(img, ball, padding: int = 0):
+    """
+    מסכת מעגל לפי center/radius של Ball.
+    שימוש מומלץ בבדיקות.
+    """
+    return get_circle_mask(img, center=ball.center, radius=ball.radius, padding=padding)
+
+
+
+def get_annulus_mask(shape, center, r_inner, r_outer):
+    """טבעת בין רדיוס פנימי לחיצוני כ־mask של 0/1."""
+    outer = get_circle_mask(shape, center, r_outer, filled=True)
+    inner = get_circle_mask(shape, center, r_inner, filled=True)
+    return (outer & (1 - inner)).astype(np.uint8)
+
 
 def clamp_0_100(x: float) -> float:
     """מגביל ציון לטווח 0–100."""
@@ -94,3 +178,20 @@ def _black_avg(ball: Ball) -> float:
     ]
     # כרגע מחזיר ממוצע פשוט, שנה למשוקלל אם הגדרת משקלים גם לשחור
     return sum(b_vec) / 5.0 if b_vec else 0.0
+
+
+
+def assert_scored(balls: List[Ball]) -> None:
+    for i, b in enumerate(balls, 1):
+        cs = getattr(b, "color_score", None)
+        assert cs is not None, f"[Ball {i}] missing color_score (did you run score_balls?)"
+
+        w = getattr(cs, "white_score", None)
+        bl = getattr(cs, "black_score", None)
+        assert w is not None, f"[Ball {i}] missing white_score"
+        assert bl is not None, f"[Ball {i}] missing black_score"
+
+        for attr in ["white_score_test_1","white_score_test_2","white_score_test_3","white_score_test_4","white_score_test_5"]:
+            assert hasattr(w, attr), f"[Ball {i}] missing {attr}"
+        for attr in ["black_score_test_1","black_score_test_2","black_score_test_3","black_score_test_4","black_score_test_5"]:
+            assert hasattr(bl, attr), f"[Ball {i}] missing {attr}"

@@ -27,7 +27,7 @@ def _run_suite_to_five(ball: Ball, suite: TestSuite) -> List[float]:
 
 def run_white_suite(ball: Ball, suite: TestSuite):
      ## Run each test in the suite on the ball and clamp results between 0–100
-    scores = [_run_suite_to_five(ball, suite)]
+    scores = _run_suite_to_five(ball, suite)
     # Access the 'white_score' section of the ball's color score data
     w = ball.color_score.white_score
     # Assign the computed scores to the respective fields
@@ -39,7 +39,7 @@ def run_white_suite(ball: Ball, suite: TestSuite):
 
 def run_black_suite(ball: Ball, suite: TestSuite):
      ## Run each test in the suite on the ball and clamp results between 0–100
-    scores = [_run_suite_to_five(ball, suite)]
+    scores = _run_suite_to_five(ball, suite)
     # Access the 'white_score' section of the ball's color score data
     b = ball.color_score.black_score
     # Assign the computed scores to the respective fields

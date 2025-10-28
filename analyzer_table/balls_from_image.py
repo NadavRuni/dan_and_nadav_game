@@ -122,10 +122,10 @@ def full_analyzer_pipeline(image_path: str) -> Tuple[List[Ball], Optional[Ball],
 
     #dan all data!!!!
     from analyzer_table.ball_type_score.build_suites import (
-    build_white_suite, build_black_suite, build_solid_suite, build_striped_suite,
+    build_white_suite, build_black_suite
     )
     from analyzer_table.ball_type_score.run_scores import score_balls
-    from analyzer_table.launcher_helper.score_helper.common import _white_avg, _black_avg
+    from analyzer_table.launcher_helper.score_helper.common import _white_avg, _black_avg, assert_scored
 
 
     white_suite = build_white_suite() # test suite for white balls
@@ -134,6 +134,7 @@ def full_analyzer_pipeline(image_path: str) -> Tuple[List[Ball], Optional[Ball],
     #striped_suite = build_striped_suite() # test suite for striped balls
 
     score_balls(sorted_balls, white_suite, black_suite)
+    assert_scored(sorted_balls)
 
 
     ### יצירת תיקייה לשמירת כדורים
@@ -159,7 +160,7 @@ def full_analyzer_pipeline(image_path: str) -> Tuple[List[Ball], Optional[Ball],
             Debugger.log(f"✅ Saved blackest ball image to {os.path.join(out_balls_dir, 'black.png')}")
 
    
-#############################################################################################
+##########################################################################################################################################################################################
 
     
     # שלב 5: זיהוי הכדור הלבן והשחור
