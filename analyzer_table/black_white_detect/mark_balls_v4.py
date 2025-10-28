@@ -29,20 +29,31 @@ def preprocess_roi(roi_gray):
     return blur
 
 
-def edge_support_ratio(edges, cx, cy, r, step_deg=10, tol=2.5):
-    """בודק כמה מהנקודות על ההיקף באמת נופלות על קצוות"""
-    H, W = edges.shape[:2]
-    ok, total = 0, 0
-    for a in range(0, 360, step_deg):
-        total += 1
-        rad = np.deg2rad(a)
-        x = int(cx + r * np.cos(rad))
-        y = int(cy + r * np.sin(rad))
-        x1, y1 = max(0, x - int(tol)), max(0, y - int(tol))
-        x2, y2 = min(W - 1, x + int(tol)), min(H - 1, y + int(tol))
-        if edges[y1:y2 + 1, x1:x2 + 1].max() > 0:
-            ok += 1
-    return ok / max(1, total)
+def edge_support_ratio(edges, cx, cy, r):
+    # edges: תמונת קצוות בינארית (numpy array)
+    h, w = edges.shape[:2]
+    r = int(max(1, r))
+    cx, cy = int(cx), int(cy)
+
+    # חלון קטן מסביב למעגל
+    pad = 1
+    x1 = max(0, cx - r - pad)
+    x2 = min(w - 1, cx + r + pad)
+    y1 = max(0, cy - r - pad)
+    y2 = min(h - 1, cy + r + pad)
+
+    # אם החלון לא תקין/ריק – אין תמיכה
+    if x2 < x1 or y2 < y1:
+        return 0.0
+
+    roi = edges[y1:y2+1, x1:x2+1]
+    if roi.size == 0:
+        return 0.0
+    if roi.max() == 0:
+        return 0.0
+
+    support_ratio = float(roi.sum() > 0)  # או roi.mean()/255 אם edges הוא 0/255
+    return support_ratio
 
 
 def refine_with_hough(gray, x, y, w, h, pad=20):
@@ -55,6 +66,8 @@ def refine_with_hough(gray, x, y, w, h, pad=20):
     roi = gray[y1:y2, x1:x2]
     if roi.size == 0:
         return None
+    if roi.max() ==0:
+        return 0.0
 
     roi_prep = preprocess_roi(roi)
     edges = cv2.Canny(roi_prep, 60, 160)
@@ -155,19 +168,49 @@ def detect_balls_full_pipeline(input_path: str):
     if orig is None:
         raise FileNotFoundError(f"❌ Could not read input image: {input_path}")
 
-    # === Create felt mask ===
+    # === Create felt mask (blue OR green) ===
     hsv = cv2.cvtColor(orig, cv2.COLOR_BGR2HSV)
-    lower_blue = np.array([80, 40, 30])
-    upper_blue = np.array([125, 255, 255])
-    mask_felt = cv2.inRange(hsv, lower_blue, upper_blue)
-    mask_inv = cv2.bitwise_not(mask_felt)
-    _, mask_bin = cv2.threshold(mask_inv, 127, 255, cv2.THRESH_BINARY)
-    kernel = np.ones((5, 5), np.uint8)
-    mask_bin = cv2.morphologyEx(mask_bin, cv2.MORPH_OPEN, kernel, iterations=1)
-    mask_bin = cv2.morphologyEx(mask_bin, cv2.MORPH_CLOSE, kernel, iterations=1)
-    cv2.imwrite(str(MASK_OUTPUT_PATH), mask_bin)
 
+    lower_blue  = np.array([80,  40, 30], dtype=np.uint8)
+    upper_blue  = np.array([125, 255,255], dtype=np.uint8)
+    lower_green = np.array([35,  30, 30], dtype=np.uint8)
+    upper_green = np.array([85, 255,255], dtype=np.uint8)
+
+    # כניסה רק לפיקסלים "צבעוניים" מספיק (פחות רגיש להשתקפויות/צללים)
+    S = hsv[:, :, 1]; V = hsv[:, :, 2]
+    colorful = cv2.inRange(hsv, np.array([0,40,40], np.uint8), np.array([179,255,255], np.uint8))
+
+    mask_blue  = cv2.inRange(hsv, lower_blue,  upper_blue)
+    mask_green = cv2.inRange(hsv, lower_green, upper_green)
+    mask_felt  = cv2.bitwise_or(mask_blue, mask_green)
+    mask_felt  = cv2.bitwise_and(mask_felt, colorful)
+
+    # מורפולוגיה לניקוי
+    kernel = np.ones((5, 5), np.uint8)
+    mask_felt = cv2.morphologyEx(mask_felt, cv2.MORPH_OPEN, kernel, iterations=1)
+    mask_felt = cv2.morphologyEx(mask_felt, cv2.MORPH_CLOSE, kernel, iterations=1)
+
+    # שמירת רק רכיבי felt גדולים (מונע בליעה של כדור ירוק/כחול קטן)
+    num, labels, stats, _ = cv2.connectedComponentsWithStats(mask_felt, connectivity=8)
+    H, W = mask_felt.shape[:2]
+    img_area = H * W
+    min_felt_area = int(0.005 * img_area)  # כייל: 0.003–0.01 בהתאם לתמונה
+
+    mask_felt_clean = np.zeros_like(mask_felt)
+    for lab in range(1, num):
+        x, y, w, h, area = stats[lab]
+        if area >= min_felt_area:
+            mask_felt_clean[labels == lab] = 255
+
+    # הופכים – עכשיו לבן = לא felt (כדורים, מקל, כיסים)
+    mask_inv = cv2.bitwise_not(mask_felt_clean)
+
+    # כאן כבר יש 0/255, ה-threshold מיותר. אפשר ישר מורפולוגיה קלה אם צריך:
+    mask_bin = cv2.morphologyEx(mask_inv, cv2.MORPH_CLOSE, kernel, iterations=1)
+
+    cv2.imwrite(str(MASK_OUTPUT_PATH), mask_bin)
     print(f"🖤 Mask saved to: {MASK_OUTPUT_PATH}")
+
 
     # === Detect balls ===
     gray = cv2.cvtColor(orig, cv2.COLOR_BGR2GRAY)
