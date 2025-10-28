@@ -226,3 +226,4 @@ out/balls/
 analyzer_table/out/
 Billiard-Balls--1/
 out/
+analyzer_table/predict/models/*.pth
