@@ -210,6 +210,7 @@ dan/images/
 dan/output/
 yolov8n.pt
 **.jpg
+.DS_Store
 **.png
 **.yaml
 **.cache
