@@ -168,19 +168,49 @@ def detect_balls_full_pipeline(input_path: str):
     if orig is None:
         raise FileNotFoundError(f"❌ Could not read input image: {input_path}")
 
-    # === Create felt mask ===
+    # === Create felt mask (blue OR green) ===
     hsv = cv2.cvtColor(orig, cv2.COLOR_BGR2HSV)
-    lower_blue = np.array([80, 40, 30])
-    upper_blue = np.array([125, 255, 255])
-    mask_felt = cv2.inRange(hsv, lower_blue, upper_blue)
-    mask_inv = cv2.bitwise_not(mask_felt)
-    _, mask_bin = cv2.threshold(mask_inv, 127, 255, cv2.THRESH_BINARY)
-    kernel = np.ones((5, 5), np.uint8)
-    mask_bin = cv2.morphologyEx(mask_bin, cv2.MORPH_OPEN, kernel, iterations=1)
-    mask_bin = cv2.morphologyEx(mask_bin, cv2.MORPH_CLOSE, kernel, iterations=1)
-    cv2.imwrite(str(MASK_OUTPUT_PATH), mask_bin)
 
+    lower_blue  = np.array([80,  40, 30], dtype=np.uint8)
+    upper_blue  = np.array([125, 255,255], dtype=np.uint8)
+    lower_green = np.array([35,  30, 30], dtype=np.uint8)
+    upper_green = np.array([85, 255,255], dtype=np.uint8)
+
+    # כניסה רק לפיקסלים "צבעוניים" מספיק (פחות רגיש להשתקפויות/צללים)
+    S = hsv[:, :, 1]; V = hsv[:, :, 2]
+    colorful = cv2.inRange(hsv, np.array([0,40,40], np.uint8), np.array([179,255,255], np.uint8))
+
+    mask_blue  = cv2.inRange(hsv, lower_blue,  upper_blue)
+    mask_green = cv2.inRange(hsv, lower_green, upper_green)
+    mask_felt  = cv2.bitwise_or(mask_blue, mask_green)
+    mask_felt  = cv2.bitwise_and(mask_felt, colorful)
+
+    # מורפולוגיה לניקוי
+    kernel = np.ones((5, 5), np.uint8)
+    mask_felt = cv2.morphologyEx(mask_felt, cv2.MORPH_OPEN, kernel, iterations=1)
+    mask_felt = cv2.morphologyEx(mask_felt, cv2.MORPH_CLOSE, kernel, iterations=1)
+
+    # שמירת רק רכיבי felt גדולים (מונע בליעה של כדור ירוק/כחול קטן)
+    num, labels, stats, _ = cv2.connectedComponentsWithStats(mask_felt, connectivity=8)
+    H, W = mask_felt.shape[:2]
+    img_area = H * W
+    min_felt_area = int(0.005 * img_area)  # כייל: 0.003–0.01 בהתאם לתמונה
+
+    mask_felt_clean = np.zeros_like(mask_felt)
+    for lab in range(1, num):
+        x, y, w, h, area = stats[lab]
+        if area >= min_felt_area:
+            mask_felt_clean[labels == lab] = 255
+
+    # הופכים – עכשיו לבן = לא felt (כדורים, מקל, כיסים)
+    mask_inv = cv2.bitwise_not(mask_felt_clean)
+
+    # כאן כבר יש 0/255, ה-threshold מיותר. אפשר ישר מורפולוגיה קלה אם צריך:
+    mask_bin = cv2.morphologyEx(mask_inv, cv2.MORPH_CLOSE, kernel, iterations=1)
+
+    cv2.imwrite(str(MASK_OUTPUT_PATH), mask_bin)
     print(f"🖤 Mask saved to: {MASK_OUTPUT_PATH}")
+
 
     # === Detect balls ===
     gray = cv2.cvtColor(orig, cv2.COLOR_BGR2GRAY)
