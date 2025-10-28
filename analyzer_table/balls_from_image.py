@@ -139,7 +139,7 @@ def full_analyzer_pipeline(image_path: str) -> Tuple[List[Ball], Optional[Ball],
 
     ### יצירת תיקייה לשמירת כדורים
     ### בשביל לבדוק את הכדורים הלבנים והשחורים
-     ### for debug pe  
+     ### for debug 
     out_balls_dir = os.path.join(out_dir, "balls")
     os.makedirs(out_balls_dir, exist_ok=True)
     
