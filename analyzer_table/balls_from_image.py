@@ -132,6 +132,7 @@ def full_analyzer_pipeline(image_path: str) -> AnalyzerResult:
 
 
     # שלב 1: ניתוח מלא
+    
     sub_photos, main_photo = run_full_analysis(image_path)
     black_and_white_ball_list = run_ball_detection(image_path)
 

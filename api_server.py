@@ -23,20 +23,19 @@ if nav_file.exists():
 # חשיפה של קבצי frontend כסטטיים
 app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
 
-
 @app.get("/frontend_nav.json")
-async def get_nav_file(background_tasks: BackgroundTasks):
+async def get_nav_file():
     nav_path = Path(__file__).resolve().parent / "frontend_nav.json"
     print(f"[DEBUG] Trying to serve nav file from: {nav_path}")
 
     if nav_path.exists():
         print("✅ Found frontend_nav.json — serving now.")
-        # מחיקה מתוזמנת לאחר השליחה
-        background_tasks.add_task(delete_file_safely, nav_path)
+        # לא מוחקים כאן — זה שומר על יציבות
         return FileResponse(nav_path)
     else:
-        print("❌ frontend_nav.json not found!")
-        return JSONResponse(status_code=404, content={"error": "frontend_nav.json not found"})
+        # אין קובץ – מחזירים תשובה שקטה (לא שגיאה)
+        return JSONResponse(status_code=204, content=None)
+
 
 def delete_file_safely(path: Path):
     try:
