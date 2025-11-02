@@ -8,6 +8,12 @@ from analyzer_table.detect_ball.detect_table import find_table_rectangle
 from analyzer_table.launcher_helper.black_and_white_launcher import run_ball_detection
 from typing import Tuple, List, Optional
 import cv2
+from analyzer_table.ball_type_score.build_suites import (
+    build_white_suite, build_black_suite
+    )
+from analyzer_table.ball_type_score.run_scores import score_balls
+from analyzer_table.launcher_helper.score_helper.common import _white_avg, _black_avg, assert_scored
+
 import numpy as np
 import os
 from analyzer_table.launcher_helper.json_models import Ball , table_pockets , AnalyzerResult
@@ -166,17 +172,10 @@ def full_analyzer_pipeline(image_path: str) -> AnalyzerResult:
 
 
     #dan all data!!!!
-    from analyzer_table.ball_type_score.build_suites import (
-    build_white_suite, build_black_suite
-    )
-    from analyzer_table.ball_type_score.run_scores import score_balls
-    from analyzer_table.launcher_helper.score_helper.common import _white_avg, _black_avg, assert_scored
-
+   
 
     white_suite = build_white_suite() # test suite for white balls
     black_suite = build_black_suite() # test suite for black balls
-    #solid_suite = build_solid_suite() # test suite for solid balls
-    #striped_suite = build_striped_suite() # test suite for striped balls
 
     score_balls(sorted_balls, white_suite, black_suite)
     assert_scored(sorted_balls)
@@ -208,11 +207,9 @@ def full_analyzer_pipeline(image_path: str) -> AnalyzerResult:
 ##########################################################################################################################################################################################
 
     
-    # שלב 5: זיהוי הכדור הלבן והשחור
-    white_ball ,black_ball =analyze_ball_brightness(image_path, sorted_balls, os.path.join(out_dir, "balls"))
  
     
-    insert_black_and_white_balls(sorted_balls, black_ball, white_ball) 
+    insert_black_and_white_balls(sorted_balls, blackest_ball, whitest_ball) 
     update_undefined_balls(sorted_balls)
 
 
@@ -229,8 +226,8 @@ def full_analyzer_pipeline(image_path: str) -> AnalyzerResult:
     analyzerResult = AnalyzerResult(
         Pockets=all_pocket,
         balls=sorted_balls,
-        black=black_ball,
-        white=white_ball,
+        black=blackest_ball,
+        white=whitest_ball,
     )
     Debugger.log("✅ Full analyzer pipeline completed successfully.")
     return analyzerResult

@@ -1,0 +1,173 @@
+{
+  "image_path": "uploads/test4.jpeg",
+  "image_size_px": {
+    "width": 5674.0,
+    "height": 3303.0
+  },
+  "balls": [
+    {
+      "index": 0,
+      "type": "white",
+      "center_px": {
+        "x": 1292.0,
+        "y": 1628.0
+      },
+      "radius_px": 66.0
+    },
+    {
+      "index": 1,
+      "type": "striped",
+      "center_px": {
+        "x": 2206.0,
+        "y": 1048.0
+      },
+      "radius_px": 59.0
+    },
+    {
+      "index": 2,
+      "type": "solid",
+      "center_px": {
+        "x": 2450.0,
+        "y": 2056.0
+      },
+      "radius_px": 61.0
+    },
+    {
+      "index": 3,
+      "type": "black",
+      "center_px": {
+        "x": 3332.0,
+        "y": 2196.0
+      },
+      "radius_px": 58.0
+    },
+    {
+      "index": 4,
+      "type": "striped",
+      "center_px": {
+        "x": 3816.0,
+        "y": 1254.0
+      },
+      "radius_px": 54.0
+    },
+    {
+      "index": 5,
+      "type": "striped",
+      "center_px": {
+        "x": 3912.0,
+        "y": 2028.0
+      },
+      "radius_px": 59.0
+    }
+  ],
+  "white_ball": {
+    "center": [
+      1292,
+      1628
+    ],
+    "radius": 66,
+    "color_score": {
+      "white_score": {
+        "white_score_test_1": 90.01846612668504,
+        "white_score_test_2": 0.0,
+        "white_score_test_3": 33.99172413793104,
+        "white_score_test_4": 6.696357727050783,
+        "white_score_test_5": 85.22258481620591
+      },
+      "black_score": {
+        "black_score_test_1": 9.981533873314952,
+        "black_score_test_2": 0.0,
+        "black_score_test_3": 0.0,
+        "black_score_test_4": 0.0,
+        "black_score_test_5": 0.0
+      },
+      "solid_score": {
+        "solid_score_test_1": 0.0,
+        "solid_score_test_2": 0.0,
+        "solid_score_test_3": 0.0,
+        "solid_score_test_4": 0.0,
+        "solid_score_test_5": 0.0
+      },
+      "striped_score": {
+        "striped_score_test_1": 0.0,
+        "striped_score_test_2": 0.0,
+        "striped_score_test_3": 0.0,
+        "striped_score_test_4": 0.0,
+        "striped_score_test_5": 0.0
+      }
+    },
+    "final_color": "white",
+    "single_ball_path": "out/balls/ball_1_1292_1628.png"
+  },
+  "black_ball": {
+    "center": [
+      3332,
+      2196
+    ],
+    "radius": 58,
+    "color_score": {
+      "white_score": {
+        "white_score_test_1": 52.87397197648591,
+        "white_score_test_2": 0.0,
+        "white_score_test_3": 4.969000729394602,
+        "white_score_test_4": 26.632804870605465,
+        "white_score_test_5": 60.8126555849996
+      },
+      "black_score": {
+        "black_score_test_1": 47.12602802351409,
+        "black_score_test_2": 0.0,
+        "black_score_test_3": 100.0,
+        "black_score_test_4": 53.93285577947443,
+        "black_score_test_5": 0.0
+      },
+      "solid_score": {
+        "solid_score_test_1": 0.0,
+        "solid_score_test_2": 0.0,
+        "solid_score_test_3": 0.0,
+        "solid_score_test_4": 0.0,
+        "solid_score_test_5": 0.0
+      },
+      "striped_score": {
+        "striped_score_test_1": 0.0,
+        "striped_score_test_2": 0.0,
+        "striped_score_test_3": 0.0,
+        "striped_score_test_4": 0.0,
+        "striped_score_test_5": 0.0
+      }
+    },
+    "final_color": "black",
+    "single_ball_path": "out/balls/ball_4_3332_2196.png"
+  },
+  "pockets": {
+    "TL": {
+      "x": 330.0,
+      "y": 459.0,
+      "radius": 30.0
+    },
+    "TM": {
+      "x": 2815.0,
+      "y": 437.0,
+      "radius": 30.0
+    },
+    "TR": {
+      "x": 5300.0,
+      "y": 415.0,
+      "radius": 30.0
+    },
+    "BL": {
+      "x": 331.0,
+      "y": 2912.0,
+      "radius": 30.0
+    },
+    "BM": {
+      "x": 2858.0,
+      "y": 2855.0,
+      "radius": 30.0
+    },
+    "BR": {
+      "x": 5385.0,
+      "y": 2799.0,
+      "radius": 30.0
+    }
+  }
+}

@@ -5,8 +5,8 @@ import cv2
 import numpy as np
 
 # קבועים לקביעת גבולות מיזוג
-MERGE_MAX_X_DIFF = 50     # מרחק מותר בציר X
-MERGE_MAX_Y_DIFF = 50     # מרחק מותר בציר Y
+MERGE_MAX_X_DIFF = 65     # מרחק מותר בציר X
+MERGE_MAX_Y_DIFF = 65     # מרחק מותר בציר Y
 def mergeData(main_photo: PhotoData, sub_photos: list[PhotoData], black_and_white_list: list[Ball],  table_rectangle: Rectangle) -> PhotoData:
     """
     מאחד את כל הכדורים מהתמונה הראשית וכל שאר התמונות.
