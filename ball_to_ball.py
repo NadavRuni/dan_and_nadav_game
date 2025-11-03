@@ -8,24 +8,24 @@ from game_class.C_gameAnalayzer import GameAnalayzer
 def main():
     # כאן אתה מגדיר את כל הכדורים שאתה רוצה על השולחן
 
-    white = Ball(0, 180, 61, "white", BALL_RADIUS)  # כדור לבן
-    black = Ball(8, 200, 70, "black", BALL_RADIUS)  # כדור שחור במיקום שבחרת
+    white = Ball(0, 180, 61, "white", get_ball_radius())  # כדור לבן
+    black = Ball(8, 200, 70, "black", get_ball_radius())  # כדור שחור במיקום שבחרת
 
     balls = [
-        Ball(1, 35, 30, "solid", BALL_RADIUS),
-        Ball(2, 9, 134, "striped", BALL_RADIUS),
-        Ball(3, 100, 55, "solid", BALL_RADIUS),
-        Ball(5, 135, 35, "solid", BALL_RADIUS),
-        Ball(6, 279, 28, "striped", BALL_RADIUS),
-        Ball(7, 102, 92, "solid", BALL_RADIUS),
-        Ball(9, 215, 50, "striped", BALL_RADIUS),
-        Ball(10, 230, 60, "solid", BALL_RADIUS),
-        Ball(11, 80, 74, "striped", BALL_RADIUS),
-        Ball(12, 255, 21, "solid", BALL_RADIUS),
+        Ball(1, 35, 30, "solid", get_ball_radius()),
+        Ball(2, 9, 134, "striped", get_ball_radius()),
+        Ball(3, 100, 55, "solid", get_ball_radius()),
+        Ball(5, 135, 35, "solid", get_ball_radius()),
+        Ball(6, 279, 28, "striped", get_ball_radius()),
+        Ball(7, 102, 92, "solid", get_ball_radius()),
+        Ball(9, 215, 50, "striped", get_ball_radius()),
+        Ball(10, 230, 60, "solid", get_ball_radius()),
+        Ball(11, 80, 74, "striped", get_ball_radius()),
+        Ball(12, 255, 21, "solid", get_ball_radius()),
     ]
 
     # יצירת שולחן עם הכדורים
-    table = Table(TABLE_LENGTH, TABLE_WIDTH, [white, black] + balls)
+    table = Table(get_table_length(), TABLE_WIDTH, [white, black] + balls)
 
     # ניתוח
     game = GameAnalayzer(table)

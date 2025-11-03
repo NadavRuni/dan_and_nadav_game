@@ -3,7 +3,7 @@ from typing import List
 from game_class.C_ball import Ball
 from game_class.C_pocket import Pocket
 from game_class.C_table import Table
-from const_numbers import NOT_FREE_SHOT, TABLE_LENGTH, TABLE_WIDTH
+from const_numbers import *
 from game_class.C_calc import Calculations
 
 
@@ -80,10 +80,10 @@ class CalculationsWithWall(Calculations):
                 impact_y = TABLE_WIDTH
                 theta_deg = 180 - theta_deg
             case 1:
-                impact_x = TABLE_LENGTH - ((TABLE_WIDTH * P) / Q)
+                impact_x = get_table_length() - ((TABLE_WIDTH * P) / Q)
                 impact_y = TABLE_WIDTH
             case 2:
-                impact_x = TABLE_LENGTH - ((TABLE_WIDTH * P) / Q)
+                impact_x = get_table_length() - ((TABLE_WIDTH * P) / Q)
                 impact_y = 0
             case 3:
                 impact_x = (TABLE_WIDTH * P) / Q

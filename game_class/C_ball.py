@@ -10,7 +10,7 @@ class Ball:
         x_cord: float,
         y_cord: float,
         ball_type: str,
-        radius: float = BALL_RADIUS,
+        radius: float = get_ball_radius(),
     ):
         """
         Initialize a Ball object.

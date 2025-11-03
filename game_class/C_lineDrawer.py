@@ -96,8 +96,8 @@ class LineDrawer:
 
         # נקודת מגע על ההיקף (בצד שפונה לכיס)
         contact_target = (
-            target_px[0] - ux_p * BALL_RADIUS_PHOTO,
-            target_px[1] - uy_p * BALL_RADIUS_PHOTO,
+            target_px[0] - ux_p * get_ball_radius_photo,
+            target_px[1] - uy_p * get_ball_radius_photo,
         )
 
         # --- קו לבן → נקודת מגע ---
@@ -106,8 +106,8 @@ class LineDrawer:
         ux_w, uy_w = dx_w / dist_w, dy_w / dist_w
 
         start_white = (
-            white_px[0] + ux_w * BALL_RADIUS_PHOTO,
-            white_px[1] + uy_w * BALL_RADIUS_PHOTO,
+            white_px[0] + ux_w * get_ball_radius_photo,
+            white_px[1] + uy_w * get_ball_radius_photo,
         )
 
         def draw_dashed_line(draw, start, end, fill, width=3, dash_length=15, gap_length=10):
@@ -133,12 +133,12 @@ class LineDrawer:
 
         # --- מטרה (צד שפונה לכיס) → כיס ---
         start_target = (
-            target_px[0] + ux_p * BALL_RADIUS_PHOTO,
-            target_px[1] + uy_p * BALL_RADIUS_PHOTO,
+            target_px[0] + ux_p * get_ball_radius_photo,
+            target_px[1] + uy_p * get_ball_radius_photo,
         )
         pocket_before = (
-            pocket_px[0] - ux_p * POCKET_MARGIN,
-            pocket_px[1] - uy_p * POCKET_MARGIN,
+            pocket_px[0] - ux_p * get_pocket_margin(),
+            pocket_px[1] - uy_p * get_pocket_margin(),
         )
         draw_dashed_line(draw, start_target, pocket_before, fill=color_target, width=width)
 
@@ -146,7 +146,7 @@ class LineDrawer:
         return self.output_path
 
     def show_contact_hit(
-        self, ball_radius: int = BALL_RADIUS_PHOTO-3, color=(255, 0, 0), size: int = 8, crop_size: int = 120
+        self, ball_radius: int = get_ball_radius_photo()-3, color=(255, 0, 0), size: int = 8, crop_size: int = 120
     ) -> str:
         """
         מצייר נקודת מגע על הכדור המטרה בצד שפונה לכיס (ולא בצד שפונה ללב),
@@ -208,11 +208,11 @@ class LineDrawer:
         """
         ממיר נקודה מיחידות שולחן (x,y) לפיקסלים בתמונה.
         - x=0,y=0  => פינה שמאל-תחתון (BL)
-        - x=TABLE_LENGTH,y=0 => פינה ימין-תחתון (BR)
+        - x=get_table_length(),y=0 => פינה ימין-תחתון (BR)
         - x=0,y=TABLE_WIDTH  => פינה שמאל-עליון (TL)
-        - x=TABLE_LENGTH,y=TABLE_WIDTH => פינה ימין-עליון (TR)
+        - x=get_table_length(),y=TABLE_WIDTH => פינה ימין-עליון (TR)
         """
-        u = x / TABLE_LENGTH
+        u = x / get_table_length()
         v = y / TABLE_WIDTH
 
         width_px = self.table_size_px["width_px"]
@@ -274,7 +274,7 @@ class LineDrawer:
         # --- נקודת הקיר (המרה) ---
         wall_px = self.table_to_px(wall_point[0], wall_point[1])
         tw_dir = v_unit(v_sub(wall_px, target_c))  
-        wall_px = v_add(wall_px, v_scale(tw_dir, -WALL_MARGIN))
+        wall_px = v_add(wall_px, v_scale(tw_dir, -get_wall_margin()))
 
         if not (white_c and target_c and pocket_c and wall_px):
             raise ValueError("❌ Missing coordinates for white/target/pocket/wall")
@@ -290,20 +290,20 @@ class LineDrawer:
 
         # --- 1) לבן → מטרה ---
         wt_dir = v_unit(v_sub(target_c, white_c))
-        start_white   = v_add(white_c,  v_scale(wt_dir, BALL_RADIUS_PHOTO))
-        end_on_target = v_add(target_c, v_scale(wt_dir, -BALL_RADIUS_PHOTO))
+        start_white   = v_add(white_c,  v_scale(wt_dir, get_ball_radius_photo))
+        end_on_target = v_add(target_c, v_scale(wt_dir, -get_ball_radius_photo))
         print(f"Line 1: White edge {start_white} → Target edge {end_on_target}")
         draw_dashed_line(draw, start_white, end_on_target, fill=color_white, width=width)
 
         # --- 2) מטרה → קיר ---
         tw_dir = v_unit(v_sub(wall_px, target_c))
-        start_target_wall = v_add(target_c, v_scale(tw_dir, BALL_RADIUS_PHOTO))
+        start_target_wall = v_add(target_c, v_scale(tw_dir, get_ball_radius_photo))
         print(f"Line 2: Target edge {start_target_wall} → Wall {wall_px}")
         draw_dashed_line(draw, start_target_wall, wall_px, fill=color_target, width=width)
 
         # --- 3) קיר → חור ---
         wp_dir = v_unit(v_sub(pocket_c, wall_px))
-        pocket_before = v_add(pocket_c, v_scale(wp_dir, -POCKET_MARGIN))
+        pocket_before = v_add(pocket_c, v_scale(wp_dir, -get_pocket_margin()))
         print(f"Line 3: Wall {wall_px} → Pocket-before {pocket_before}")
         draw_dashed_line(draw, wall_px, pocket_before, fill=color_wall, width=width)
 

@@ -9,7 +9,7 @@ if ROOT_DIR not in sys.path:
     sys.path.append(ROOT_DIR)
 # ===============================================================
 
-from const_numbers import TABLE_LENGTH, TABLE_WIDTH, BALL_RADIUS
+from const_numbers import *
 from game_class.C_ball import Ball
 from game_class.C_table import Table
 from game_class.C_draw import draw_table
@@ -28,7 +28,7 @@ def load_analysis(json_path: str):
 
 def clamp_to_table(x: float, length: float) -> float:
     """גזירה לגבולות השולחן תוך שמירה על רדיוס הכדור."""
-    return max(BALL_RADIUS, min(length - BALL_RADIUS, x))
+    return max(get_ball_radius(), min(length - get_ball_radius(), x))
 
 
 def build_table_from_analysis(analysis: dict):
@@ -37,7 +37,7 @@ def build_table_from_analysis(analysis: dict):
     height_px = float(analysis.get("table_size_px", {}).get("height_px", 1.0))
 
     # סקלת פיקסלים → יחידות משחק (ל־fallback)
-    sx = TABLE_LENGTH / max(1.0, width_px)
+    sx = get_table_length() / max(1.0, width_px)
     sy = TABLE_WIDTH / max(1.0, height_px)
 
     # אם קיימת הומוגרפיה/קואורדינטות מנורמלות מה-pipeline — נעדיף אותן
@@ -74,22 +74,22 @@ def build_table_from_analysis(analysis: dict):
                 table_width_px = x_max - x_min
                 table_height_px = y_max - y_min
 
-                sx = TABLE_LENGTH / max(1.0, table_width_px)
+                sx = get_table_length() / max(1.0, table_width_px)
                 sy = TABLE_WIDTH / max(1.0, table_height_px)
 
                 # נחשב מיקום יחסי לפי גבולות השולחן
-                x_game = clamp_to_table((cx - x_min) * sx, TABLE_LENGTH)
+                x_game = clamp_to_table((cx - x_min) * sx, get_table_length())
                 # ציר Y בפיקסלים הפוך, לכן נשתמש ב־(y_max - cy)
                 y_game = clamp_to_table((y_max - cy) * sy, TABLE_WIDTH)
 
                 print(f"[build] using pocket-based mapping for ball id={bid}")
             else:
                 # fallback — אם אין מידע על כיסים
-                sx = TABLE_LENGTH / max(1.0, width_px)
+                sx = get_table_length() / max(1.0, width_px)
                 sy = TABLE_WIDTH / max(1.0, height_px)
 
                 # נשתמש בהיפוך פשוט של הציר האנכי
-                x_game = clamp_to_table(cx * sx, TABLE_LENGTH)
+                x_game = clamp_to_table(cx * sx, get_table_length())
                 y_game = clamp_to_table((height_px - cy) * sy, TABLE_WIDTH)
 
                 print(f"[build] using fallback image-size mapping for ball id={bid}")
@@ -106,7 +106,7 @@ def build_table_from_analysis(analysis: dict):
                 x_cord=x_game,
                 y_cord=y_game,
                 ball_type=btype,
-                radius=BALL_RADIUS,
+                radius=get_ball_radius(),
             )
         )
         print (f"[build] added ball id={bid}, type={btype}, pos=({x_game:.1f}, {y_game:.1f}")
@@ -118,7 +118,7 @@ def build_table_from_analysis(analysis: dict):
     else:
         print("[build] used pixel deltas fallback (sx/sy)")
 
-    return Table(TABLE_LENGTH, TABLE_WIDTH, balls)
+    return Table(get_table_length(), TABLE_WIDTH, balls)
 
 
 def start_build_table_from_img():
