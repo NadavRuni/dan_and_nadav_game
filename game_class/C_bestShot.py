@@ -102,8 +102,8 @@ class BestShot:
         ככל שהמרחקים קצרים יותר → הניקוד גבוה יותר.
         """
         # נרמול
-        norm_white = dist_white_to_target / MAX_WHITE_TO_TARGET
-        norm_target = dist_target_to_pocket / MAX_TARGET_TO_POCKET
+        norm_white = dist_white_to_target / get_max_white_to_target_distance()
+        norm_target = dist_target_to_pocket / get_max_white_to_target_distance()
 
         # שילוב עם משקל
         weighted_avg = (

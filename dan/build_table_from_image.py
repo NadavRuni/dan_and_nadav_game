@@ -38,7 +38,7 @@ def build_table_from_analysis(analysis: dict):
 
     # סקלת פיקסלים → יחידות משחק (ל־fallback)
     sx = get_table_length() / max(1.0, width_px)
-    sy = TABLE_WIDTH / max(1.0, height_px)
+    sy = get_table_width() / max(1.0, height_px)
 
     # אם קיימת הומוגרפיה/קואורדינטות מנורמלות מה-pipeline — נעדיף אותן
     # table_uv: u,v ב-[0..1] כאשר u משמאל לימין, v מלמעלה למטה (Top-Left origin)
@@ -75,22 +75,22 @@ def build_table_from_analysis(analysis: dict):
                 table_height_px = y_max - y_min
 
                 sx = get_table_length() / max(1.0, table_width_px)
-                sy = TABLE_WIDTH / max(1.0, table_height_px)
+                sy = get_table_width() / max(1.0, table_height_px)
 
                 # נחשב מיקום יחסי לפי גבולות השולחן
                 x_game = clamp_to_table((cx - x_min) * sx, get_table_length())
                 # ציר Y בפיקסלים הפוך, לכן נשתמש ב־(y_max - cy)
-                y_game = clamp_to_table((y_max - cy) * sy, TABLE_WIDTH)
+                y_game = clamp_to_table((y_max - cy) * sy, get_table_width())
 
                 print(f"[build] using pocket-based mapping for ball id={bid}")
             else:
                 # fallback — אם אין מידע על כיסים
                 sx = get_table_length() / max(1.0, width_px)
-                sy = TABLE_WIDTH / max(1.0, height_px)
+                sy = get_table_width() / max(1.0, height_px)
 
                 # נשתמש בהיפוך פשוט של הציר האנכי
                 x_game = clamp_to_table(cx * sx, get_table_length())
-                y_game = clamp_to_table((height_px - cy) * sy, TABLE_WIDTH)
+                y_game = clamp_to_table((height_px - cy) * sy, get_table_width())
 
                 print(f"[build] using fallback image-size mapping for ball id={bid}")
 
@@ -118,7 +118,7 @@ def build_table_from_analysis(analysis: dict):
     else:
         print("[build] used pixel deltas fallback (sx/sy)")
 
-    return Table(get_table_length(), TABLE_WIDTH, balls)
+    return Table(get_table_length(), get_table_width(), balls)
 
 
 def start_build_table_from_img():

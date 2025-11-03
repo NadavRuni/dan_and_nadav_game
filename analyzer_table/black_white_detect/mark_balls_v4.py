@@ -14,7 +14,7 @@ import numpy as np
 from pathlib import Path
 from typing import List, Tuple
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-
+from const_numbers import *
 from analyzer_table.launcher_helper.json_models import Ball
 
 
@@ -140,9 +140,21 @@ def balls_from_cc(mask_bin, gray):
 
 
 def detect_balls_as_dataclasses(mask_bin, gray) -> List[Ball]:
-    """ממיר את רשימת ה-(cx,cy,r) למחלקות Ball"""
+    """ממיר את רשימת ה-(cx,cy,r) למחלקות Ball, מדפיס רק כדורים ברדיוס תקין"""
     raw_balls = balls_from_cc(mask_bin, gray)
-    return [Ball(center=(int(cx), int(cy)), radius=int(r)) for (cx, cy, r) in raw_balls]
+    balls: List[Ball] = []
+
+    for (cx, cy, r) in raw_balls:
+        # סינון לפי רדיוס
+        if get_ball_radius()-get_ball_radius_determinate() <= r <= get_ball_radius()+get_ball_radius_determinate():
+            ball = Ball(center=(int(cx), int(cy)), radius=int(r))
+            balls.append(ball)
+            print(f"✅ Ball detected: x={int(cx)}, y={int(cy)}, r={int(r)}")
+        else:
+            print(f"⚠️ Ignored ball with invalid radius r={int(r)}")
+            print (f"   (valid range: [{get_ball_radius()-get_ball_radius_determinate()}, {get_ball_radius()+get_ball_radius_determinate()}])")
+
+    return balls
 
 
 # ================= Main Pipeline ================= #

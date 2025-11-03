@@ -11,7 +11,8 @@ from dan.detect_table_rectangle import detect_table_rectangle  # פונקציה 
 from dan.pipe_Line import start_pipe_line
 from dan.build_table_from_image import start_build_table_from_img
 from const_numbers import OUTPUT_IMAGE_PATH, OUTPUT_CONTACT_VIEW_PATH ,RECTANGLE_JSON_PATH
-
+from analyzer_table.launcher_helper.data_to_rectangle import create_rectangle_from_data
+from dan.detect_table_rectangle import update_table_size_from_rectangle
 app = FastAPI()
 # מחיקה אוטומטית של קובץ ניווט ישן בזמן עליית השרת
 nav_file = Path(__file__).resolve().parent / "frontend_nav.json"
@@ -72,7 +73,10 @@ async def run_pipeline(file: UploadFile = File(...)):
         shutil.copyfileobj(file.file, buffer)
 
     # הפעלת זיהוי מלבן ברקע — לא חוסם
+    print("[DEBUG] start run_pipeline")
+
     loop = asyncio.get_event_loop()
+
     loop.run_in_executor(executor, detect_table_rectangle, str(file_path))
 
     # מיד מחזיר תגובה ללקוח
@@ -86,6 +90,9 @@ async def confirm_rectangle(data: dict):
     """
     try:
         print("[DEBUG] Received rectangle confirmation data:", data)
+        rec=create_rectangle_from_data(data)
+        update_table_size_from_rectangle(rec) if rec else None
+
         rect_path = Path(BASE_DIR / RECTANGLE_JSON_PATH)
         print("[DEBUG] Writing rectangle data to:", rect_path)
         rect_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
@@ -102,6 +109,9 @@ async def confirm_rectangle(data: dict):
         return {"status": "ok", "pipeline": pipeline_result, "table": table_result}
 
     except Exception as e:
+        import traceback
+        print("❌ Exception in confirm_rectangle:")
+        traceback.print_exc()  # <== זה מדפיס את ה-stack trace המלא לקונסול
         return JSONResponse({"error": str(e)}, status_code=500)
 
 

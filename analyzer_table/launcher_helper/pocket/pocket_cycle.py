@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 from analyzer_table.launcher_helper.json_models import table_pockets, Pocket
 from analyzer_table.detect_ball.Debugger import Debugger
-from const_numbers import CROP_HALF_SIZE
+from const_numbers import *
 
 
 # =====================
@@ -51,6 +51,7 @@ def _draw_and_save_circle(img, circle_data, img_path):
 
     if circle_data is not None:
         x, y, r = circle_data
+        x,y,r = int(x), int(y), int(r)
         cv2.circle(img, (x, y), r, (0, 255, 0), 2)  # ירוק – היקף
         cv2.circle(img, (x, y), 2, (0, 0, 255), 3)  # אדום – מרכז
         Debugger.log(f"✅ Circle drawn at ({x},{y}), radius={r}")
@@ -66,7 +67,7 @@ def _draw_and_save_circle(img, circle_data, img_path):
 # 🎯 פונקציה ראשית
 # =====================
 
-def mark_pocket_circles(all_pockets: table_pockets, half_size: int = CROP_HALF_SIZE) -> None:
+def mark_pocket_circles(all_pockets: table_pockets, half_size: int = get_crop_half_size()) -> None:
     Debugger.log("🎱 Starting pocket circle marking...")
 
     for pocket in all_pockets.pocket_list:

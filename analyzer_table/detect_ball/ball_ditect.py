@@ -4,11 +4,20 @@ import json
 from .Debugger import Debugger
 import os
 from analyzer_table.launcher_helper.json_models import PhotoData, Origin, Rectangle, Ball  # ✅ נוספו המחלקות החדשות
+from const_numbers import *
+import shutil
 
-MIN_BALL_RADIUS = 50
-MAX_BALL_RADIUS = 70
+def save_debug_copy_to_out_nadav(img, file_name):
+    """
+    שומר עותק של התמונה עם הסימונים בתיקייה out_nadav לצורך בדיקה ויזואלית.
+    """
+    os.makedirs("out_nadav", exist_ok=True)
+    save_path = os.path.join("out_nadav", file_name)
+    cv2.imwrite(save_path, img)
+    print(f"🟢 Saved debug copy to: {save_path}")
 
-def detect_balls_opencv(input_dir, output_dir, parts_info, full_w, full_h):
+
+def detect_balls_opencv(input_dir, output_dir, parts_info , main_width, main_height) -> list[PhotoData]:  # ✅ סוג ההחזרה עודכן
     Debugger.log("Starting OpenCV detection (with radius filtering)")
     os.makedirs(output_dir, exist_ok=True)
     total_balls = 0
@@ -17,6 +26,12 @@ def detect_balls_opencv(input_dir, output_dir, parts_info, full_w, full_h):
 
     for part_info in parts_info:
         file = part_info["file_name"]
+        if file =="cut_main.png"   :
+            Debugger.log("Main image flag is set to True")
+            param2_value = 25
+        else:
+            param2_value = 35
+
         path = os.path.join(input_dir, file)
         Debugger.log(f"[OpenCV] Processing {path}")
 
@@ -37,23 +52,25 @@ def detect_balls_opencv(input_dir, output_dir, parts_info, full_w, full_h):
 
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         gray = cv2.GaussianBlur(gray, (7, 7), 1.5)
-
+        print (f"[OpenCV] Running HoughCircles with radius ~{get_ball_radius()} ± {get_ball_radius_determinate()}")
         circles = cv2.HoughCircles(
-            gray, cv2.HOUGH_GRADIENT, dp=1.0, minDist=25,
-            param1=60, param2=18, minRadius=10, maxRadius=90
+            gray, cv2.HOUGH_GRADIENT, dp=1.0, minDist=int(get_ball_radius()*2),
+            param1=60, param2=param2_value, minRadius=int(get_ball_radius()-2*get_ball_radius_determinate()), maxRadius=int(get_ball_radius()+2*get_ball_radius_determinate())
         )
 
         found_balls = 0
         balls = []
 
+        os.makedirs("out_debug", exist_ok=True)
+
         if circles is not None:
             circles = np.uint16(np.around(circles))
             for x, y, r in circles[0, :]:
-                if not (MIN_BALL_RADIUS <= r <= MAX_BALL_RADIUS):
-                    Debugger.warn(f"[OpenCV] ❌ Ignored circle r={r} (out of valid range [{MIN_BALL_RADIUS}, {MAX_BALL_RADIUS}]) in {file}")
+                if not (get_ball_radius()-get_ball_radius_determinate() <= r <= get_ball_radius()+get_ball_radius_determinate()):
+                    # Debugger.warn(f"[OpenCV] ❌ Ignored circle r={r} (out of valid range [{MIN_get_ball_radius()}, {MAX_get_ball_radius()}]) in {file}")
                     continue
 
-                cv2.circle(img, (x, y), r, (0, 0, 255), 3)
+                cv2.circle(img, (int(x), int(y)), int(r), (0, 0, 255), 3)
                 cv2.putText(
                     img,
                     f"{r}",
@@ -70,11 +87,29 @@ def detect_balls_opencv(input_dir, output_dir, parts_info, full_w, full_h):
                 global_y = part_info["origin_y"] + y
 
                 balls.append(Ball(center=(int(global_x), int(global_y)), radius=int(r)))
+                
+                
+                # === Debug save for each detected circle ===
+                os.makedirs("out_debug", exist_ok=True)
+                debug_img = img.copy()
+
+                cv2.circle(debug_img, (int(x), int(y)), int(r), (0, 255, 0), 2)
+                cv2.circle(debug_img, (int(x), int(y)), 2, (0, 0, 255), 3)
+
+                info_text = f"x={int(global_x)}, y={int(global_y)}, r={int(r)}"
+                cv2.putText(debug_img, info_text, (10, 30),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+
+                cv2.imwrite(f"out_debug/circle_{found_balls}.png", debug_img)
+
 
         # שמירת התמונה
         output_img_path = os.path.join(output_dir, f"detect_{file}")
+        Debugger.log(f"[OpenCV] {found_balls} balls detected, saving image to {output_img_path}")
         cv2.imwrite(output_img_path, img)
-        Debugger.log(f"[OpenCV] {found_balls} balls detected, saved {output_img_path}")
+        save_debug_copy_to_out_nadav(img, file)
+
+        # Debugger.log(f"[OpenCV] {found_balls} balls detected, saved {output_img_path}")
         total_balls += found_balls
 
         # ✅ בניית האובייקט של PhotoData

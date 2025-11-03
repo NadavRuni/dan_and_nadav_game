@@ -20,7 +20,7 @@ class Ball:
             x_cord (float): X coordinate of the ball
             y_cord (float): Y coordinate of the ball
             ball_type (str): "solid", "striped", "black", or "white"
-            radius (float): Radius of the ball (default = BALL_RADIUS)
+            radius (float): Radius of the ball (default = get_ball_radius())
         """
         self.id = ball_id
         self.x_cord = x_cord

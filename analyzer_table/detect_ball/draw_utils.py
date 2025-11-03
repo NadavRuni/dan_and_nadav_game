@@ -73,7 +73,8 @@ def draw_balls_on_image(
         Debugger.log(f"🎯 Drawing {len(all_pockets.pocket_list)} pockets on table")
         for pocket in all_pockets.pocket_list:
             cx, cy = pocket.pocket_img_cordinates_on_table
-            r = pocket.pocker_radius
+            cx, cy = int(cx), int(cy)
+            r = int(pocket.pocker_radius)
 
             # עיגול כחול סביב החור
             cv2.circle(img, (cx, cy), r, (255, 0, 0), 2)

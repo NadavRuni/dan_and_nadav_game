@@ -10,14 +10,14 @@ from analyzer_table.launcher_helper.json_models import (
     Rectangle,
     table_pockets,
 )
-from const_numbers import CROP_HALF_SIZE
+from const_numbers import *
 
 
 def analyze_table_pockets(
     img_path: str,
     rectangle: Rectangle,
     output_dir: str = "out/pockets",
-    half_size: int = CROP_HALF_SIZE,
+    half_size: int = get_crop_half_size(),
 ) -> table_pockets:
     """
     🎱 מזהה, חותכת ומסווג את ששת כיסי השולחן על פי מלבן המסגרת.
@@ -63,6 +63,7 @@ def analyze_table_pockets(
         # הגנה מגבולות
         x1, y1 = max(0, cx - half_size), max(0, cy - half_size)
         x2, y2 = min(w, cx + half_size), min(h, cy + half_size)
+        x1, y1, x2, y2 = map(int, [x1, y1, x2, y2])
         roi = img[y1:y2, x1:x2]
 
         if roi.size == 0:

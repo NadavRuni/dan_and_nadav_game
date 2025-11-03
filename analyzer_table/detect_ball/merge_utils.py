@@ -3,10 +3,9 @@ from analyzer_table.detect_ball.Debugger import Debugger
 import math
 import cv2
 import numpy as np
+from const_numbers import *
 
 # קבועים לקביעת גבולות מיזוג
-MERGE_MAX_X_DIFF = 65     # מרחק מותר בציר X
-MERGE_MAX_Y_DIFF = 65     # מרחק מותר בציר Y
 def mergeData(main_photo: PhotoData, sub_photos: list[PhotoData], black_and_white_list: list[Ball],  table_rectangle: Rectangle) -> PhotoData:
     """
     מאחד את כל הכדורים מהתמונה הראשית וכל שאר התמונות.
@@ -21,11 +20,11 @@ def mergeData(main_photo: PhotoData, sub_photos: list[PhotoData], black_and_whit
     merged_balls = []
     for b in main_balls:
         if not is_inside_table(b , table_rectangle):
-            Debugger.log(f"Skipping ball at {b.center} from main image (outside table)")
+            # Debugger.log(f"Skipping ball at {b.center} from main image (outside table)")
             continue
 
         if _ball_exists(merged_balls, b):
-            Debugger.log(f"Skipping duplicate ball at {b.center} from main image")
+            # Debugger.log(f"Skipping duplicate ball at {b.center} from main image")
             continue
         Debugger.log(f"Adding ball at {b.center} with radius {b.radius} from main image")
         merged_balls.append(Ball(center=b.center, radius=b.radius))
@@ -110,18 +109,19 @@ def _ball_exists(merged_balls: list[Ball], new_ball: Ball) -> bool:
         dy = abs(existing.center[1] - new_ball.center[1])
 
         # אם הם קרובים מאוד — נחשב אותו כדור
-        if dx <= MERGE_MAX_X_DIFF and dy <= MERGE_MAX_Y_DIFF :
+        if dx <= get_merge_max_diff() and dy <= get_merge_max_diff() :
             return True
         
     return False
+
 def is_inside_table(ball: Ball, rect: Rectangle) -> bool:
     """
-    בודקת אם מרכז הכדור נמצא בתוך המלבן (נטוי).
-    מבוסס על אלגוריתם Point-in-Polygon (ray casting).
+    בודקת אם כל הכדור (כולל רדיוס + SAFE_PATH) נמצא בתוך המלבן (נטוי).
+    לא נחשב כ'בפנים' אם הכדור נוגע או חורג מגבולות השולחן.
     """
     x, y = ball.center
+    r = ball.radius + get_safe_from_wall()  # כולל מרחק ביטחון
 
-    # 4 נקודות המלבן
     polygon = [
         rect.top_left,
         rect.top_right,
@@ -129,22 +129,27 @@ def is_inside_table(ball: Ball, rect: Rectangle) -> bool:
         rect.bottom_left
     ]
 
-    # אלגוריתם ray casting
-    inside = False
-    n = len(polygon)
-    for i in range(n):
-        x1, y1 = polygon[i]
-        x2, y2 = polygon[(i + 1) % n]
-        if ((y1 > y) != (y2 > y)) and (x < (x2 - x1) * (y - y1) / (y2 - y1 + 1e-9) + x1):
-            inside = not inside
+    # פונקציה פנימית לבדיקת נקודה בתוך פוליגון (ray casting)
+    def point_in_polygon(px, py, poly):
+        inside = False
+        n = len(poly)
+        for i in range(n):
+            x1, y1 = poly[i]
+            x2, y2 = poly[(i + 1) % n]
+            if ((y1 > py) != (y2 > py)) and (px < (x2 - x1) * (py - y1) / (y2 - y1 + 1e-9) + x1):
+                inside = not inside
+        return inside
 
-    if inside:
-        Debugger.log(
-            f"🟢 INSIDE ball center=({x}, {y}) r={ball.radius} within polygon {polygon}"
-        )
+    edge_points = [
+        (x + r, y), (x - r, y), (x, y + r), (x, y - r),
+        (x + r / 1.414, y + r / 1.414), (x - r / 1.414, y - r / 1.414),
+        (x + r / 1.414, y - r / 1.414), (x - r / 1.414, y + r / 1.414)
+    ]
+
+    # אם כל הנקודות האלו בתוך הפוליגון — הכדור כולו בפנים
+    if all(point_in_polygon(px, py, polygon) for (px, py) in edge_points):
+        Debugger.log(f"🟢 INSIDE ball center=({x},{y}) r={ball.radius}+safe={get_safe_from_wall()} within polygon {polygon}")
+        return True
     else:
-        Debugger.warn(
-            f"🔴 OUTSIDE ball center=({x}, {y}) r={ball.radius} polygon={polygon}"
-        )
-
-    return inside
+        Debugger.log(f"🔴 TOO CLOSE TO EDGE ball center=({x},{y}) r={ball.radius}+safe={get_safe_from_wall()}")
+        return False

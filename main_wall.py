@@ -10,7 +10,7 @@ import math
 
 def main():
     # White ball in the center
-    x_white, y_white = get_table_length() / 2, TABLE_WIDTH / 2
+    x_white, y_white = get_table_length() / 2, get_table_width() / 2
 
     # Choose your ball type
     my_type = "striped"  # or "solid"
@@ -49,7 +49,7 @@ def main():
     # Create table with only 3 balls
     table = Table(
         get_table_length(),
-        TABLE_WIDTH,
+        get_table_width(),
         [
             white,
             ball_f,

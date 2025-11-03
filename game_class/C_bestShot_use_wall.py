@@ -58,7 +58,7 @@ class BestWallShot(BestShot):
                 dist = self.point_segment_distance(
                     ball.x_cord, ball.y_cord, x1, y1, x2, y2
                 )
-                if dist <= ball.radius + BALL_RADIUS + SAFE_DISTANCE:
+                if dist <= ball.radius + get_ball_radius() + get_safe_distance():
                     return True
         return False
 

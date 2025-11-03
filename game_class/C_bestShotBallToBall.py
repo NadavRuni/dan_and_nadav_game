@@ -77,8 +77,8 @@ class BestShotBallToBall:
     def calculate_score_distance(
         dist_helper_to_target: float, dist_target_to_pocket: float
     ) -> float:
-        norm_white = dist_helper_to_target / MAX_WHITE_TO_TARGET
-        norm_target = dist_target_to_pocket / MAX_TARGET_TO_POCKET
+        norm_white = dist_helper_to_target / get_max_white_to_target_distance()
+        norm_target = dist_target_to_pocket / get_max_white_to_target_distance()
         score = 1 - (norm_white + norm_target) / 2  # ממוצע נורמליזציות
         return max(0.0, min(1.0, score))
 

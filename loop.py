@@ -9,11 +9,11 @@ from game_class.C_gameAnalayzer import GameAnalayzer
 
 
 def run_one_simulation(run_idx: int, out_dir: str):
-    x_white, y_white = get_table_length() / 2, TABLE_WIDTH / 2
+    x_white, y_white = get_table_length() / 2, get_table_width() / 2
     white = Ball(0, x_white, y_white, "white", get_ball_radius())
 
     x_black = random.uniform(get_ball_radius() * 2, get_table_length() - get_ball_radius() * 2)
-    y_black = random.uniform(get_ball_radius() * 2, TABLE_WIDTH - get_ball_radius() * 2)
+    y_black = random.uniform(get_ball_radius() * 2, get_table_width() - get_ball_radius() * 2)
     black = Ball(8, x_black, y_black, "black", get_ball_radius())
 
     balls = []
@@ -36,11 +36,11 @@ def run_one_simulation(run_idx: int, out_dir: str):
 
     for i, (color, ball_type) in enumerate(colors, start=1):
         x = random.uniform(get_ball_radius() * 2, get_table_length() - get_ball_radius() * 2)
-        y = random.uniform(get_ball_radius() * 2, TABLE_WIDTH - get_ball_radius() * 2)
+        y = random.uniform(get_ball_radius() * 2, get_table_width() - get_ball_radius() * 2)
         balls.append(Ball(str(i), x, y, ball_type, get_ball_radius()))
 
     # יצירת שולחן עם כל הכדורים
-    table = Table(get_table_length(), TABLE_WIDTH, [white, black] + balls)
+    table = Table(get_table_length(), get_table_width(), [white, black] + balls)
 
     game = GameAnalayzer(table)
     best_shot = game.find_best_overall_shot("striped")

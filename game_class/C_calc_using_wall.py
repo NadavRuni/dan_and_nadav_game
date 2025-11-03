@@ -41,7 +41,7 @@ class CalculationsWithWall(Calculations):
         Args:
             ball_x, ball_y (float): מיקום הכדור
             pocket_x, pocket_y (float): מיקום הכיס
-            table_width (float): רוחב השולחן (y המקסימלי, כלומר מיקום הקיר העליון)
+            get_table_width() (float): רוחב השולחן (y המקסימלי, כלומר מיקום הקיר העליון)
 
         Returns:
             angle_deg (float): הזווית במעלות (ביחס לציר ה־X)
@@ -51,7 +51,7 @@ class CalculationsWithWall(Calculations):
         pocket_y = pocket.y_cord
 
         # 1. שיקוף הכיס ביחס לקיר העליון
-        mirrored_pocket_y = 2 * TABLE_WIDTH - pocket_y
+        mirrored_pocket_y = 2 * get_table_width() - pocket_y
 
         match pocket_id:
             case 0:
@@ -61,10 +61,10 @@ class CalculationsWithWall(Calculations):
                 Q = mirrored_pocket_y - self.distance_from_wall_dict["down"]
                 direction_from_side_wall = "right"
             case 2:
-                Q = self.distance_from_wall_dict["down"] + TABLE_WIDTH
+                Q = self.distance_from_wall_dict["down"] + get_table_width()
                 direction_from_side_wall = "right"
             case 3:
-                Q = self.distance_from_wall_dict["down"] + TABLE_WIDTH
+                Q = self.distance_from_wall_dict["down"] + get_table_width()
                 direction_from_side_wall = "left"
 
         P = self.distance_from_wall_dict[direction_from_side_wall]
@@ -76,17 +76,17 @@ class CalculationsWithWall(Calculations):
             # sorry fot this :)
 
             case 0:
-                impact_x = (TABLE_WIDTH * P) / Q
-                impact_y = TABLE_WIDTH
+                impact_x = (get_table_width() * P) / Q
+                impact_y = get_table_width()
                 theta_deg = 180 - theta_deg
             case 1:
-                impact_x = get_table_length() - ((TABLE_WIDTH * P) / Q)
-                impact_y = TABLE_WIDTH
+                impact_x = get_table_length() - ((get_table_width() * P) / Q)
+                impact_y = get_table_width()
             case 2:
-                impact_x = get_table_length() - ((TABLE_WIDTH * P) / Q)
+                impact_x = get_table_length() - ((get_table_width() * P) / Q)
                 impact_y = 0
             case 3:
-                impact_x = (TABLE_WIDTH * P) / Q
+                impact_x = (get_table_width() * P) / Q
                 impact_y = 0
                 theta_deg = 180 - theta_deg
 
@@ -99,7 +99,7 @@ class CalculationsWithWall(Calculations):
         Args:
             ball_x, ball_y (float): מיקום הכדור
             pocket_x, pocket_y (float): מיקום הכיס
-            table_width (float): רוחב השולחן (y המקסימלי, כלומר מיקום הקיר העליון)
+            get_table_width() (float): רוחב השולחן (y המקסימלי, כלומר מיקום הקיר העליון)
 
         Returns:
             angle_deg (float): הזווית במעלות (ביחס לציר ה־X)
@@ -111,7 +111,7 @@ class CalculationsWithWall(Calculations):
         pocket_y = pocket.y_cord
 
         # 1. שיקוף הכיס ביחס לקיר העליון
-        mirrored_pocket_y = 2 * TABLE_WIDTH - pocket_y
+        mirrored_pocket_y = 2 * get_table_width() - pocket_y
 
         Q = mirrored_pocket_y - self.distance_from_wall_dict["down"]
         P = self.distance_from_wall_dict["right"]
@@ -125,9 +125,9 @@ class CalculationsWithWall(Calculations):
         # דמיון משולשים
         # sorry fot this :)
 
-        impact_x = (TABLE_WIDTH * P) / Q
+        impact_x = (get_table_width() * P) / Q
 
-        return theta_deg, (impact_x, TABLE_WIDTH)
+        return theta_deg, (impact_x, get_table_width())
 
     def min_abs_angle(self) -> tuple[int, float]:
         """

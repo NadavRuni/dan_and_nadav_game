@@ -66,7 +66,7 @@ def get_circle_mask(
     cy = max(0, min(h - 1, cy))
 
     if r > 0:
-        cv2.circle(mask, (cx, cy), r, 255, thickness=-1)
+        cv2.circle(mask, (cx, cy), int(r), 255, thickness=-1)
 
     return mask
 

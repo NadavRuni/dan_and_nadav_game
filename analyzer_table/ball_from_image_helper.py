@@ -28,6 +28,7 @@ def crop_and_save_balls(image_path: str, balls: List[Ball], output_dir: str = "o
 
         x1, y1 = max(0, cx - r), max(0, cy - r)
         x2, y2 = min(w, cx + r), min(h, cy + r)
+        x1, y1, x2, y2 = map(int, [x1, y1, x2, y2])
         roi = img[y1:y2, x1:x2]
 
         if roi.size == 0:

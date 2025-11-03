@@ -25,7 +25,7 @@ def main():
     ]
 
     # יצירת שולחן עם הכדורים
-    table = Table(get_table_length(), TABLE_WIDTH, [white, black] + balls)
+    table = Table(get_table_length(), get_table_width(), [white, black] + balls)
 
     # ניתוח
     game = GameAnalayzer(table)

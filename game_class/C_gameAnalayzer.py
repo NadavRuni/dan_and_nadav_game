@@ -74,7 +74,7 @@ class GameAnalayzer:
             return all_wall_shots  # need to add mor logic here
 
 
-    def has_clear_path(self, ball1, ball2, all_balls, SAFE_DISTANCE=3.0) -> bool:
+    def has_clear_path(self, ball1, ball2, all_balls) -> bool:
         """
         בודקת אם יש מסלול פנוי בין שני כדורים (מהיקף ל-היקף).
         אם כדור אחר נמצא במרחק קטן מ-(radius + SAFE_DISTANCE) מהקו → חסום.
@@ -124,7 +124,7 @@ class GameAnalayzer:
             dist = math.hypot(other.x_cord - closest_x, other.y_cord - closest_y)
 
             # אם קרוב מדי → חסום
-            if dist <= other.radius + SAFE_DISTANCE:
+            if dist <= other.radius + get_safe_distance():
                 return False
 
         # אין אף כדור שחוסם
@@ -219,7 +219,7 @@ class GameAnalayzer:
                     continue
                 if target_ball.type == "black" or helper_ball.type == "black":
                     continue
-                if not self.has_clear_path(white, helper_ball):
+                if not self.has_clear_path(white, helper_ball , all_balls=balls):
                     print(
                         "[B2B] between the white and ball number",
                         helper_ball.id,

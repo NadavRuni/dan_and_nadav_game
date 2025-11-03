@@ -180,12 +180,12 @@ def draw_random_table():
         else:
             btype = "striped"
 
-        x = random.uniform(BALL_RADIUS * 2, get_table_length() - BALL_RADIUS * 2)
-        y = random.uniform(BALL_RADIUS * 2, TABLE_WIDTH - BALL_RADIUS * 2)
+        x = random.uniform(get_ball_radius() * 2, get_table_length() - get_ball_radius() * 2)
+        y = random.uniform(get_ball_radius() * 2, get_table_width() - get_ball_radius() * 2)
 
-        balls.append(Ball(i, x, y, btype, BALL_RADIUS))
+        balls.append(Ball(i, x, y, btype, get_ball_radius()))
 
-    table = Table(get_table_length(), TABLE_WIDTH, balls)
+    table = Table(get_table_length(), get_table_width(), balls)
     draw_table(table)
 
 
@@ -197,17 +197,17 @@ def draw_random_white_and_black(draw_line_between: bool = False, pocket_id: int 
     """
 
     # כדור לבן
-    x_white = random.uniform(BALL_RADIUS * 2, get_table_length() - BALL_RADIUS * 2)
-    y_white = random.uniform(BALL_RADIUS * 2, TABLE_WIDTH - BALL_RADIUS * 2)
-    white = Ball(0, x_white, y_white, "white", BALL_RADIUS)
+    x_white = random.uniform(get_ball_radius() * 2, get_table_length() - get_ball_radius() * 2)
+    y_white = random.uniform(get_ball_radius() * 2, get_table_width() - get_ball_radius() * 2)
+    white = Ball(0, x_white, y_white, "white", get_ball_radius())
 
     # כדור שחור
-    x_black = random.uniform(BALL_RADIUS * 2, get_table_length() - BALL_RADIUS * 2)
-    y_black = random.uniform(BALL_RADIUS * 2, TABLE_WIDTH - BALL_RADIUS * 2)
-    black = Ball(8, x_black, y_black, "black", BALL_RADIUS)
+    x_black = random.uniform(get_ball_radius() * 2, get_table_length() - get_ball_radius() * 2)
+    y_black = random.uniform(get_ball_radius() * 2, get_table_width() - get_ball_radius() * 2)
+    black = Ball(8, x_black, y_black, "black", get_ball_radius())
 
     # יצירת שולחן
-    table = Table(get_table_length(), TABLE_WIDTH, [white, black])
+    table = Table(get_table_length(), get_table_width(), [white, black])
 
     # מערך קווים לציור
     lines = []
@@ -229,12 +229,12 @@ def draw_white_center_black_to_corner():
 
     # מיקום הלבן = מרכז
     x_white = get_table_length() / 2
-    y_white = TABLE_WIDTH / 2
-    white = Ball(0, x_white, y_white, "white", BALL_RADIUS)
+    y_white = get_table_width() / 2
+    white = Ball(0, x_white, y_white, "white", get_ball_radius())
 
     # חור בפינה הימנית־תחתונה
     bottom_right_pocket = None
-    for p in Table(get_table_length(), TABLE_WIDTH, []).pockets:
+    for p in Table(get_table_length(), get_table_width(), []).pockets:
         if p.x_cord == get_table_length() and p.y_cord == 0:  # ימין תחתון
             bottom_right_pocket = p
             break
@@ -245,10 +245,10 @@ def draw_white_center_black_to_corner():
     # מיקום השחור = אמצע הדרך בין מרכז→חור ימין תחתון
     x_black = (x_white + bottom_right_pocket.x_cord) / 2
     y_black = (y_white + bottom_right_pocket.y_cord) / 2
-    black = Ball(8, x_black, y_black, "black", BALL_RADIUS)
+    black = Ball(8, x_black, y_black, "black", get_ball_radius())
 
     # שולחן
-    table = Table(get_table_length(), TABLE_WIDTH, [white, black])
+    table = Table(get_table_length(), get_table_width(), [white, black])
 
     # קווים: בין שחור→חור
     lines = [Line(black, p) for p in table.pockets]

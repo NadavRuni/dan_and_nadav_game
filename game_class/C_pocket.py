@@ -1,4 +1,4 @@
-from const_numbers import CORNER_POCKET_RADIUS, SIDE_POCKET_RADIUS
+from const_numbers import *
 from typing import Tuple
 
 
@@ -17,7 +17,7 @@ class Pocket:
         self.x_cord = x_cord
         self.y_cord = y_cord
         self.is_corner = is_corner
-        self.radius = CORNER_POCKET_RADIUS if is_corner else SIDE_POCKET_RADIUS
+        self.radius = get_corner_pocket_radius()  if is_corner else get_side_pocket_radius()
 
     def position(self) -> Tuple[float, float]:
         """Return (x, y) position of the pocket."""

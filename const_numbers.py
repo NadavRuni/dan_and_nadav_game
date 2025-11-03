@@ -48,11 +48,12 @@ def get_ball_radius() -> int | float:
 
 def get_ball_radius_photo() -> int | float:
     """מחזיר את רדיוס הכדור הנוכחי לתמונות."""
-    return get_table_length()/14.5
+    return get_table_length()/60
 
 def get_pocket_margin() -> int | float:
     """מחזיר את מרווח הכיסים הנוכחי."""
-    return get_table_length()/4.8
+    return get_table_length()/50
+
 def get_wall_margin() -> int | float:
     """מחזיר את מרווח הקירות הנוכחי."""
     return get_table_length()/2.9
@@ -62,20 +63,44 @@ def get_ball_diameter() -> int | float:
     return get_ball_radius() * 2.2
 
 
+def get_corner_pocket_radius() -> int | float:
+    """מחזיר את רדיוס הכיסים הפינתיים הנוכחי."""
+    return get_table_length()/72.5
 
+def get_side_pocket_radius() -> int | float:
+    """מחזיר את רדיוס הכיסים הצדדיים הנוכחי."""
+    return get_table_length()/64.4
 
-CORNER_POCKET_RADIUS = 4
-SIDE_POCKET_RADIUS = 4.5
-ADD_TO_POCKET = 3.5
+def get_min_distance_from_pocket() -> int | float:
+    """מחזיר את המרחק המינימלי מהכיס לפגיעה בטוחה."""
+    return get_ball_radius() * 1.2
 
-SAFE_DISTANCE = get_ball_radius() * 0.5
+def get_safe_distance() -> int | float:
+    """מחזיר את המרחק הבטוח בין כדורים."""
+    return get_ball_radius() * 0.5
 
-WEIGHT_WHITE_TO_TARGET = 1 / (TABLE_LENGTH / 2)
-WEIGHT_TARGET_TO_POCKET = 1 / (TABLE_LENGTH / 4)
+def get_ball_radius_determinate() -> int | float:
+    return get_ball_radius() * 0.3
 
-MAX_WHITE_TO_TARGET = TABLE_LENGTH / 2
-MAX_TARGET_TO_POCKET = math.hypot(TABLE_LENGTH, TABLE_WIDTH) / 2
+def get_max_white_to_target_distance() -> int | float:
+    """מחזיר את המרחק המקסימלי בין הכדור הלבן לכדור היעד."""
+    return get_table_length() / 2
 
+def get_get_max_white_to_target_distance() -> int | float:
+    """מחזיר את המרחק המקסימלי בין כדור היעד לכיס."""
+    return math.hypot(get_table_length(), get_table_width()) / 2
+
+def get_crop_half_size() -> int:
+    """מחזיר את חצי הגודל של החיתוך לתמונות."""
+    return get_table_length()/9.5
+
+def get_safe_from_wall() -> int | float:
+    """מחזיר את המרחק הבטוח מהקירות."""
+    return get_ball_radius() * 0.5
+
+def get_merge_max_diff () -> int:
+    return int(get_table_length()/20)    # מרחק מותר בציר X
+MERGE_MAX_Y_DIFF = 65     # מרחק מותר בציר Y
 NOT_FREE_SHOT = "dont have a free shot"
 
 OUTPUT_JSON_PATH = "photos/output/img_JSON.json"
@@ -84,11 +109,6 @@ OUTPUT_CONTACT_VIEW_PATH = Path("photos/output/img_contact.png")
 
 FORSE_WALL_SHOT = False
 
-
-
-MIN_CONFIDENCE = 40 
-
-CROP_HALF_SIZE = 30
 
 RECTANGLE_JSON_PATH = "rectangles_cache.json"
 BASE_DIR = Path(__file__).resolve().parent

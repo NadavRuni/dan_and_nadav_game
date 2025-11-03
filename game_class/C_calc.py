@@ -4,7 +4,7 @@ from typing import List
 from sympy import false
 
 from game_class.C_table import Table
-from const_numbers import NOT_FREE_SHOT
+from const_numbers import *
 import math
 from .C_ball import Ball
 from .C_pocket import Pocket
@@ -127,7 +127,7 @@ class Calculations:
                 dist = math.hypot(ball.x_cord - closest_x, ball.y_cord - closest_y)
 
                 # אם הכדור נוגע בקו (כולל רדיוס שלו ושל המטרה) → חסימה
-                if dist < ball.radius + target.radius:
+                if dist < ball.radius + target.radius +get_safe_distance():
                     return False
 
         return True

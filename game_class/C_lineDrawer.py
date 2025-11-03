@@ -96,8 +96,8 @@ class LineDrawer:
 
         # נקודת מגע על ההיקף (בצד שפונה לכיס)
         contact_target = (
-            target_px[0] - ux_p * get_ball_radius_photo,
-            target_px[1] - uy_p * get_ball_radius_photo,
+            target_px[0] - ux_p * get_ball_radius_photo(),
+            target_px[1] - uy_p * get_ball_radius_photo(),
         )
 
         # --- קו לבן → נקודת מגע ---
@@ -106,8 +106,8 @@ class LineDrawer:
         ux_w, uy_w = dx_w / dist_w, dy_w / dist_w
 
         start_white = (
-            white_px[0] + ux_w * get_ball_radius_photo,
-            white_px[1] + uy_w * get_ball_radius_photo,
+            white_px[0] + ux_w * get_ball_radius_photo(),
+            white_px[1] + uy_w * get_ball_radius_photo(),
         )
 
         def draw_dashed_line(draw, start, end, fill, width=3, dash_length=15, gap_length=10):
@@ -133,8 +133,8 @@ class LineDrawer:
 
         # --- מטרה (צד שפונה לכיס) → כיס ---
         start_target = (
-            target_px[0] + ux_p * get_ball_radius_photo,
-            target_px[1] + uy_p * get_ball_radius_photo,
+            target_px[0] + ux_p * get_ball_radius_photo(),
+            target_px[1] + uy_p * get_ball_radius_photo(),
         )
         pocket_before = (
             pocket_px[0] - ux_p * get_pocket_margin(),
@@ -209,11 +209,11 @@ class LineDrawer:
         ממיר נקודה מיחידות שולחן (x,y) לפיקסלים בתמונה.
         - x=0,y=0  => פינה שמאל-תחתון (BL)
         - x=get_table_length(),y=0 => פינה ימין-תחתון (BR)
-        - x=0,y=TABLE_WIDTH  => פינה שמאל-עליון (TL)
-        - x=get_table_length(),y=TABLE_WIDTH => פינה ימין-עליון (TR)
+        - x=0,y=get_table_width()  => פינה שמאל-עליון (TL)
+        - x=get_table_length(),y=get_table_width() => פינה ימין-עליון (TR)
         """
         u = x / get_table_length()
-        v = y / TABLE_WIDTH
+        v = y / get_table_width()
 
         width_px = self.table_size_px["width_px"]
         height_px = self.table_size_px["height_px"]
