@@ -67,7 +67,7 @@ def refine_with_hough(gray, x, y, w, h, pad=20):
     if roi.size == 0:
         return None
     if roi.max() ==0:
-        return 0.0
+        return None
 
     roi_prep = preprocess_roi(roi)
     edges = cv2.Canny(roi_prep, 60, 160)
@@ -119,8 +119,10 @@ def balls_from_cc(mask_bin, gray):
     balls = []
     img_area = h * w
     min_area_cc = int(0.00015 * img_area)
-    max_area_cc = int(0.0085 * img_area)
+    max_area_cc = int(0.0055 * img_area)
 
+    MAX_R = 100  # <-- סף עליון לרדיוס (כייל לפי התמונות שלך: 40–50)
+ 
     for label in range(1, num):
         x, y, bw, bh, area = stats[label]
         if area < min_area_cc or area > max_area_cc:
@@ -130,11 +132,18 @@ def balls_from_cc(mask_bin, gray):
 
         ref = refine_with_hough(gray, x, y, bw, bh)
         if ref:
-            balls.append(ref)
+            cx, cy, r = ref
         else:
             cx, cy = centroids[label]
             rr = int(0.5 * (bw + bh) / 2)
-            balls.append((int(cx), int(cy), max(6, rr)))
+            r = max(6, rr)
+
+        # ✅ סינון אחד קטן: מתעלמים מעיגולים ענקיים (כגון קושן/השתקפות)
+        if r > MAX_R:
+            # print(f"🔴 Ignored circle r={r} (too large)")  # אופציונלי: לוג
+            continue
+
+        balls.append((int(cx), int(cy), int(r)))
 
     return sorted(balls, key=lambda item: item[2], reverse=True)
 
