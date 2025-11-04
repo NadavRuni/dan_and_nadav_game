@@ -36,7 +36,6 @@ def run_white_suite(ball: Ball, suite: TestSuite):
     w.white_score_test_3 = scores[2]
     w.white_score_test_4 = scores[3]
     w.white_score_test_5 = scores[4]
-    #print (f"White scores: {scores}")
 
 def run_black_suite(ball: Ball, suite: TestSuite):
      ## Run each test in the suite on the ball and clamp results between 0–100

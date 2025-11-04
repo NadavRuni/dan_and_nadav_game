@@ -1,88 +1,88 @@
 {
-  "image_path": "uploads/IMG_1870.jpeg",
+  "image_path": "uploads/table-12.jpg",
   "image_size_px": {
-    "width": 5712.0,
-    "height": 2991.0
+    "width": 1280.0,
+    "height": 703.0
   },
   "balls": [
     {
       "index": 0,
       "type": "solid",
       "center_px": {
-        "x": 530.0,
-        "y": 2735.0
+        "x": 238.0,
+        "y": 334.0
       },
-      "radius_px": 28.0
+      "radius_px": 16.0
     },
     {
       "index": 1,
-      "type": "solid",
+      "type": "striped",
       "center_px": {
-        "x": 628.0,
-        "y": 2669.0
+        "x": 507.0,
+        "y": 537.0
       },
-      "radius_px": 22.0
+      "radius_px": 12.0
     },
     {
       "index": 2,
-      "type": "solid",
+      "type": "striped",
       "center_px": {
-        "x": 774.0,
-        "y": 2723.0
+        "x": 556.0,
+        "y": 286.0
       },
-      "radius_px": 23.0
+      "radius_px": 11.0
     },
     {
       "index": 3,
-      "type": "white",
+      "type": "black",
       "center_px": {
-        "x": 1309.0,
-        "y": 1448.0
+        "x": 566.0,
+        "y": 94.0
       },
-      "radius_px": 65.0
+      "radius_px": 12.0
     },
     {
       "index": 4,
-      "type": "solid",
+      "type": "striped",
       "center_px": {
-        "x": 2414.0,
-        "y": 2387.0
+        "x": 571.0,
+        "y": 369.0
       },
-      "radius_px": 30.0
+      "radius_px": 15.0
     },
     {
       "index": 5,
-      "type": "black",
+      "type": "striped",
       "center_px": {
-        "x": 2480.0,
-        "y": 2306.0
+        "x": 748.0,
+        "y": 154.0
       },
-      "radius_px": 29.0
+      "radius_px": 12.0
     },
     {
       "index": 6,
-      "type": "solid",
+      "type": "striped",
       "center_px": {
-        "x": 2486.0,
-        "y": 688.0
+        "x": 852.0,
+        "y": 366.0
       },
-      "radius_px": 28.0
+      "radius_px": 12.0
     },
     {
       "index": 7,
       "type": "striped",
       "center_px": {
-        "x": 2822.0,
-        "y": 2614.0
+        "x": 896.0,
+        "y": 594.0
       },
-      "radius_px": 30.0
+      "radius_px": 11.0
     },
     {
       "index": 8,
-      "type": "solid",
+      "type": "white",
       "center_px": {
-        "x": 2860.0,
-        "y": 2688.0
+        "x": 918.0,
+        "y": 342.0
       },
       "radius_px": 12.0
     },
@@ -90,38 +90,65 @@
       "index": 9,
       "type": "solid",
       "center_px": {
-        "x": 3214.0,
-        "y": 1334.0
+        "x": 1001.0,
+        "y": 140.0
       },
-      "radius_px": 29.0
+      "radius_px": 18.0
     },
     {
       "index": 10,
       "type": "striped",
       "center_px": {
-        "x": 5288.0,
-        "y": 2556.0
+        "x": 1014.0,
+        "y": 352.0
       },
-      "radius_px": 25.0
+      "radius_px": 13.0
+    },
+    {
+      "index": 11,
+      "type": "solid",
+      "center_px": {
+        "x": 1042.0,
+        "y": 444.0
+      },
+      "radius_px": 14.0
+    },
+    {
+      "index": 12,
+      "type": "solid",
+      "center_px": {
+        "x": 1104.0,
+        "y": 550.0
+      },
+      "radius_px": 11.0
+    },
+    {
+      "index": 13,
+      "type": "solid",
+      "center_px": {
+        "x": 1184.0,
+        "y": 104.0
+      },
+      "radius_px": 18.0
     }
   ],
   "white_ball": {
     "center": [
-      1309,
-      1448
+      918,
+      342
     ],
-    "radius": 65,
+    "radius": 12,
     "color_score": {
       "white_score": {
-        "white_score_test_1": 84.51346004710479,
-        "white_score_test_2": 0.0,
-        "white_score_test_3": 0.5038211151995472,
-        "white_score_test_4": 20.700125694274906,
-        "white_score_test_5": 83.08353886043129
+        "white_score_test_1": 78.97516587201287,
+        "white_score_test_2": 11.99188232421875,
+        "white_score_test_3": 34.78260869565217,
+        "white_score_test_4": 72.14514255523682,
+        "white_score_test_5": 38.775510204081634
       },
       "black_score": {
-        "black_score_test_1": 15.486539952895217,
-        "black_score_test_2": 0.0,
+        "black_score_test_1": 21.024834127987134,
+        "black_score_test_2": 9.999999999999998,
         "black_score_test_3": 0.0,
         "black_score_test_4": 0.0,
         "black_score_test_5": 0.0
@@ -142,28 +169,28 @@
       }
     },
     "final_color": "white",
-    "single_ball_path": "out/balls/ball_4_1309_1448.png"
+    "single_ball_path": "out/balls/ball_9_918_342.png"
   },
   "black_ball": {
     "center": [
-      2480,
-      2306
+      566,
+      94
     ],
-    "radius": 29,
+    "radius": 12,
     "color_score": {
       "white_score": {
-        "white_score_test_1": 26.22394935757506,
-        "white_score_test_2": 55.989837646484375,
-        "white_score_test_3": 12.691466083150985,
-        "white_score_test_4": 71.41608953475952,
-        "white_score_test_5": 71.50949683438854
+        "white_score_test_1": 38.20915072571998,
+        "white_score_test_2": 0.0,
+        "white_score_test_3": 9.795918367346939,
+        "white_score_test_4": 63.651399612426765,
+        "white_score_test_5": 11.564625850340137
       },
       "black_score": {
-        "black_score_test_1": 73.77605064242493,
+        "black_score_test_1": 61.79084927428002,
         "black_score_test_2": 0.0,
         "black_score_test_3": 100.0,
         "black_score_test_4": 100.0,
-        "black_score_test_5": 0.0
+        "black_score_test_5": 3.316326530612243
       },
       "solid_score": {
         "solid_score_test_1": 0.0,
@@ -181,37 +208,37 @@
       }
     },
     "final_color": "black",
-    "single_ball_path": "out/balls/ball_6_2480_2306.png"
+    "single_ball_path": "out/balls/ball_4_566_94.png"
   },
   "pockets": {
     "TL": {
-      "x": 242.0,
-      "y": 285.0,
+      "x": 69.0,
+      "y": 65.0,
       "radius": 30.0
     },
     "TM": {
-      "x": 2784.0,
-      "y": 268.0,
+      "x": 635.0,
+      "y": 63.0,
       "radius": 30.0
     },
     "TR": {
-      "x": 5327.0,
-      "y": 252.0,
+      "x": 1201.0,
+      "y": 61.0,
       "radius": 30.0
     },
     "BL": {
-      "x": 425.0,
-      "y": 2778.0,
+      "x": 60.0,
+      "y": 625.0,
       "radius": 30.0
     },
     "BM": {
-      "x": 2859.0,
-      "y": 2694.0,
+      "x": 630.0,
+      "y": 628.0,
       "radius": 30.0
     },
     "BR": {
-      "x": 5293.0,
-      "y": 2610.0,
+      "x": 1201.0,
+      "y": 631.0,
       "radius": 30.0
     }
   }

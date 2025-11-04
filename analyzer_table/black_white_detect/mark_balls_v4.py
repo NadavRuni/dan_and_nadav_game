@@ -76,6 +76,7 @@ def refine_with_hough(gray, x, y, w, h, pad=20):
     def try_hough(p2, r_lo_mul, r_hi_mul):
         min_r = max(6, int(r_lo_mul * r_est))
         max_r = max(min_r + 2, int(r_hi_mul * r_est))
+       # print("hhiiiiiii trying hough:", max_r)
         return cv2.HoughCircles(
             roi_prep, cv2.HOUGH_GRADIENT,
             dp=1.2, minDist=max(10, int(0.8 * r_est)),

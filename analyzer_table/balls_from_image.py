@@ -181,6 +181,29 @@ def full_analyzer_pipeline(image_path: str) -> AnalyzerResult:
     score_balls(sorted_balls, white_suite, black_suite)
     assert_scored(sorted_balls)
 
+    # --- PRINT WHITE SCORES PER BALL ---
+    for i, b in enumerate(sorted_balls, 1):
+        try:
+            white_score = _white_avg(b)
+        except Exception as e:
+            white_score = float("nan")
+            Debugger.warn(f"[score] Ball #{i} center={b.center} radius={b.radius} → failed to get white_avg: {e}")
+
+        Debugger.log(f"[score] Ball #{i} center={b.center} r={b.radius:.1f} → white_avg={white_score:.4f}")
+
+        # אם בא לך גם פירוט של כל מבחן ב־white (אם נשמר במבנה הציונים):
+        if hasattr(b, "scores") and isinstance(getattr(b, "scores"), dict):
+            white_breakdown = b.scores.get("white") or b.scores.get("WHITE")
+            if isinstance(white_breakdown, dict):
+                for test_name, val in white_breakdown.items():
+                    try:
+                        Debugger.log(f"        white.{test_name}: {float(val):.4f}")
+                    except Exception:
+                        Debugger.log(f"        white.{test_name}: {val}")
+    # --- END PRINT WHITE SCORES PER BALL ---
+
+
+
 
     ### יצירת תיקייה לשמירת כדורים
     ### בשביל לבדוק את הכדורים הלבנים והשחורים
