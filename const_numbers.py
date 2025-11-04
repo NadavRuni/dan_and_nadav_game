@@ -52,7 +52,7 @@ def get_ball_radius_photo() -> int | float:
 
 def get_pocket_margin() -> int | float:
     """מחזיר את מרווח הכיסים הנוכחי."""
-    return get_table_length()/50
+    return get_table_length()/30
 
 def get_wall_margin() -> int | float:
     """מחזיר את מרווח הקירות הנוכחי."""
@@ -104,12 +104,17 @@ MERGE_MAX_Y_DIFF = 65     # מרחק מותר בציר Y
 NOT_FREE_SHOT = "dont have a free shot"
 
 OUTPUT_JSON_PATH = "photos/output/img_JSON.json"
-OUTPUT_IMAGE_PATH = Path("photos/output/img.png")
-OUTPUT_CONTACT_VIEW_PATH = Path("photos/output/img_contact.png")
+BASE_DIR = Path(__file__).resolve().parent
+OUTPUT_DIR = BASE_DIR / "output"
+UPLOAD_DIR = BASE_DIR / "uploads"
 
+FRONTEND_DIR = BASE_DIR / "frontend"
+
+
+OUTPUT_IMAGE_PATH = OUTPUT_DIR / "img.png"
+OUTPUT_CONTACT_VIEW_PATH = BASE_DIR / "img_contact.png"
 FORSE_WALL_SHOT = False
 
 
 RECTANGLE_JSON_PATH = "rectangles_cache.json"
-BASE_DIR = Path(__file__).resolve().parent
 

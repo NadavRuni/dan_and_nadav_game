@@ -44,8 +44,9 @@ def main():
 
     # ציור
     if best_shot:
-        draw_table(table, best_shot=best_shot[0])
-    draw_table(table)
+        print("Drawing best shot on table...")
+        # draw_table(table, best_shot=best_shot[0])
+    # draw_table(table)
 
 
 if __name__ == "__main__":

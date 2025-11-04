@@ -147,6 +147,8 @@ def detect_balls_as_dataclasses(mask_bin, gray) -> List[Ball]:
     for (cx, cy, r) in raw_balls:
         # סינון לפי רדיוס
         if get_ball_radius()-get_ball_radius_determinate() <= r <= get_ball_radius()+get_ball_radius_determinate():
+
+        # if 50 <= r <= 70:
             ball = Ball(center=(int(cx), int(cy)), radius=int(r))
             balls.append(ball)
             print(f"✅ Ball detected: x={int(cx)}, y={int(cy)}, r={int(r)}")

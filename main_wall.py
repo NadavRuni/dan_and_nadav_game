@@ -63,13 +63,13 @@ def main():
             ball_b2,
         ],
     )
-    draw_table(table)
+    # draw_table(table)
 
     game = GameAnalayzer(table)
     best_shot = game.find_best_overall_shot(my_type)
     if len(best_shot) > 0:
         print("best shot is:", best_shot[0])
-        draw_table(table, best_shot=best_shot[0])
+        # draw_table(table, best_shot=best_shot[0])
     if len(best_shot) > 1:
         print("second best shot is:", best_shot[1])
     if len(best_shot) > 2:
