@@ -163,7 +163,7 @@ def draw_table(
             zorder=5,
         )
 
-    # plt.show()
+    plt.show()
     return fig, final_lines
 
 
