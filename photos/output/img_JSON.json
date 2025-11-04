@@ -1,145 +1,82 @@
 {
-  "image_path": "uploads/table-12.jpg",
+  "image_path": "uploads/test4.jpeg",
   "image_size_px": {
-    "width": 1280.0,
-    "height": 703.0
+    "width": 5674.0,
+    "height": 3303.0
   },
   "balls": [
     {
       "index": 0,
-      "type": "solid",
+      "type": "white",
       "center_px": {
-        "x": 235.0,
-        "y": 333.0
+        "x": 1296.0,
+        "y": 1622.0
       },
-      "radius_px": 11.0
+      "radius_px": 58.0
     },
     {
       "index": 1,
       "type": "striped",
       "center_px": {
-        "x": 506.0,
-        "y": 535.0
+        "x": 2206.0,
+        "y": 1048.0
       },
-      "radius_px": 12.0
+      "radius_px": 59.0
     },
     {
       "index": 2,
-      "type": "striped",
+      "type": "solid",
       "center_px": {
-        "x": 556.0,
-        "y": 286.0
+        "x": 2450.0,
+        "y": 2056.0
       },
-      "radius_px": 12.0
+      "radius_px": 61.0
     },
     {
       "index": 3,
-      "type": "striped",
+      "type": "black",
       "center_px": {
-        "x": 566.0,
-        "y": 368.0
+        "x": 3332.0,
+        "y": 2196.0
       },
-      "radius_px": 13.0
+      "radius_px": 58.0
     },
     {
       "index": 4,
-      "type": "black",
+      "type": "striped",
       "center_px": {
-        "x": 566.0,
-        "y": 95.0
+        "x": 3816.0,
+        "y": 1254.0
       },
-      "radius_px": 11.0
+      "radius_px": 54.0
     },
     {
       "index": 5,
       "type": "striped",
       "center_px": {
-        "x": 748.0,
-        "y": 154.0
+        "x": 3912.0,
+        "y": 2028.0
       },
-      "radius_px": 10.0
-    },
-    {
-      "index": 6,
-      "type": "striped",
-      "center_px": {
-        "x": 852.0,
-        "y": 366.0
-      },
-      "radius_px": 12.0
-    },
-    {
-      "index": 7,
-      "type": "striped",
-      "center_px": {
-        "x": 897.0,
-        "y": 593.0
-      },
-      "radius_px": 10.0
-    },
-    {
-      "index": 8,
-      "type": "white",
-      "center_px": {
-        "x": 918.0,
-        "y": 342.0
-      },
-      "radius_px": 12.0
-    },
-    {
-      "index": 9,
-      "type": "solid",
-      "center_px": {
-        "x": 996.0,
-        "y": 414.0
-      },
-      "radius_px": 11.0
-    },
-    {
-      "index": 10,
-      "type": "solid",
-      "center_px": {
-        "x": 1005.0,
-        "y": 141.0
-      },
-      "radius_px": 13.0
-    },
-    {
-      "index": 11,
-      "type": "solid",
-      "center_px": {
-        "x": 1104.0,
-        "y": 550.0
-      },
-      "radius_px": 11.0
-    },
-    {
-      "index": 12,
-      "type": "solid",
-      "center_px": {
-        "x": 1188.0,
-        "y": 106.0
-      },
-      "radius_px": 10.0
+      "radius_px": 59.0
     }
   ],
   "white_ball": {
     "center": [
-      918,
-      342
+      1296,
+      1622
     ],
-    "radius": 12,
+    "radius": 58,
     "color_score": {
       "white_score": {
-        "white_score_test_1": 78.97516587201287,
-        "white_score_test_2": 11.99188232421875,
-        "white_score_test_3": 34.78260869565217,
-        "white_score_test_4": 72.14514255523682,
-        "white_score_test_5": 38.775510204081634
+        "white_score_test_1": 91.11048081341912,
+        "white_score_test_2": 0.0,
+        "white_score_test_3": 43.267249342713,
+        "white_score_test_4": 35.75099468231201,
+        "white_score_test_5": 88.2357664819722
       },
       "black_score": {
-        "black_score_test_1": 21.024834127987134,
-        "black_score_test_2": 9.999999999999998,
+        "black_score_test_1": 8.889519186580886,
+        "black_score_test_2": 23.33333333333333,
         "black_score_test_3": 0.0,
         "black_score_test_4": 0.0,
         "black_score_test_5": 0.0
@@ -160,28 +97,28 @@
       }
     },
     "final_color": "white",
-    "single_ball_path": "out/balls/ball_9_918_342.png"
+    "single_ball_path": "out/balls/ball_1_1296_1622.png"
   },
   "black_ball": {
     "center": [
-      566,
-      95
+      3332,
+      2196
     ],
-    "radius": 11,
+    "radius": 58,
     "color_score": {
       "white_score": {
-        "white_score_test_1": 33.90256096335018,
+        "white_score_test_1": 52.87397197648591,
         "white_score_test_2": 0.0,
-        "white_score_test_3": 15.286624203821656,
-        "white_score_test_4": 69.0300989151001,
-        "white_score_test_5": 21.750663129973468
+        "white_score_test_3": 4.969000729394602,
+        "white_score_test_4": 26.632804870605465,
+        "white_score_test_5": 60.8126555849996
       },
       "black_score": {
-        "black_score_test_1": 66.09743903664982,
-        "black_score_test_2": 2.0001220703125044,
+        "black_score_test_1": 47.12602802351409,
+        "black_score_test_2": 0.0,
         "black_score_test_3": 100.0,
-        "black_score_test_4": 100.0,
-        "black_score_test_5": 10.245358090185675
+        "black_score_test_4": 53.93285577947443,
+        "black_score_test_5": 0.0
       },
       "solid_score": {
         "solid_score_test_1": 0.0,
@@ -199,37 +136,37 @@
       }
     },
     "final_color": "black",
-    "single_ball_path": "out/balls/ball_5_566_95.png"
+    "single_ball_path": "out/balls/ball_4_3332_2196.png"
   },
   "pockets": {
     "TL": {
-      "x": 45.0,
-      "y": 51.0,
+      "x": 310.0,
+      "y": 424.0,
       "radius": 30.526315789473685
     },
     "TM": {
-      "x": 640.0,
-      "y": 47.0,
+      "x": 2849.0,
+      "y": 371.0,
       "radius": 30.526315789473685
     },
     "TR": {
-      "x": 1235.0,
-      "y": 44.0,
+      "x": 5388.0,
+      "y": 319.0,
       "radius": 30.526315789473685
     },
     "BL": {
-      "x": 49.0,
-      "y": 655.0,
+      "x": 291.0,
+      "y": 2992.0,
       "radius": 30.526315789473685
     },
     "BM": {
-      "x": 635.0,
-      "y": 655.0,
+      "x": 2877.0,
+      "y": 2909.0,
       "radius": 30.526315789473685
     },
     "BR": {
-      "x": 1221.0,
-      "y": 656.0,
+      "x": 5463.0,
+      "y": 2827.0,
       "radius": 30.526315789473685
     }
   }
