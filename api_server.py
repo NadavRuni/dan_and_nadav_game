@@ -130,6 +130,7 @@ async def confirm_rectangle(data: dict):
 
     except Exception as e:
         import traceback
+<<<<<<< HEAD
         print("❌ Exception in confirm_rectangle:")
         traceback.print_exc()
         return JSONResponse({"error": str(e)}, status_code=500)
@@ -165,6 +166,7 @@ async def get_output(request: Request):
     print(f"[DEBUG] ✅ Returning direct public image URL: {public_url}")
 
     return JSONResponse({"output_url": public_url}, status_code=200)
+
 
 @app.get("/api/get_output_contact")
 async def get_output_contact():
