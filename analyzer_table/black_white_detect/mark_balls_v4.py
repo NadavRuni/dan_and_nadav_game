@@ -2,9 +2,9 @@
 """
 🎯 Full pipeline for automatic billiard ball detection.
 Steps:
-1️⃣ Generate blue-felt mask
+1️⃣ Generate felt mask (green/blue), then shrink to create a safety margin
 2️⃣ Detect connected components (CC)
-3️⃣ Refine with HoughCircles
+3️⃣ Refine with HoughCircles (even near borders)
 4️⃣ Draw green circles and labels on the original image
 5️⃣ Save debug & output files
 """
@@ -66,8 +66,8 @@ def refine_with_hough(gray, x, y, w, h, pad=20):
     roi = gray[y1:y2, x1:x2]
     if roi.size == 0:
         return None
-    if roi.max() ==0:
-        return 0.0
+    if roi.max() == 0:
+        return None
 
     roi_prep = preprocess_roi(roi)
     edges = cv2.Canny(roi_prep, 60, 160)
@@ -76,7 +76,6 @@ def refine_with_hough(gray, x, y, w, h, pad=20):
     def try_hough(p2, r_lo_mul, r_hi_mul):
         min_r = max(6, int(r_lo_mul * r_est))
         max_r = max(min_r + 2, int(r_hi_mul * r_est))
-       # print("hhiiiiiii trying hough:", max_r)
         return cv2.HoughCircles(
             roi_prep, cv2.HOUGH_GRADIENT,
             dp=1.2, minDist=max(10, int(0.8 * r_est)),
@@ -108,13 +107,17 @@ def refine_with_hough(gray, x, y, w, h, pad=20):
     return int(x1 + cx), int(y1 + cy), int(r)
 
 
-def touches_border(bbox, w, h, pad=3):
+def touches_border(bbox, w, h, pad=1):
+    """בדיקה אם ה-bbox על גבול התמונה (pad קטן כדי לא לפסול סתם)"""
     x, y, bw, bh = bbox
     return x <= pad or y <= pad or (x + bw) >= (w - 1 - pad) or (y + bh) >= (h - 1 - pad)
 
 
-def balls_from_cc(mask_bin, gray):
-    """מאתר בלובים לבנים במסכה, מריץ Hough refining ומחזיר [(cx, cy, r), ...]"""
+def balls_from_cc(mask_bin, gray, felt_mask_for_center=None):
+    """
+    מאתר בלובים לבנים במסכה, מריץ Hough refining ומחזיר [(cx, cy, r), ...]
+    אם felt_mask_for_center סופקה (255=בד), מאשרים בלוב גבולי רק אם מרכז העיגול יושב על הבד.
+    """
     h, w = mask_bin.shape[:2]
     num, labels, stats, centroids = cv2.connectedComponentsWithStats(mask_bin, connectivity=8)
     balls = []
@@ -126,23 +129,39 @@ def balls_from_cc(mask_bin, gray):
         x, y, bw, bh, area = stats[label]
         if area < min_area_cc or area > max_area_cc:
             continue
-        if touches_border((x, y, bw, bh), w, h):
-            continue
+
+        border_hit = touches_border((x, y, bw, bh), w, h)
 
         ref = refine_with_hough(gray, x, y, bw, bh)
         if ref:
-            balls.append(ref)
+            cx, cy, r = ref
+
+            if border_hit and felt_mask_for_center is not None:
+                # אשר רק אם המרכז על הבד (ולא על מסגרת/רפלקציה)
+                if 0 <= cy < felt_mask_for_center.shape[0] and 0 <= cx < felt_mask_for_center.shape[1]:
+                    if felt_mask_for_center[cy, cx] == 255:
+                        balls.append((cx, cy, r))
+                    else:
+                        # מרכז לא על הבד – דלג
+                        pass
+                else:
+                    pass
+            else:
+                balls.append((cx, cy, r))
+
         else:
-            cx, cy = centroids[label]
-            rr = int(0.5 * (bw + bh) / 2)
-            balls.append((int(cx), int(cy), max(6, rr)))
+            # fallback רק אם לא גבולי, כדי לא “להמציא” כדור על שפה
+            if not border_hit:
+                cx, cy = centroids[label]
+                rr = int(0.5 * (bw + bh) / 2)
+                balls.append((int(cx), int(cy), max(6, rr)))
 
     return sorted(balls, key=lambda item: item[2], reverse=True)
 
 
-def detect_balls_as_dataclasses(mask_bin, gray) -> List[Ball]:
+def detect_balls_as_dataclasses(mask_bin, gray, felt_mask_for_center=None) -> List[Ball]:
     """ממיר את רשימת ה-(cx,cy,r) למחלקות Ball"""
-    raw_balls = balls_from_cc(mask_bin, gray)
+    raw_balls = balls_from_cc(mask_bin, gray, felt_mask_for_center=felt_mask_for_center)
     return [Ball(center=(int(cx), int(cy)), radius=int(r)) for (cx, cy, r) in raw_balls]
 
 
@@ -174,11 +193,10 @@ def detect_balls_full_pipeline(input_path: str):
 
     lower_blue  = np.array([80,  40, 30], dtype=np.uint8)
     upper_blue  = np.array([125, 255,255], dtype=np.uint8)
-    lower_green = np.array([35,  30, 30], dtype=np.uint8)
-    upper_green = np.array([85, 255,255], dtype=np.uint8)
+    lower_green = np.array([38,  45, 35], dtype=np.uint8)   # מעט צר יותר
+    upper_green = np.array([82, 255,255], dtype=np.uint8)
 
     # כניסה רק לפיקסלים "צבעוניים" מספיק (פחות רגיש להשתקפויות/צללים)
-    S = hsv[:, :, 1]; V = hsv[:, :, 2]
     colorful = cv2.inRange(hsv, np.array([0,40,40], np.uint8), np.array([179,255,255], np.uint8))
 
     mask_blue  = cv2.inRange(hsv, lower_blue,  upper_blue)
@@ -186,10 +204,10 @@ def detect_balls_full_pipeline(input_path: str):
     mask_felt  = cv2.bitwise_or(mask_blue, mask_green)
     mask_felt  = cv2.bitwise_and(mask_felt, colorful)
 
-    # מורפולוגיה לניקוי
-    kernel = np.ones((5, 5), np.uint8)
-    mask_felt = cv2.morphologyEx(mask_felt, cv2.MORPH_OPEN, kernel, iterations=1)
-    mask_felt = cv2.morphologyEx(mask_felt, cv2.MORPH_CLOSE, kernel, iterations=1)
+    # מורפולוגיה לניקוי ראשוני
+    kernel5 = np.ones((5, 5), np.uint8)
+    mask_felt = cv2.morphologyEx(mask_felt, cv2.MORPH_OPEN, kernel5, iterations=1)
+    mask_felt = cv2.morphologyEx(mask_felt, cv2.MORPH_CLOSE, kernel5, iterations=1)
 
     # שמירת רק רכיבי felt גדולים (מונע בליעה של כדור ירוק/כחול קטן)
     num, labels, stats, _ = cv2.connectedComponentsWithStats(mask_felt, connectivity=8)
@@ -203,19 +221,32 @@ def detect_balls_full_pipeline(input_path: str):
         if area >= min_felt_area:
             mask_felt_clean[labels == lab] = 255
 
-    # הופכים – עכשיו לבן = לא felt (כדורים, מקל, כיסים)
-    mask_inv = cv2.bitwise_not(mask_felt_clean)
+    # === מרווח ביטחון מהבד: כיווץ (erode) לפני ההיפוך ===
+    shrink_px = max(3, int(0.006 * min(H, W)))  # אפשר להגדיל ל-0.01 אם עדיין נצמד
+    kernel_shrink = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2*shrink_px+1, 2*shrink_px+1))
+    mask_felt_shrunk = cv2.erode(mask_felt_clean, kernel_shrink, iterations=1)
 
-    # כאן כבר יש 0/255, ה-threshold מיותר. אפשר ישר מורפולוגיה קלה אם צריך:
-    mask_bin = cv2.morphologyEx(mask_inv, cv2.MORPH_CLOSE, kernel, iterations=1)
+    # (אופציונלי) ניקוי שפה דקה של הבד
+    mask_felt_shrunk = cv2.morphologyEx(
+        mask_felt_shrunk, cv2.MORPH_OPEN,
+        cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3)), iterations=1
+    )
+
+    # הופכים – עכשיו לבן = לא felt (כדורים, מקל, כיסים)
+    mask_inv = cv2.bitwise_not(mask_felt_shrunk)
+
+    # כאן כבר יש 0/255; משתמשים ב-OPEN עדין שלא יחבר את הכדור לבד
+    mask_bin = cv2.morphologyEx(
+        mask_inv, cv2.MORPH_OPEN,
+        cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3)), iterations=1
+    )
 
     cv2.imwrite(str(MASK_OUTPUT_PATH), mask_bin)
     print(f"🖤 Mask saved to: {MASK_OUTPUT_PATH}")
 
-
     # === Detect balls ===
     gray = cv2.cvtColor(orig, cv2.COLOR_BGR2GRAY)
-    ball_objects = detect_balls_as_dataclasses(mask_bin, gray)
+    ball_objects = detect_balls_as_dataclasses(mask_bin, gray, felt_mask_for_center=mask_felt_shrunk)
     print(f"🎱 Found {len(ball_objects)} balls.")
 
     # === Draw results ===
@@ -235,6 +266,7 @@ def detect_balls_full_pipeline(input_path: str):
     print(f"✅ Final image saved to: {OUTPUT_PATH}")
 
     return ball_objects
+
 
 
 # ================= Run Example ================= #
