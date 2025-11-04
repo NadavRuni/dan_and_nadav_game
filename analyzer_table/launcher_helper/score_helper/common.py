@@ -145,12 +145,13 @@ def _white_avg(ball: Ball) -> float:
 
     # --- השתמש באותם משקלים שהגדרת ב-run_real_image.py ---
     weights = {
-    'W1': 0.65,
-    'W2': 0.05,
-    'W3': 0.05,
-    'W4': 0.20,
-    'W5': 0.050,
+    'W1': 0.1,
+    'W2': 0.1,
+    'W3': 0.3,
+    'W4': 0.25,
+    'W5': 0.25,
 }
+    
 
     weighted_sum = (
         w_vec[0] * weights['W1'] +
