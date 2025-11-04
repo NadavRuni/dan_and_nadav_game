@@ -130,7 +130,6 @@ async def confirm_rectangle(data: dict):
 
     except Exception as e:
         import traceback
-<<<<<<< HEAD
         print("❌ Exception in confirm_rectangle:")
         traceback.print_exc()
         return JSONResponse({"error": str(e)}, status_code=500)
