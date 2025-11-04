@@ -7,7 +7,9 @@ from const_numbers import OUTPUT_JSON_PATH
 from analyzer_table.balls_from_image import full_analyzer_pipeline 
 from analyzer_table.launcher_helper.json_models import Ball , table_pockets , AnalyzerResult
 from analyzer_table.detect_ball.Debugger import Debugger
+from pathlib import Path
 
+UPLOAD_DIR = Path(__file__).resolve().parents[1] / "uploads"
 
 
 
@@ -564,6 +566,22 @@ def main():
 
 async def start_pipe_line(image_path: str):
     print("start_pipe_line", image_path)
+    import requests
+    from pathlib import Path
+
+    # אם ה-image_path הוא URL, נוריד אותו לקובץ זמני
+    if image_path.startswith("http"):
+        print(f"[DEBUG] Downloading remote image: {image_path}")
+        local_name = Path(image_path.split("/")[-1])
+        local_path = UPLOAD_DIR / local_name
+        response = requests.get(image_path, stream=True)
+        response.raise_for_status()
+        with open(local_path, "wb") as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+        image_path = str(local_path)
+        print(f"[DEBUG] Saved remote image locally to: {image_path}")
+
     
     img = cv2.imread(image_path)
     if img is None:

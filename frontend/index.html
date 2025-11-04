@@ -134,21 +134,16 @@
   <div class="loading-overlay" id="loading">
     <div class="spinner"></div>
   </div>
-
   <script>
-    let hasNavigated = false;
-    let watcher = null;
-    let pollInterval = null;
-
     console.log("🚀 Billiard Pipeline page loaded.");
-
+  
     // --- Spinner ---
     function showLoading(show) {
       const overlay = document.getElementById("loading");
       if (show) overlay.classList.add("active");
       else overlay.classList.remove("active");
     }
-
+  
     // --- Preview image ---
     function previewFile(file) {
       const preview = document.getElementById("preview");
@@ -160,36 +155,31 @@
         console.log("🖼 Preview displayed:", file.name);
       }
     }
-
+  
     // --- Upload file ---
     async function handleFile(file) {
       try {
         console.log("📤 Upload triggered:", file);
         if (!file) return;
-
+  
         previewFile(file);
         showLoading(true);
-
+  
         const formData = new FormData();
         formData.append("file", file);
-
+  
         const res = await fetch("/api/run_pipeline", {
           method: "POST",
           body: formData,
         });
-
+  
         console.log("📩 Response:", res.status);
         if (!res.ok) throw new Error("Upload failed: " + res.status);
-
+  
         const data = await res.json();
         console.log("✅ Pipeline result:", data);
-
-        // סיום – עצור האזנות
-        console.log("🛑 Pipeline finished — stopping watchers.");
-        stopAllWatchers();
-
+  
         if (data.redirect_url) {
-          hasNavigated = true;
           console.log("🌐 Redirect:", data.redirect_url);
           window.location.href = data.redirect_url;
         }
@@ -198,72 +188,9 @@
         alert("❌ " + err.message);
       } finally {
         showLoading(false);
-        stopAllWatchers();
       }
     }
-
-    // --- Stop all watchers ---
-    function stopAllWatchers() {
-      if (watcher) {
-        watcher.postMessage("stop");
-        watcher.terminate?.();
-        watcher = null;
-      }
-      if (pollInterval) {
-        clearInterval(pollInterval);
-        pollInterval = null;
-      }
-      hasNavigated = true;
-      console.log("🧹 All watchers stopped.");
-    }
-
-    // --- Start worker watcher ---
-    function startWatcher() {
-      if (window.Worker) {
-        watcher = new Worker("/frontend/nav_watcher.js");
-        watcher.onmessage = (e) => {
-          if (e.data.type === "navigate" && !hasNavigated) {
-            console.log("🚀 Redirect (from worker):", e.data.url);
-            hasNavigated = true;
-            stopAllWatchers();
-            window.location.href = e.data.url;
-          }
-        };
-        watcher.postMessage("start");
-        console.log("✅ Background watcher started.");
-      } else {
-        console.warn("⚠️ Web Workers not supported. Using fallback polling.");
-        pollInterval = setInterval(pollFallback, 1000);
-      }
-    }
-
-    // --- Fallback polling ---
-    async function pollFallback() {
-      if (hasNavigated) {
-        stopAllWatchers();
-        return;
-      }
-      try {
-        const res = await fetch("/frontend_nav.json?ts=" + Date.now(), { cache: "no-store" });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.navigate_to) {
-            console.log("🚀 Redirect (fallback):", data.navigate_to);
-            hasNavigated = true;
-            stopAllWatchers();
-            window.location.href = data.navigate_to;
-          }
-        }
-      } catch (err) {
-        console.error("pollFallback error:", err);
-      }
-    }
-
-    // --- Init watcher on load ---
-    window.addEventListener("load", () => {
-      console.log("✅ Watcher initialized (auto-stops after pipeline).");
-      startWatcher();
-    });
   </script>
+  
 </body>
 </html>

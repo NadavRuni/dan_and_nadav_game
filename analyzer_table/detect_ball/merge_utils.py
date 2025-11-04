@@ -114,6 +114,56 @@ def _ball_exists(merged_balls: list[Ball], new_ball: Ball) -> bool:
         
     return False
 
+
+def is_inside_inner_rectangle(ball: Ball, rect: Rectangle, margin: float) -> bool:
+    """
+    בודקת האם מרכז הכדור נמצא בתוך מלבן פנימי,
+    שמתקבל מהמלבן המקורי לאחר שמרחיקים את הגבולות מהפינות (margin).
+    שימושי כדי לוודא שכדורים לא נמצאים באיזור החורים (pockets).
+
+    Args:
+        ball (Ball): הכדור עם מיקום ורדיוס
+        rect (Rectangle): המלבן המקורי של השולחן
+        margin (float): המרחק מהפינות שיוגדר כאזור אסור (למשל POCKET_MARGIN)
+
+    Returns:
+        bool: True אם הכדור בתוך המלבן הפנימי (כלומר לא קרוב לפינות)
+    """
+
+    # חילוץ נקודות המלבן
+    tlx, tly = rect.top_left
+    trx, try_ = rect.top_right
+    blx, bly = rect.bottom_left
+    brx, bry = rect.bottom_right
+
+    # נניח שהמלבן יחסית ישר (לא נטוי מאוד)
+    # נחשב את המלבן הפנימי ע"י הסטת הגבולות פנימה
+    inner_rect = Rectangle(
+        top_left=(tlx + margin, tly + margin),
+        top_right=(trx - margin, try_ + margin),
+        bottom_left=(blx + margin, bly - margin),
+        bottom_right=(brx - margin, bry - margin)
+    )
+
+    # נבדוק האם מרכז הכדור נמצא בתוך המלבן הפנימי
+    x, y = ball.center[0], ball.center[1]
+
+    min_x = min(inner_rect.top_left[0], inner_rect.bottom_left[0])
+    max_x = max(inner_rect.top_right[0], inner_rect.bottom_right[0])
+    min_y = min(inner_rect.top_left[1], inner_rect.top_right[1])
+    max_y = max(inner_rect.bottom_left[1], inner_rect.bottom_right[1])
+
+    inside = (min_x + ball.radius <= x <= max_x - ball.radius) and \
+             (min_y + ball.radius <= y <= max_y - ball.radius)
+
+    if inside:
+        Debugger.log(f"✅ Ball ({x:.1f},{y:.1f}) safely inside inner rectangle (margin={margin})")
+    else:
+        Debugger.log(f"⚠️ Ball ({x:.1f},{y:.1f}) too close to pocket area (margin={margin})")
+
+    return inside
+
+
 def is_inside_table(ball: Ball, rect: Rectangle) -> bool:
     """
     בודקת אם כל הכדור (כולל רדיוס + SAFE_PATH) נמצא בתוך המלבן (נטוי).
@@ -149,7 +199,7 @@ def is_inside_table(ball: Ball, rect: Rectangle) -> bool:
     # אם כל הנקודות האלו בתוך הפוליגון — הכדור כולו בפנים
     if all(point_in_polygon(px, py, polygon) for (px, py) in edge_points):
         Debugger.log(f"🟢 INSIDE ball center=({x},{y}) r={ball.radius}+safe={get_safe_from_wall()} within polygon {polygon}")
-        return True
+        return True and is_inside_inner_rectangle(ball, rect, get_pocket_margin())
     else:
         Debugger.log(f"🔴 TOO CLOSE TO EDGE ball center=({x},{y}) r={ball.radius}+safe={get_safe_from_wall()}")
         return False

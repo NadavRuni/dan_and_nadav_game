@@ -128,7 +128,7 @@ def start_build_table_from_img():
     
     table = build_table_from_analysis(analysis)
     print(f"Built table with {len(table.balls)} balls from {OUTPUT_JSON_PATH}")
-    draw_table(table)
+    # draw_table(table)
 
     game = GameAnalayzer(table)
     best_shot = game.find_best_overall_shot("solid")
