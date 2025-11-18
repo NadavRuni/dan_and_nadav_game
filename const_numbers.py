@@ -56,7 +56,7 @@ def get_pocket_margin() -> int | float:
 
 def get_wall_margin() -> int | float:
     """מחזיר את מרווח הקירות הנוכחי."""
-    return get_table_length()/2.9
+    return get_table_length()/37
 
 def get_ball_diameter() -> int | float:
     """מחזיר את קוטר הכדור הנוכחי."""

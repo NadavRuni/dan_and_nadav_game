@@ -36,8 +36,6 @@ class LineDrawer:
         self.pockets = meta.get("pockets", {})
         print("[DEBUG] Loaded pockets:", self.pockets.keys())
 
-        # ✅ טוען את הגודל של השולחן בפיקסלים
-        self.table_size_px = meta.get("table_size_px", {"width_px": 0, "height_px": 0})
 
         self.img = Image.open(self.input_path).convert("RGB")
         base_dir = os.getcwd()
@@ -204,31 +202,75 @@ class LineDrawer:
         )
         return str(OUTPUT_CONTACT_VIEW_PATH)
         
-    def table_to_px(self, x: float, y: float) -> tuple[float, float]:
+    def table_to_px(self, x: float, y: float, smart_wall_margin=False) -> tuple[float, float]:
         """
         ממיר נקודה מיחידות שולחן (x,y) לפיקסלים בתמונה.
-        - x=0,y=0  => פינה שמאל-תחתון (BL)
-        - x=get_table_length(),y=0 => פינה ימין-תחתון (BR)
-        - x=0,y=get_table_width()  => פינה שמאל-עליון (TL)
-        - x=get_table_length(),y=get_table_width() => פינה ימין-עליון (TR)
+        
+        סדר פעולות (כאשר smart_wall_margin=True):
+        1. המרה מלאה לפיקסלים.
+        2. הזזת הנקודה בפיקסלים (Margin) פנימה, אם זוהתה כדופן.
         """
-        u = x / get_table_length()
-        v = y / get_table_width()
+        
+        # 1. קבלת מידות
+        width_px, height_px = self.img.size
+        table_length = get_table_length()
+        table_width = get_table_width()
 
-        width_px = self.table_size_px["width_px"]
-        height_px = self.table_size_px["height_px"]
+        if table_length == 0 or table_width == 0:
+            print("❌ Error: Table dimensions are zero.")
+            return (0.0, 0.0)
+
+        # -------------------------------------------
+        # 2. המרה בסיסית לפיקסלים (לפני Margin)
+        # -------------------------------------------
+        u = x / table_length
+        v = y / table_width
 
         px = u * width_px
-        py = height_px - (v * height_px)  # היפוך כי בתמונה y=0 זה למעלה
-        return (px, py)
+        py = height_px - (v * height_px) # היפוך ציר Y
 
+        # -------------------------------------------
+        # 3. לוגיקה חכמה: הוספת Margin בפיקסלים
+        # -------------------------------------------
+        if smart_wall_margin:
+            # ההנחה היא ש-get_wall_margin מחזיר ערך שמתאים לפיקסלים (או שהמשתמש רוצה להחיל אותו במישור התמונה)
+            margin = get_wall_margin()
+            epsilon = 2.0  # זיהוי קיר לפי יחידות שולחן מקוריות
+
+            # -- ציר X --
+            
+            # דופן שמאל (x=0) -> בתמונה זה 0 -> דחיפה ימינה (+)
+            if abs(x - 0) < epsilon:
+                print(f"🛡️ Wall (Left): Pushing px {px:.1f} -> {px + margin:.1f}")
+                px += margin
+            
+            # דופן ימין (x=Length) -> בתמונה זה Width -> דחיפה שמאלה (-)
+            elif abs(x - table_length) < epsilon:
+                print(f"🛡️ Wall (Right): Pushing px {px:.1f} -> {px - margin:.1f}")
+                px -= margin
+
+            # -- ציר Y --
+            
+            # דופן תחתונה (y=0) -> בתמונה זה Height (למטה) -> דחיפה למעלה (-)
+            # הערה: בתמונה Y עולה ככל שיושבים למטה, לכן כדי לעלות למעלה צריך להחסיר
+            if abs(y - 0) < epsilon:
+                print(f"🛡️ Wall (Bottom): Pushing py {py:.1f} -> {py - margin:.1f}")
+                py -= margin
+
+            # דופן עליונה (y=Width) -> בתמונה זה 0 (למעלה) -> דחיפה למטה (+)
+            elif abs(y - table_width) < epsilon:
+                print(f"🛡️ Wall (Top): Pushing py {py:.1f} -> {py + margin:.1f}")
+                py += margin
+
+        print(f"Converting: Table({x:.1f}, {y:.1f}) -> Px({px:.1f}, {py:.1f}) [SmartMargin={smart_wall_margin}]")
+        return (px, py)
     def draw_lines_with_wall(
         self,
         wall_point: tuple[float, float],   # ביחידות שולחן (x,y)
         color_target=(255, 0, 0),
         color_white=(0, 0, 255),
         color_wall=(0, 255, 0),
-        width=3,
+        width=6,
     ) -> str:
         """
         מצייר 3 קווים מקווקווים על התמונה:
@@ -247,7 +289,7 @@ class LineDrawer:
             return (0.0, 0.0) if L == 0 else (v[0]/L, v[1]/L)
         def v_scale(v, s): return (v[0]*s, v[1]*s)
 
-        def draw_dashed_line(draw, start, end, fill, width=3, dash_length=15, gap_length=10):
+        def draw_dashed_line(draw, start, end, fill, width=6, dash_length=15, gap_length=10):
             x1, y1 = start
             x2, y2 = end
             total_length = math.hypot(x2 - x1, y2 - y1)
@@ -272,9 +314,12 @@ class LineDrawer:
         pocket_c  = self.get_pocket_px(self.best_shot.pocket.id)
 
         # --- נקודת הקיר (המרה) ---
-        wall_px = self.table_to_px(wall_point[0], wall_point[1])
+        wall_px = self.table_to_px(wall_point[0], wall_point[1], True)
+        print ("Converted wall point to px:", wall_px)
         tw_dir = v_unit(v_sub(wall_px, target_c))  
-        wall_px = v_add(wall_px, v_scale(tw_dir, -get_wall_margin()))
+        
+        # FIXED: added () to get_wall_margin
+        # wall_px = v_add(wall_px, v_scale(tw_dir, -get_wall_margin()))
 
         if not (white_c and target_c and pocket_c and wall_px):
             raise ValueError("❌ Missing coordinates for white/target/pocket/wall")
@@ -290,20 +335,27 @@ class LineDrawer:
 
         # --- 1) לבן → מטרה ---
         wt_dir = v_unit(v_sub(target_c, white_c))
-        start_white   = v_add(white_c,  v_scale(wt_dir, get_ball_radius_photo))
-        end_on_target = v_add(target_c, v_scale(wt_dir, -get_ball_radius_photo))
+        # FIXED: added () to get_ball_radius_photo
+        start_white   = v_add(white_c,  v_scale(wt_dir, get_ball_radius_photo()))
+        # FIXED: added () to get_ball_radius_photo
+        end_on_target = v_add(target_c, v_scale(wt_dir, -get_ball_radius_photo()))
+        
         print(f"Line 1: White edge {start_white} → Target edge {end_on_target}")
         draw_dashed_line(draw, start_white, end_on_target, fill=color_white, width=width)
 
         # --- 2) מטרה → קיר ---
         tw_dir = v_unit(v_sub(wall_px, target_c))
-        start_target_wall = v_add(target_c, v_scale(tw_dir, get_ball_radius_photo))
+        # FIXED: added () to get_ball_radius_photo
+        start_target_wall = v_add(target_c, v_scale(tw_dir, get_ball_radius_photo()))
+        
         print(f"Line 2: Target edge {start_target_wall} → Wall {wall_px}")
         draw_dashed_line(draw, start_target_wall, wall_px, fill=color_target, width=width)
 
         # --- 3) קיר → חור ---
         wp_dir = v_unit(v_sub(pocket_c, wall_px))
+        # FIXED: added () to get_pocket_margin
         pocket_before = v_add(pocket_c, v_scale(wp_dir, -get_pocket_margin()))
+        
         print(f"Line 3: Wall {wall_px} → Pocket-before {pocket_before}")
         draw_dashed_line(draw, wall_px, pocket_before, fill=color_wall, width=width)
 

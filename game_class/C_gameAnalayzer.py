@@ -243,12 +243,7 @@ class GameAnalayzer:
                 key=lambda s: s.score,
                 reverse=True,
             )
-            print(
-                "✅ All valid shots:",
-                ", ".join(
-                    [f"Ball {s.target.id} (score={s.score:.2f})" for s in sorted_shots]
-                ),
-            )
+         
             return sorted_shots[:3]  # שלושת המכות הכי טובות
         else: #this is the wall shot logic
             print("STARTING WALL SHOT LOGIC")
@@ -280,7 +275,12 @@ class GameAnalayzer:
                         ]
                     ),
                 )
-                return sorted_wall_shots[:3]
+            print ("✅The best wall shot is ", sorted_wall_shots[0]) 
+            print ( "wall point is -" , sorted_wall_shots[0].point_with_the_wall)
+
+
+
+            return sorted_wall_shots[:3]
 
             print("❌ No wall shots found either.")
             return []

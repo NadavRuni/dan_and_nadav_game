@@ -57,7 +57,7 @@ def draw_table(
     # ציור לפי best_shot (כולל wall shot אם קיים)
     if best_shot:
         print (isinstance(best_shot, BestWallShot))
-        if best_shot.angle>90 or not isinstance(best_shot, BestWallShot):
+        if not isinstance(best_shot, BestWallShot) or best_shot.angle>90 :
             print("Best shot is BestWallShot draw the line later")
         elif isinstance(best_shot, BestShotBallToBall):
             ax.plot(
