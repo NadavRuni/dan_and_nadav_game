@@ -201,6 +201,108 @@ class LineDrawer:
             f"[DEBUG] Contact-to-pocket point drawn at ({contact_x:.2f}, {contact_y:.2f}), zoom saved."
         )
         return str(OUTPUT_CONTACT_VIEW_PATH)
+    def draw_combo_lines(self, color_mid=(0, 255, 255), color_target=(255, 0, 0), color_white=(0, 0, 255), width=6) -> str:
+        """
+        מצייר מסלול קומבינציה (3 שלבים) מתוך אובייקט BestShotBallToBall:
+        1. לבן (White) → כדור עזר (Helper / Mid)
+        2. כדור עזר (Helper) → כדור מטרה (Target)
+        3. כדור מטרה (Target) → כיס (Pocket)
+
+        מחשב את נקודות המגע הפיזיקליות ("Ghost Ball") לאחור.
+        """
+        print("=== Starting Combo Drawing ===")
+        draw = ImageDraw.Draw(self.img)
+        
+        # בדיקה שהשוט תקין
+        if hasattr(self.best_shot, 'valid') and not self.best_shot.valid:
+            print("❌ Combo shot is marked as invalid.")
+            return self.output_path
+
+        # חילוץ הנתונים מתוך אובייקט BestShotBallToBall
+        try:
+            white_id = self.best_shot.white.id
+            mid_ball_id = self.best_shot.target_helper.id   # הכדור הראשון שנפגע (העזר)
+            target_ball_id = self.best_shot.target.id       # הכדור שנכנס לכיס
+            pocket_id = self.best_shot.pocket.id
+        except AttributeError as e:
+            print(f"❌ Error accessing attributes in best_shot: {e}")
+            return self.output_path
+
+        print(f"Drawing COMBO lines: White({white_id}) -> Helper({mid_ball_id}) -> Target({target_ball_id}) -> Pocket({pocket_id})")
+
+        # 1. השגת קואורדינטות פיקסלים
+        white_px = self.get_ball_px(white_id)
+        mid_px = self.get_ball_px(mid_ball_id)
+        target_px = self.get_ball_px(target_ball_id)
+        pocket_px = self.get_pocket_px(pocket_id)
+
+        if not (white_px and mid_px and target_px and pocket_px):
+            print("❌ Missing coordinates for combo shot")
+            return self.output_path
+
+        # פונקציות עזר פנימיות
+        def get_dir_unit(p1, p2):
+            dx, dy = p2[0] - p1[0], p2[1] - p1[1]
+            dist = math.hypot(dx, dy)
+            return (0, 0) if dist == 0 else (dx/dist, dy/dist)
+
+        def draw_dashed_line(draw, start, end, fill, width=3, dash_length=15, gap_length=10):
+            x1, y1 = start
+            x2, y2 = end
+            total_length = math.hypot(x2 - x1, y2 - y1)
+            if total_length == 0: return
+            dx, dy = (x2 - x1) / total_length, (y2 - y1) / total_length
+
+            pos = 0
+            while pos < total_length:
+                x_start = x1 + dx * pos
+                y_start = y1 + dy * pos
+                pos += dash_length
+                if pos > total_length: pos = total_length
+                x_end = x1 + dx * pos
+                y_end = y1 + dy * pos
+                draw.line([(x_start, y_start), (x_end, y_end)], fill=fill, width=width)
+                pos += gap_length
+
+        radius = get_ball_radius_photo()
+
+        # --- שלב 3 (הסוף): כדור מטרה (Target) → כיס ---
+        ux_3, uy_3 = get_dir_unit(target_px, pocket_px)
+        
+        start_3 = (target_px[0] + ux_3 * radius, target_px[1] + uy_3 * radius)
+        end_3 = (pocket_px[0] - ux_3 * get_pocket_margin(), pocket_px[1] - uy_3 * get_pocket_margin())
+        
+        draw_dashed_line(draw, start_3, end_3, fill=color_target, width=width)
+
+        # --- שלב 2 (האמצע): כדור עזר (Helper) → כדור מטרה ---
+        # נקודת המגע הנדרשת על כדור המטרה (בצד ההפוך לכיס)
+        contact_on_target = (
+            target_px[0] - ux_3 * radius,
+            target_px[1] - uy_3 * radius
+        )
+        
+        # כיוון התנועה של העזר: מהמרכז שלו אל עבר נקודת המגע
+        ux_2, uy_2 = get_dir_unit(mid_px, contact_on_target)
+        
+        start_2 = (mid_px[0] + ux_2 * radius, mid_px[1] + uy_2 * radius)
+        
+        draw_dashed_line(draw, start_2, contact_on_target, fill=color_mid, width=width)
+
+        # --- שלב 1 (ההתחלה): לבן → כדור עזר ---
+        # נקודת המגע הנדרשת על כדור העזר (כדי שיעוף לכיוון המטרה)
+        contact_on_mid = (
+            mid_px[0] - ux_2 * radius,
+            mid_px[1] - uy_2 * radius
+        )
+        
+        ux_1, uy_1 = get_dir_unit(white_px, contact_on_mid)
+        start_1 = (white_px[0] + ux_1 * radius, white_px[1] + uy_1 * radius)
+        
+        draw_dashed_line(draw, start_1, contact_on_mid, fill=color_white, width=width)
+
+        print("=== Finished Combo Drawing ===")
+        self.img.save(self.output_path, quality=95)
+        return self.output_path
         
     def table_to_px(self, x: float, y: float, smart_wall_margin=False) -> tuple[float, float]:
         """

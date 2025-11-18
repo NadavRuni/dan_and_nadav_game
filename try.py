@@ -5,7 +5,7 @@ import os
 
 url = "http://localhost:8000/api/confirm_rectangle"
 
-picture_name = "test2_wall_shot.jpeg"
+picture_name = "test3_b2b.jpeg"
 image_path = os.path.join("/Users/nadavhershkovitz/Downloads", picture_name)
 
 data = {
@@ -13,8 +13,8 @@ data = {
     "points": [
         {"x": 150, "y": 200},
         {"x": 160 , "y": 2900},
-        {"x": 5600, "y": 2900},
-        {"x": 5246, "y": 200}
+        {"x": 5500, "y": 2800},
+        {"x": 5500, "y": 200}
     ],
     "display_width": 5712,
     "display_height": 3093,

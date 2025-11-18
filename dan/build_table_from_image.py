@@ -148,6 +148,9 @@ def start_build_table_from_img():
         line_drawer.draw_lines_with_wall(
             (best_shot[0].point_with_the_wall[0], best_shot[0].point_with_the_wall[1])
         )
+    elif (isinstance(best_shot[0],BestShotBallToBall)):
+        print("Drawing ball-to-ball shot lines...")
+        line_drawer.draw_combo_lines()
     else :
         line_drawer.draw_lines()
 

@@ -121,12 +121,12 @@ def draw_table(
                     (best_shot.target.x_cord, best_shot.target.y_cord),
                 )
             )
-
-        for i, ((x1, y1), (x2, y2)) in enumerate(best_shot.get_lines()):
-            color = "blue" if i == 0 else ("orange" if i == 1 else "red")
-            ax.plot(
-                [x1, x2], [y1, y2], linestyle="-", color=color, linewidth=2, zorder=2
-            )
+        if (isinstance(best_shot, BestWallShot)):
+            for i, ((x1, y1), (x2, y2)) in enumerate(best_shot.get_lines()):
+                color = "blue" if i == 0 else ("orange" if i == 1 else "red")
+                ax.plot(
+                    [x1, x2], [y1, y2], linestyle="-", color=color, linewidth=2, zorder=2
+                )
 
     # ציור חורים
     for pocket in table.pockets:
@@ -163,7 +163,7 @@ def draw_table(
             zorder=5,
         )
 
-    plt.show()
+    # plt.show()
     return fig, final_lines
 
 
