@@ -157,8 +157,8 @@ async def get_output(request: Request):
     base_url = str(request.base_url).rstrip("/")
 
     # אם הבקשה מגיעה מ-ngrok, נשתמש בכתובת הקבועה
-    if "ngrok" in base_url:
-        base_url = "https://sunbeamed-spectrologically-kameron.ngrok-free.dev"
+    # if "ngrok" in base_url:
+    #     base_url = "https://sunbeamed-spectrologically-kameron.ngrok-free.dev"
 
     # ניצור קישור מלא לפי התיקייה הנוכחית (ללא /static)
     public_url = f"{base_url}/api/output_image"
