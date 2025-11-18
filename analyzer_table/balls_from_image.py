@@ -189,6 +189,12 @@ def full_analyzer_pipeline(image_path: str) -> AnalyzerResult:
     os.makedirs(out_balls_dir, exist_ok=True)
     
     whitest_ball = max(sorted_balls, key=_white_avg, default=None)
+    print ("Whitest ball analysis:")
+    for ball in sorted_balls:
+        score = _white_avg(ball)
+
+        print(f"{ball.center}: white score = {score}")
+
     blackest_ball = max(sorted_balls, key=_black_avg, default=None)
 
 
