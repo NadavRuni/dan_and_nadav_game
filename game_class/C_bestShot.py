@@ -33,7 +33,7 @@ class BestShot:
             )
             self.angle: float = best_angle
 
-            if abs(self.angle) > 85:
+            if abs(self.angle) > 75:
                 self.no_valid_shot()
                 return
 
