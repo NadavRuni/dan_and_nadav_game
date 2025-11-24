@@ -37,46 +37,43 @@ def process_image_for_border(image_path: str):
 
     # 2. Try to remove the white border
     print("Step 2: Checking for and removing white border...")
-    processed_mask = remove_white_border(binary_mask)
-
-    final_mask = None
+    processed_mask, crop_coords = remove_white_border(binary_mask)
     final_mask_output_path = get_output_path("final_processed_mask.jpg", sub_dir="border_and_pocket")
-    was_cropped = False
 
     # 3. Check if the mask was changed
-    if processed_mask.shape != binary_mask.shape:
+    if crop_coords:
         print(f"  - Border detected and cropped!")
         print(f"  - Original mask shape: {binary_mask.shape}")
-        print(f"  - Cropped mask shape:  {processed_mask.shape}")
-        final_mask = processed_mask
-        was_cropped = True
+        print(f"  - Final mask shape:    {processed_mask.shape}")
 
-        # 4b. Draw the cropping rectangle on the original image for debugging
-        print("  - Generating debug image with crop rectangle...")
-        black_pixels = np.where(binary_mask == 0)
-        if black_pixels[0].size > 0:
-            top = np.min(black_pixels[0])
-            bottom = np.max(black_pixels[0])
-            left = np.min(black_pixels[1])
-            right = np.max(black_pixels[1])
+        # Save the new, cropped mask
+        cv2.imwrite(final_mask_output_path, processed_mask)
+        print(f"  - Saved cropped mask to: {final_mask_output_path}")
 
-            debug_image = original_image.copy()
-            # Draw a bright green rectangle on the debug image
-            cv2.rectangle(debug_image, (left, top), (right, bottom), (0, 255, 0), 3)
+        # Draw the cropping rectangle on the original image for debugging
+        print("  - Generating debug images with crop rectangle...")
+        debug_image = original_image.copy()
+        top, bottom = crop_coords['top'], crop_coords['bottom']
+        left, right = crop_coords['left'], crop_coords['right']
+        
+        # Draw on original image
+        cv2.rectangle(debug_image, (left, top), (right, bottom), (0, 255, 0), 3)
+        output_debug_path = get_output_path("debug_border_crop.jpg", sub_dir="border_and_pocket")
+        cv2.imwrite(output_debug_path, debug_image)
+        print(f"  - Saved debug image with crop rectangle to: {output_debug_path}")
 
-            output_debug_path = get_output_path("debug_border_crop.jpg", sub_dir="border_and_pocket")
-            cv2.imwrite(output_debug_path, debug_image)
-            print(f"  - Saved debug image with crop rectangle to: {output_debug_path}")
-        else:
-            print("  - WARNING: Could not draw debug rectangle because no black pixels were found in the original mask.")
+        # Draw on mask image
+        debug_mask_image = cv2.cvtColor(binary_mask, cv2.COLOR_GRAY2BGR)
+        cv2.rectangle(debug_mask_image, (left, top), (right, bottom), (0, 255, 0), 3)
+        output_debug_mask_path = get_output_path("debug_mask_crop.jpg", sub_dir="border_and_pocket")
+        cv2.imwrite(output_debug_mask_path, debug_mask_image)
+        print(f"  - Saved debug mask with crop rectangle to: {output_debug_mask_path}")
+
     else:
-        print("  - No removable white border was detected. Mask remains unchanged.")
-        final_mask = binary_mask
-    
-    # 4a. Always save the final (cropped or original) mask
-    if final_mask is not None:
-        cv2.imwrite(final_mask_output_path, final_mask)
-        print(f"  - Final processed mask saved to: {final_mask_output_path}")
+        print("  - No removable border detected. Mask remains unchanged.")
+        # Save the original mask as the final mask
+        cv2.imwrite(final_mask_output_path, processed_mask)
+        print(f"  - Unchanged mask saved to: {final_mask_output_path}")
 
     print("--- Process Finished ---")
 
