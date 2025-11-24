@@ -16,8 +16,7 @@ from analyzer_table.table.rectangle import parse_rectangle_from_data
 from analyzer_table.launcher_helper.json_models import Rectangle
 from typing import Optional, List
 
-AREA_MIN_POCKET = 15000
-AREA_MAX_POCKET = 60000
+
 
 
 def is_near_border(center, image_width, image_height, margin_fraction=0.2):
@@ -25,6 +24,7 @@ def is_near_border(center, image_width, image_height, margin_fraction=0.2):
     center_x, center_y = center
     margin_x = image_width * margin_fraction
     margin_y = image_height * margin_fraction
+    
     return (
         center_x < margin_x
         or center_x > image_width - margin_x
@@ -300,23 +300,21 @@ def _circles_from_connected_components(
 
 
 def find_corner_pockets_from_mask(
-    mask_path: str, table_rectangle: Optional["Rectangle"] = None
-) -> List["PocketDetection"]:
+    image_path: str 
+) -> tuple[List["PocketDetection"] , str] :
     """
     Finds and circles white polygonal shapes in the corners of a binary mask.
     Saves the output as 'pocket_mask.jpg' near the original path.
     """
 
-    # 1. Handle Default Table Rectangle
-    if not table_rectangle:
-        try:
-            table_rectangle = get_table_rect()
-            print("DEBUG: find_corner_pockets - Using default table_rectangle.")
-        except NameError:
-            print(
-                "DEBUG: find_corner_pockets - No get_table_rect function found, skipping."
-            )
 
+    # 1. Handle Default Table Rectangle
+    from const_numbers import set_table_length, set_table_width
+
+
+    mask_path, binary_mask, original_image = crate_mask_table(image_path)
+    set_table_width(original_image.shape[0])
+    set_table_length(original_image.shape[1])
     print(f"DEBUG: find_corner_pockets - Loading mask from: {mask_path}")
 
     # 2. Load Mask
@@ -336,7 +334,8 @@ def find_corner_pockets_from_mask(
     # 3. Add Padding (Fixes pockets touching edges)
     padding = 50
     padded_mask = cv2.copyMakeBorder(
-        mask, padding, padding, padding, padding, cv2.BORDER_CONSTANT, value=0
+    mask, padding, padding, padding, padding,
+    cv2.BORDER_CONSTANT, value=0
     )
     output_path = get_output_path("padded_mask.jpg")
     cv2.imwrite(output_path, padded_mask)
@@ -364,7 +363,9 @@ def find_corner_pockets_from_mask(
         (x, y), radius = cv2.minEnclosingCircle(contour)
 
         # Filter by radius size
-        if radius > 150:
+        if not (get_pocket_radius()-30 < radius < get_pocket_radius()+30 ):
+            print (" didnt pass radius check " , radius , 'not in valid range ' , get_pocket_radius()-30 , ' - ' , get_pocket_radius()+30
+                   )
             continue
 
         # 5. Calculate Coordinates
@@ -383,8 +384,8 @@ def find_corner_pockets_from_mask(
         is_valid_pocket = True
 
         # If you have specific border logic, enable it here:
-        if table_rectangle and not is_close_to_rectangle_borders(
-            table_rectangle, real_center_x, real_center_y, margin=100
+        if get_table_rect() and not is_close_to_rectangle_borders(
+            get_table_rect(), real_center_x, real_center_y, margin=50
         ):
             is_valid_pocket = False
 
@@ -407,7 +408,7 @@ def find_corner_pockets_from_mask(
                     center=(real_center_x, real_center_y), radius=int(radius)
                 )
                 detected_pockets.append(pocket)
-                print(f"✅ Accepted Pocket: ({real_center_x}, {real_center_y})")
+                print(f"✅ Accepted Pocket: ({real_center_x}, {real_center_y}) radius={int(radius)}")
             except NameError:
                 # Fallback if PocketDetection class isn't imported in this scope
                 detected_pockets.append(
@@ -424,34 +425,18 @@ def find_corner_pockets_from_mask(
         print("DEBUG: Saved debug image to: pocket_mask_debug.jpg")
 
     print(f"Found {count} corner pockets.")
-    return detected_pockets
+    return detected_pockets , output_path
 
-
-def detect_balls_pipeline(input_path: str) -> List[Ball]:
-    """Full pipeline for detecting balls in an image."""
-    print(
-        f"DEBUG: detect_balls_pipeline - Starting ball detection for input_path: {input_path}"
-    )
-    MASK_OUTPUT_PATH = get_output_path("01_felt_mask.jpg", sub_dir="black_white_detect")
-    print(f"DEBUG: detect_balls_pipeline - MASK_OUTPUT_PATH: {MASK_OUTPUT_PATH}")
+def crate_mask_table(input_path:str ,) -> tuple[str , np.ndarray , np.ndarray]: 
     original_image = cv2.imread(input_path)
+    MASK_OUTPUT_PATH = get_output_path("01_felt_mask.jpg", sub_dir="black_white_detect")
     if original_image is None:
         raise FileNotFoundError(f"❌ Could not read input image: {input_path}")
-    print(
-        f"DEBUG: detect_balls_pipeline - Original image loaded. Shape: {original_image.shape}"
-    )
     hsv_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2HSV)
-    print(
-        f"DEBUG: detect_balls_pipeline - Converted to HSV. hsv_image shape: {hsv_image.shape}"
-    )
     lower_blue = np.array([80, 40, 30], dtype=np.uint8)
     upper_blue = np.array([125, 255, 255], dtype=np.uint8)
     lower_green = np.array([35, 30, 30], dtype=np.uint8)
     upper_green = np.array([85, 255, 255], dtype=np.uint8)
-    print(
-        f"DEBUG: detect_balls_pipeline - HSV color ranges defined for blue and green."
-    )
-
     colorful_mask = cv2.inRange(
         hsv_image, np.array([0, 40, 40], np.uint8), np.array([179, 255, 255], np.uint8)
     )
@@ -459,17 +444,10 @@ def detect_balls_pipeline(input_path: str) -> List[Ball]:
     green_mask = cv2.inRange(hsv_image, lower_green, upper_green)
     felt_mask = cv2.bitwise_or(blue_mask, green_mask)
     felt_mask = cv2.bitwise_and(felt_mask, colorful_mask)
-    print(
-        f"DEBUG: detect_balls_pipeline - Felt mask created. felt_mask shape: {felt_mask.shape}"
-    )
 
     kernel = np.ones((5, 5), np.uint8)
     felt_mask = cv2.morphologyEx(felt_mask, cv2.MORPH_OPEN, kernel, iterations=1)
     felt_mask = cv2.morphologyEx(felt_mask, cv2.MORPH_CLOSE, kernel, iterations=1)
-    print(
-        f"DEBUG: detect_balls_pipeline - Felt mask after morphology. felt_mask shape: {felt_mask.shape}"
-    )
-
     num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(
         felt_mask, connectivity=8
     )
@@ -478,21 +456,21 @@ def detect_balls_pipeline(input_path: str) -> List[Ball]:
     min_felt_area = int(0.005 * image_area)
     cleaned_felt_mask = np.zeros_like(felt_mask)
     for label_id in range(1, num_labels):
-        stat_x, stat_y, stat_width, stat_height, stat_area = stats[label_id]
+        _, _, _, _, stat_area = stats[label_id]
         if stat_area >= min_felt_area:
             cleaned_felt_mask[labels == label_id] = 255
-    print(
-        f"DEBUG: detect_balls_pipeline - Cleaned felt mask created. cleaned_felt_mask shape: {cleaned_felt_mask.shape}"
-    )
-
     inverted_mask = cv2.bitwise_not(cleaned_felt_mask)
     binary_mask = cv2.morphologyEx(inverted_mask, cv2.MORPH_CLOSE, kernel, iterations=1)
-    print(
-        f"DEBUG: detect_balls_pipeline - Final binary mask for balls. binary_mask shape: {binary_mask.shape}"
-    )
     cv2.imwrite(MASK_OUTPUT_PATH, binary_mask)
-    print(f"DEBUG: detect_balls_pipeline - Felt mask saved to: {MASK_OUTPUT_PATH}")
 
+    return MASK_OUTPUT_PATH , binary_mask , original_image
+
+
+
+
+def detect_balls_pipeline(input_path: str) -> List[Ball]:
+
+    _ , binary_mask, original_image = crate_mask_table(input_path)
     gray_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)
     raw_balls = _circles_from_connected_components(
         binary_mask, gray_image, 0.00015, 0.0055
@@ -608,13 +586,77 @@ def detect_pockets_pipeline(original_image: np.ndarray) -> List[PocketDetection]
     return pocket_objects
 
 
+def detect_only_pockets_and_draw(image_path: str) -> str:
+    """
+    Detects pockets from a given mask, draws them on the original image,
+    and returns the path to the output image with pockets circled.
+    """
+    from const_numbers import set_table_length, set_table_width
+
+
+    mask_path, binary_mask, original_image = crate_mask_table(image_path)
+    set_table_width(original_image.shape[0])
+    set_table_length(original_image.shape[1])
+    # Load the original image
+    if original_image is None:
+        raise FileNotFoundError(f"❌ Could not read input image: {image_path}")
+    print(f"DEBUG: detect_only_pockets_and_draw - Original image loaded. Shape: {original_image.shape}")
+
+    if binary_mask is None:
+        raise FileNotFoundError(f"❌ Could not read mask image: {mask_path}")
+    print(f"DEBUG: detect_only_pockets_and_draw - Mask loaded. Shape: {binary_mask.shape}")
+
+    gray_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)
+    print(f"DEBUG: detect_only_pockets_and_draw - Original image converted to grayscale. gray_image shape: {gray_image.shape}")
+
+    # Detect pockets using the provided mask and grayscale image
+    detected_pockets = detect_pockets_as_dataclasses(binary_mask, gray_image)
+    print(f"DEBUG: detect_only_pockets_and_draw - Found {len(detected_pockets)} pockets.")
+
+    # Create a copy of the original image to draw on
+    output_image = original_image.copy()
+
+    # Draw pockets in blue
+    for pocket in detected_pockets:
+        center_x, center_y = pocket.center
+        radius = pocket.radius
+        draw_radius = max(8, int(radius))
+        thickness = max(2, draw_radius // 5)
+        cv2.circle(
+            output_image, (center_x, center_y), draw_radius, (255, 0, 0), thickness
+        )
+        cv2.circle(
+            output_image,
+            (center_x, center_y),
+            max(3, draw_radius // 6),
+            (0, 0, 255),
+            -1,
+        )
+        label_text = f"P({center_x},{center_y})"
+        cv2.putText(
+            output_image,
+            label_text,
+            (center_x + draw_radius + 6, center_y - draw_radius - 6),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            (255, 255, 255),
+            1,
+        )
+
+    # Define the output path
+    output_path = get_output_path("output_pockets_only.jpg", sub_dir="black_white_detect")
+    cv2.imwrite(output_path, output_image)
+    print(f"✅ Image with only pockets circled saved to: {output_path}")
+
+    return output_path
+
+
 def get_table_rect():
     rect_path = Path(BASE_DIR / RECTANGLE_JSON_PATH)
     if rect_path.exists():
         with open(rect_path, "r", encoding="utf-8") as f:
             data = json.load(f)
         print(f"[DEBUG] Loaded existing data: {data}")
-        return parse_rectangle_from_data(data)
 
 
 if __name__ == "__main__":
@@ -697,4 +739,14 @@ if __name__ == "__main__":
 
     cv2.imwrite(FINAL_OUTPUT_PATH, output_image)
     print(f"✅ Final image with balls and pockets saved to: {FINAL_OUTPUT_PATH}")
+
+    # Test the new detect_only_pockets_and_draw function
+    print("\n--- Testing detect_only_pockets_and_draw function ---")
+    pockets_only_output_path = detect_only_pockets_and_draw(
+        original_image_path, FELT_MASK_FOR_POCKETS
+    )
+    print(
+        f"✅ Image with only pockets drawn saved to: {pockets_only_output_path}"
+    )
+
     print("[OK] Example finished.")

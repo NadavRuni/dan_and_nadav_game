@@ -131,7 +131,7 @@ def start_build_table_from_img():
     # draw_table(table)
 
     game = GameAnalayzer(table)
-    best_shot = game.find_best_overall_shot("solid")
+    best_shot = game.find_best_overall_shot(get_ball_type())
     if len(best_shot) > 0:
         print("best shot is:", best_shot[0])
     if len(best_shot) > 1:

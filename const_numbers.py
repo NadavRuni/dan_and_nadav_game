@@ -1,10 +1,12 @@
 import math
 from pathlib import Path
+from analyzer_table.launcher_helper.json_models import Ball_Color
 
 # table_config.py
 
 TABLE_LENGTH = 290
 TABLE_WIDTH = 145
+BALL_TYPE = "solid"
 
 
 # -------------------------------
@@ -90,7 +92,7 @@ def get_safe_distance() -> int | float:
 
 def get_pocket_radius() -> int | float:
     """מחזיר את רדיוס הכיס הנוכחי."""
-    return get_table_length() / 4
+    return get_table_length() / 50
 
 
 def get_pocket_radius_determinate() -> int | float:
@@ -123,6 +125,16 @@ def get_safe_from_wall() -> int | float:
 
 def get_merge_max_diff() -> int:
     return int(get_table_length() / 20)  # מרחק מותר בציר X
+
+def get_ball_type() -> str:
+    return BALL_TYPE
+
+def set_ball_type(value: str) -> None:
+    if value not in {Ball_Color.SOLID,Ball_Color.STRIPED,}:
+        raise ValueError("Invalid ball type.")
+    global BALL_TYPE
+    BALL_TYPE = value
+    
 
 
 MERGE_MAX_Y_DIFF = 65  # מרחק מותר בציר Y

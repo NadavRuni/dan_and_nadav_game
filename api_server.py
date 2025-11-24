@@ -18,6 +18,7 @@ from dan.build_table_from_image import start_build_table_from_img
 from const_numbers import *
 from analyzer_table.launcher_helper.data_to_rectangle import create_rectangle_from_data
 from dan.detect_table_rectangle import update_table_size_from_rectangle
+from analyzer_table.black_white_detect.detect_balls_and_pockets import detect_only_pockets_and_draw
 
 # ✅ יצירת אפליקציה עם Response כברירת מחדל
 app = FastAPI(default_response_class=Response)
@@ -156,13 +157,14 @@ async def set_ball_and_get_pocket(request: Request):
         response = requests.get(image_url, stream=True)
         response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
 
-        # Get content type from response headers
-        content_type = response.headers.get("Content-Type", "application/octet-stream")
+        set_ball_type(ball_type)
 
         # Read image content
         image_content = response.content
 
-        return Response(content=image_content, media_type=content_type)
+        image_content= detect_only_pockets_and_draw(image_content)
+        
+        return Response(content=image_content)
 
     except requests.exceptions.RequestException as e:
         print(f"[ERROR] Failed to fetch image from URL: {e}")
