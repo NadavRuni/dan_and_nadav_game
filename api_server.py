@@ -42,6 +42,7 @@ BASE_DIR = Path(__file__).resolve().parent
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 executor = ThreadPoolExecutor()
 
+
 # ✅ קובץ ניווט — עכשיו זה באמת 100% תקין
 @app.get("/frontend_nav.json")
 async def get_nav_file():
@@ -54,6 +55,7 @@ async def get_nav_file():
 
     # 204 תקין — בלי שום תוכן או header נוסף
     return Response(status_code=204)
+
 
 # ✅ הרצת פייפליין
 @app.post("/api/run_pipeline")
@@ -82,7 +84,9 @@ async def run_pipeline(request: Request, file: UploadFile = None):
                 shutil.copyfileobj(file.file, buffer)
 
         else:
-            return JSONResponse({"error": "No file or image_url provided"}, status_code=400)
+            return JSONResponse(
+                {"error": "No file or image_url provided"}, status_code=400
+            )
 
         print(f"[DEBUG] start run_pipeline on {file_path}")
         loop = asyncio.get_event_loop()
@@ -94,6 +98,7 @@ async def run_pipeline(request: Request, file: UploadFile = None):
         print("[ERROR]", e)
         return JSONResponse({"error": str(e)}, status_code=500)
 
+
 # ✅ אישור מלבן
 @app.post("/api/confirm_rectangle")
 async def confirm_rectangle(data: dict):
@@ -101,12 +106,13 @@ async def confirm_rectangle(data: dict):
         print("[DEBUG] Received rectangle confirmation data:", data)
         rec = create_rectangle_from_data(data)
 
-        
         image_path = data.get("image_path")
         if not image_path:
             return JSONResponse({"error": "Missing image_path"}, status_code=400)
 
-        cropped_path, rec_scaled = crop_image_by_rectangle(rec, image_path, UPLOAD_DIR, data)
+        cropped_path, rec_scaled = crop_image_by_rectangle(
+            rec, image_path, UPLOAD_DIR, data
+        )
         update_table_size_from_rectangle(rec_scaled)
 
         # שמירת המלבן החדש לקובץ JSON
@@ -114,7 +120,6 @@ async def confirm_rectangle(data: dict):
         rect_path.write_text(json.dumps(asdict(rec_scaled), indent=2), encoding="utf-8")
         print(f"[DEBUG] ✅ Saved scaled rectangle to: {rect_path}")
 
-     
         if not cropped_path:
             return JSONResponse({"error": "Failed to crop image"}, status_code=500)
 
@@ -122,17 +127,17 @@ async def confirm_rectangle(data: dict):
         pipeline_result = await start_pipe_line(str(cropped_path))
         table_result = start_build_table_from_img()
 
-        return JSONResponse({
-            "status": "ok",
-            "pipeline": pipeline_result,
-            "table": table_result
-        })
+        return JSONResponse(
+            {"status": "ok", "pipeline": pipeline_result, "table": table_result}
+        )
 
     except Exception as e:
         import traceback
+
         print("❌ Exception in confirm_rectangle:")
         traceback.print_exc()
         return JSONResponse({"error": str(e)}, status_code=500)
+
 
 # ✅ קבלת תמונה
 @app.get("/api/get_image")
@@ -142,6 +147,8 @@ async def get_image(path: str):
     if not file_path.exists():
         return JSONResponse({"error": f"Image not found: {file_path}"}, status_code=404)
     return FileResponse(str(file_path))
+
+
 @app.post("/api/get_output")
 async def get_output(request: Request):
     """
@@ -173,6 +180,7 @@ async def get_output_contact():
         return JSONResponse({"output_url": f"/static/{OUTPUT_CONTACT_VIEW_PATH.name}"})
     return JSONResponse({"error": "No output contact image found"})
 
+
 @app.get("/api/output_image")
 async def output_image():
     """
@@ -185,8 +193,10 @@ async def output_image():
     return FileResponse(
         path=str(OUTPUT_IMAGE_PATH),
         media_type="image/png",
-        filename=OUTPUT_IMAGE_PATH.name
+        filename=OUTPUT_IMAGE_PATH.name,
     )
+
+
 # ✅ Static files
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 app.mount("/static", StaticFiles(directory=str(OUTPUT_DIR)), name="static")

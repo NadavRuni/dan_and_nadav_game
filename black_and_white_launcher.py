@@ -7,6 +7,7 @@ black_and_white_launcher.py
 import cv2
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parent / "black_white_detect"))
 
 from black_white_detect.mark_balls_v4 import detect_balls_as_dataclasses

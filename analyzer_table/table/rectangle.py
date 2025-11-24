@@ -1,6 +1,7 @@
 from typing import Dict, Tuple
 from analyzer_table.launcher_helper.json_models import Rectangle
 
+
 def parse_rectangle_from_data(data: Dict) -> Rectangle:
     """
     מחזירה מופע Rectangle מתוך dict.
@@ -30,7 +31,9 @@ def parse_rectangle_from_data(data: Dict) -> Rectangle:
         return rect
 
     # 🟣 אם זה קובץ rectangle.json (אובייקט מלבן ישיר)
-    elif all(k in data for k in ["top_left", "top_right", "bottom_left", "bottom_right"]):
+    elif all(
+        k in data for k in ["top_left", "top_right", "bottom_left", "bottom_right"]
+    ):
         rect = Rectangle(
             top_left=tuple(map(int, data["top_left"])),
             top_right=tuple(map(int, data["top_right"])),
@@ -41,4 +44,6 @@ def parse_rectangle_from_data(data: Dict) -> Rectangle:
         return rect
 
     else:
-        raise ValueError("Invalid rectangle data format — expected 'points' or 'top_left' keys.")
+        raise ValueError(
+            "Invalid rectangle data format — expected 'points' or 'top_left' keys."
+        )

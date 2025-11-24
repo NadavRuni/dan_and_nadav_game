@@ -4,7 +4,10 @@ import time
 import os
 from analyzer_table.launcher_helper.json_models import Rectangle
 
-def confirm_or_correct_rectangle(image_path: str, rectangle: Rectangle | None) -> Rectangle | None:
+
+def confirm_or_correct_rectangle(
+    image_path: str, rectangle: Rectangle | None
+) -> Rectangle | None:
     # 🧭 נשתמש בנתיב של קובץ השרת הראשי (api_server.py)
     NAV_FILE = Path(__file__).resolve().parents[2] / "frontend_nav.json"
     CACHE_FILE = Path(__file__).resolve().parents[2] / "rectangles_cache.json"
@@ -19,7 +22,9 @@ def confirm_or_correct_rectangle(image_path: str, rectangle: Rectangle | None) -
         CACHE_FILE.unlink()
 
     # ניצור URL יחסי תקין
-    relative_image_path = os.path.relpath(image_path, Path(__file__).resolve().parents[2])
+    relative_image_path = os.path.relpath(
+        image_path, Path(__file__).resolve().parents[2]
+    )
     url = f"/frontend/confirm_rectangle.html?image={relative_image_path}"
     print(f"🌐 Navigate frontend to: {url}")
 
@@ -42,10 +47,10 @@ def confirm_or_correct_rectangle(image_path: str, rectangle: Rectangle | None) -
                 if len(points) == 4:
                     print("✅ User confirmed rectangle via browser.")
                     return Rectangle(
-                        top_left=(int(points[0]['x']), int(points[0]['y'])),
-                        top_right=(int(points[1]['x']), int(points[1]['y'])),
-                        bottom_right=(int(points[2]['x']), int(points[2]['y'])),
-                        bottom_left=(int(points[3]['x']), int(points[3]['y']))
+                        top_left=(int(points[0]["x"]), int(points[0]["y"])),
+                        top_right=(int(points[1]["x"]), int(points[1]["y"])),
+                        bottom_right=(int(points[2]["x"]), int(points[2]["y"])),
+                        bottom_left=(int(points[3]["x"]), int(points[3]["y"])),
                     )
         time.sleep(1)
         waited += 1

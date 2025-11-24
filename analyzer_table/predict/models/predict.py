@@ -44,12 +44,13 @@ def update_undefined_balls(balls: List[Ball]) -> None:
     MODELS = {name: load_model(name) for name in MODEL_WEIGHTS.keys()}
     print("✅ Models loaded into memory")
 
-    val_transform = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                             std=[0.229, 0.224, 0.225]),
-    ])
+    val_transform = transforms.Compose(
+        [
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ]
+    )
 
     def predict_ensemble(image_path: str) -> str:
         img = Image.open(image_path).convert("RGB")
@@ -91,7 +92,9 @@ def update_undefined_balls(balls: List[Ball]) -> None:
                 ball.final_color = (
                     Ball_Color.STRIPED if prediction == "striped" else Ball_Color.SOLID
                 )
-                print(f"🎱 {os.path.basename(ball.single_ball_path)} → {ball.final_color}")
+                print(
+                    f"🎱 {os.path.basename(ball.single_ball_path)} → {ball.final_color}"
+                )
                 updated += 1
             except Exception as e:
                 print(f"❌ Error on {ball.single_ball_path}: {e}")

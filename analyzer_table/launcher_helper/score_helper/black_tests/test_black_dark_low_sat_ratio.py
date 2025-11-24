@@ -1,7 +1,11 @@
 import cv2
 import numpy as np
 from analyzer_table.launcher_helper.json_models import Ball
-from analyzer_table.launcher_helper.score_helper.common import get_ball_image, clamp_0_100
+from analyzer_table.launcher_helper.score_helper.common import (
+    get_ball_image,
+    clamp_0_100,
+)
+
 
 def _circular_mask(shape, shrink=0.85):
     h, w = shape[:2]
@@ -10,6 +14,7 @@ def _circular_mask(shape, shrink=0.85):
     m = np.zeros((h, w), np.uint8)
     cv2.circle(m, (cx, cy), r, 255, -1)
     return m
+
 
 def run(ball: Ball) -> float:
     """
@@ -22,19 +27,19 @@ def run(ball: Ball) -> float:
         return 0.0
 
     mask = _circular_mask(img.shape, 0.85)
-    hsv  = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    s    = hsv[..., 1].astype(np.uint8)
-    v    = hsv[..., 2].astype(np.uint8)
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    s = hsv[..., 1].astype(np.uint8)
+    v = hsv[..., 2].astype(np.uint8)
 
     # ספי "כהה" ו"רוויה נמוכה" (כוונון קל לפי הדאטה שלך)
     V_MAX = 95
     S_MAX = 70
 
-    roi = (mask > 0)
+    roi = mask > 0
     if not np.any(roi):
         return 0.0
 
-    good = ((v <= V_MAX) & (s <= S_MAX) & roi)
+    good = (v <= V_MAX) & (s <= S_MAX) & roi
     ratio = float(np.count_nonzero(good)) / float(np.count_nonzero(roi))
 
     # מיפוי: 0.15 → 0 ; 0.55 → 100  (מגדיל פערים לשחורים טובים)

@@ -48,7 +48,7 @@ def build_table_from_analysis(analysis: dict):
     next_id = 1
     used_ids = set([0, 8])
     print("[build] building table from analysis...")
-    print (analysis.get("balls", []))
+    print(analysis.get("balls", []))
 
     for b in analysis.get("balls", []):
         btype = b.get("type", "other")
@@ -56,7 +56,7 @@ def build_table_from_analysis(analysis: dict):
 
         x_game = y_game = None
 
-                # ---- עדיפות 4 (חדשה): center_px בלבד ----
+        # ---- עדיפות 4 (חדשה): center_px בלבד ----
         if (x_game is None or y_game is None) and "center_px" in b:
             # נשלוף את מיקום הכדור במערכת הפיקסלים
             cx = float(b["center_px"]["x"])
@@ -94,7 +94,6 @@ def build_table_from_analysis(analysis: dict):
 
                 print(f"[build] using fallback image-size mapping for ball id={bid}")
 
-
         # אם עדיין אין ערכים — דלג על הכדור
         if x_game is None or y_game is None:
             print(f"[build] warning: skipping ball id={bid} due to missing position")
@@ -109,8 +108,9 @@ def build_table_from_analysis(analysis: dict):
                 radius=get_ball_radius(),
             )
         )
-        print (f"[build] added ball id={bid}, type={btype}, pos=({x_game:.1f}, {y_game:.1f}")
-        
+        print(
+            f"[build] added ball id={bid}, type={btype}, pos=({x_game:.1f}, {y_game:.1f}"
+        )
 
     # אפשרי: לוג קטן כדי להבין באיזה נתיב השתמשנו
     if has_uv:
@@ -125,7 +125,7 @@ def start_build_table_from_img():
 
     analysis = load_analysis(OUTPUT_JSON_PATH)
     print(f"Loaded analysis from {OUTPUT_JSON_PATH}")
-    
+
     table = build_table_from_analysis(analysis)
     print(f"Built table with {len(table.balls)} balls from {OUTPUT_JSON_PATH}")
     # draw_table(table)
@@ -142,16 +142,16 @@ def start_build_table_from_img():
     # ציור
     p, lines = draw_table(table, best_shot=best_shot[0])
     line_drawer = LineDrawer(OUTPUT_JSON_PATH, best_shot[0], OUTPUT_IMAGE_PATH)
-    line_drawer.show_contact_hit() # need to be first before draw_lines
-    if (isinstance(best_shot[0],BestWallShot)):
+    line_drawer.show_contact_hit()  # need to be first before draw_lines
+    if isinstance(best_shot[0], BestWallShot):
         print("Drawing wall-based shot lines...")
         line_drawer.draw_lines_with_wall(
             (best_shot[0].point_with_the_wall[0], best_shot[0].point_with_the_wall[1])
         )
-    elif (isinstance(best_shot[0],BestShotBallToBall)):
+    elif isinstance(best_shot[0], BestShotBallToBall):
         print("Drawing ball-to-ball shot lines...")
         line_drawer.draw_combo_lines()
-    else :
+    else:
         line_drawer.draw_lines()
 
 

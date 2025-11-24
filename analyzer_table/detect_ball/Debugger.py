@@ -1,4 +1,5 @@
-DEBUG_MODE =   True
+DEBUG_MODE = True
+
 
 class Debugger:
     GREEN = "\033[92m"

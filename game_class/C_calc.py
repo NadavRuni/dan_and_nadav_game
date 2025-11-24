@@ -127,7 +127,7 @@ class Calculations:
                 dist = math.hypot(ball.x_cord - closest_x, ball.y_cord - closest_y)
 
                 # אם הכדור נוגע בקו (כולל רדיוס שלו ושל המטרה) → חסימה
-                if dist < ball.radius + target.radius +get_safe_distance():
+                if dist < ball.radius + target.radius + get_safe_distance():
                     return False
 
         return True

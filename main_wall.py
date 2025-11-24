@@ -37,14 +37,14 @@ def main():
     my_ball = Ball(my_id, 80, 50, my_type, get_ball_radius())
 
     # --- Extra balls with fixed coordinates ---
-    ball_a = Ball(2, 275, 135, "solid", get_ball_radius())  
-    ball_b = Ball(3, 145, 130, "solid", get_ball_radius())  
-    ball_b2 = Ball(9, 156, 135, "solid", get_ball_radius())  
+    ball_a = Ball(2, 275, 135, "solid", get_ball_radius())
+    ball_b = Ball(3, 145, 130, "solid", get_ball_radius())
+    ball_b2 = Ball(9, 156, 135, "solid", get_ball_radius())
 
-    ball_c = Ball(4, 275, 15, "solid", get_ball_radius()) 
-    ball_d = Ball(5, 135, 15, "solid", get_ball_radius())  
-    ball_e = Ball(6, 155, 15, "solid", get_ball_radius()) 
-    ball_f = Ball(7, 12, 15, "solid", get_ball_radius()) 
+    ball_c = Ball(4, 275, 15, "solid", get_ball_radius())
+    ball_d = Ball(5, 135, 15, "solid", get_ball_radius())
+    ball_e = Ball(6, 155, 15, "solid", get_ball_radius())
+    ball_f = Ball(7, 12, 15, "solid", get_ball_radius())
 
     # Create table with only 3 balls
     table = Table(

@@ -38,7 +38,7 @@ class GameAnalayzer:
             if ball.type == "black" and len(table.get_balls()) > 2:
                 # אפשר להכניס לוגיקה מתקדמת לפסים/מלאים
                 continue
-            if not self.has_clear_path(white, ball , balls):
+            if not self.has_clear_path(white, ball, balls):
                 print(
                     "between the white and ball number",
                     ball.id,
@@ -51,7 +51,12 @@ class GameAnalayzer:
             if not shot.valid or shot.score <= 1:
                 continue
 
-            print ( "found a valid shot between the white and ball number", ball.id, "score:", shot.score)
+            print(
+                "found a valid shot between the white and ball number",
+                ball.id,
+                "score:",
+                shot.score,
+            )
             all_shots.append(shot)
 
         if all_shots:
@@ -68,11 +73,10 @@ class GameAnalayzer:
             )
             return sorted_shots[:3]  # שלושת המכות הכי טובות
         else:
-            print ("❌ No valid normal shots found.")
-            all_wall_shots = self.find_best_wall_shots( my_ball_type)
+            print("❌ No valid normal shots found.")
+            all_wall_shots = self.find_best_wall_shots(my_ball_type)
 
             return all_wall_shots  # need to add mor logic here
-
 
     def has_clear_path(self, ball1, ball2, all_balls) -> bool:
         """
@@ -197,7 +201,7 @@ class GameAnalayzer:
         """
         print("enter to find_best_wall_shots")
         table = self.table
-        white  = next(b for b in table.get_balls() if b.type == "white")
+        white = next(b for b in table.get_balls() if b.type == "white")
         wall_shots: list[BestWallShot] = []
 
         all_shots: list[BestShot] = []
@@ -219,7 +223,7 @@ class GameAnalayzer:
                     continue
                 if target_ball.type == "black" or helper_ball.type == "black":
                     continue
-                if not self.has_clear_path(white, helper_ball , all_balls=balls):
+                if not self.has_clear_path(white, helper_ball, all_balls=balls):
                     print(
                         "[B2B] between the white and ball number",
                         helper_ball.id,
@@ -237,15 +241,15 @@ class GameAnalayzer:
                     continue
                 all_shots.append(shot)
 
-        if all_shots and FORSE_WALL_SHOT==False:
+        if all_shots and FORSE_WALL_SHOT == False:
             sorted_shots = sorted(
                 [s for s in all_shots if s.score is not None],
                 key=lambda s: s.score,
                 reverse=True,
             )
-         
+
             return sorted_shots[:3]  # שלושת המכות הכי טובות
-        else: #this is the wall shot logic
+        else:  # this is the wall shot logic
             print("STARTING WALL SHOT LOGIC")
             for ball in balls:
                 if ball.type == "white":
@@ -275,13 +279,10 @@ class GameAnalayzer:
                         ]
                     ),
                 )
-            print ("✅The best wall shot is ", sorted_wall_shots[0]) 
-            print ( "wall point is -" , sorted_wall_shots[0].point_with_the_wall)
-
-
+            print("✅The best wall shot is ", sorted_wall_shots[0])
+            print("wall point is -", sorted_wall_shots[0].point_with_the_wall)
 
             return sorted_wall_shots[:3]
 
             print("❌ No wall shots found either.")
             return []
-
