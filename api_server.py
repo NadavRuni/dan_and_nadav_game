@@ -138,6 +138,40 @@ async def confirm_rectangle(data: dict):
         traceback.print_exc()
         return JSONResponse({"error": str(e)}, status_code=500)
 
+@app.post("/api/set_ball_and_get_pocket")
+async def set_ball_and_get_pocket(request: Request):
+    try:
+        data = await request.json()
+        image_url = data.get("image_url")
+        ball_type = data.get("ball_type")
+
+        if not image_url:
+            return JSONResponse({"error": "Missing 'image_url'"}, status_code=400)
+        if not ball_type:
+            return JSONResponse({"error": "Missing 'ball_type'"}, status_code=400)
+        
+        print(f"[DEBUG] Received request: image_url={image_url}, ball_type={ball_type}")
+
+        # Fetch the image
+        response = requests.get(image_url, stream=True)
+        response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
+
+        # Get content type from response headers
+        content_type = response.headers.get("Content-Type", "application/octet-stream")
+
+        # Read image content
+        image_content = response.content
+
+        return Response(content=image_content, media_type=content_type)
+
+    except requests.exceptions.RequestException as e:
+        print(f"[ERROR] Failed to fetch image from URL: {e}")
+        return JSONResponse({"error": f"Failed to fetch image: {e}"}, status_code=500)
+    except Exception as e:
+        import traceback
+        print("❌ Exception in /api/set_ball_and_get_pocket:")
+        traceback.print_exc()
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 # ✅ קבלת תמונה
 @app.get("/api/get_image")
