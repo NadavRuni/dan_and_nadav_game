@@ -20,7 +20,7 @@ from analyzer_table.launcher_helper.json_models import Rectangle  # Import Recta
 
 def process_image_for_border(
     image_path: str,
-) -> tuple[str, np.ndarray, np.ndarray, Rectangle | None , str]:
+) -> tuple[str, np.ndarray, np.ndarray, Rectangle | None, str]:
     """
     Loads an image, creates a binary mask, removes a white border if present,
     and saves the results and debug images.
@@ -108,13 +108,24 @@ def process_image_for_border(
     else:
         print("  - No removable border detected. Mask remains unchanged.")
         height, width = original_image.shape[:2]
-        rectangle_obj = Rectangle(top_left=(0,0), top_right=(width,0), bottom_left=(0,height), bottom_right=(width,height))
+        rectangle_obj = Rectangle(
+            top_left=(0, 0),
+            top_right=(width, 0),
+            bottom_left=(0, height),
+            bottom_right=(width, height),
+        )
         # Save the original mask as the final mask
         cv2.imwrite(final_mask_output_path, processed_mask)
         print(f"  - Unchanged mask saved to: {final_mask_output_path}")
 
     print("--- Process Finished ---")
-    return final_mask_output_path, binary_mask, cropped_original_photo, rectangle_obj , output_debug_original_cropped_path
+    return (
+        final_mask_output_path,
+        binary_mask,
+        cropped_original_photo,
+        rectangle_obj,
+        output_debug_original_cropped_path,
+    )
 
 
 if __name__ == "__main__":

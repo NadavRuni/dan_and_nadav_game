@@ -89,6 +89,7 @@ class LineDrawer:
             raise ValueError("❌ Missing ball or pocket coordinates")
 
         # --- חישוב נקודת המגע על המטרה לפי הכיס ---
+        print("Calculating contact point on target ball...")
         dx_p, dy_p = pocket_px[0] - target_px[0], pocket_px[1] - target_px[1]
         dist_p = math.hypot(dx_p, dy_p)
         ux_p, uy_p = dx_p / dist_p, dy_p / dist_p
@@ -98,7 +99,7 @@ class LineDrawer:
             target_px[0] - ux_p * get_ball_radius_photo(),
             target_px[1] - uy_p * get_ball_radius_photo(),
         )
-
+        print("Contact point on target ball:", contact_target)
         # --- קו לבן → נקודת מגע ---
         dx_w, dy_w = contact_target[0] - white_px[0], contact_target[1] - white_px[1]
         dist_w = math.hypot(dx_w, dy_w)
@@ -108,6 +109,7 @@ class LineDrawer:
             white_px[0] + ux_w * get_ball_radius_photo(),
             white_px[1] + uy_w * get_ball_radius_photo(),
         )
+        print("Start point on white ball:", start_white)
 
         def draw_dashed_line(
             draw, start, end, fill, width=3, dash_length=15, gap_length=10
@@ -133,6 +135,7 @@ class LineDrawer:
         draw_dashed_line(
             draw, start_white, contact_target, fill=color_white, width=width
         )
+        print("Drew dashed line from white to contact point.")
 
         # --- מטרה (צד שפונה לכיס) → כיס ---
         start_target = (
@@ -143,9 +146,11 @@ class LineDrawer:
             pocket_px[0] - ux_p * get_pocket_margin(),
             pocket_px[1] - uy_p * get_pocket_margin(),
         )
+        print("Start point on target ball (towards pocket):", start_target)
         draw_dashed_line(
             draw, start_target, pocket_before, fill=color_target, width=width
         )
+        print("Drew dashed line from target to pocket.")
 
         self.img.save(self.output_path, quality=95)
         return self.output_path

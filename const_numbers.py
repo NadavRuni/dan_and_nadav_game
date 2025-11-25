@@ -9,7 +9,7 @@ from typing import List
 TABLE_LENGTH = 290
 TABLE_WIDTH = 145
 BALL_TYPE = "solid"
-POCKET_PATH =''
+POCKET_PATH = ""
 RECTANGLE_CROPED = None
 USE_PREDICTED_POCKETS = False
 DETECTED_POCKETS: List[Pocket] | None = None
@@ -106,7 +106,7 @@ def get_pocket_up_radius() -> int | float:
 
 
 def get_pocket_down_radius() -> int | float:
-    return get_pocket_radius() * 0.2
+    return get_pocket_radius() * 0.5
 
 
 def get_pocket_radius_determinate() -> int | float:
@@ -146,9 +146,9 @@ def get_ball_type() -> str:
 
 
 def set_ball_type(value: str) -> None:
-    if (value =='solids'):
+    if value == "solids":
         value = Ball_Color.SOLID
-    elif (value =='stripes'):
+    elif value == "stripes":
         value = Ball_Color.STRIPED
     if value not in {
         Ball_Color.SOLID,
@@ -158,32 +158,41 @@ def set_ball_type(value: str) -> None:
     global BALL_TYPE
     BALL_TYPE = value
 
+
 def get_pocket_path() -> str:
     return POCKET_PATH
+
+
 def set_pocket_path(value: str) -> None:
     global POCKET_PATH
     POCKET_PATH = value
+
+
 def get_rectangle_croped() -> Rectangle | None:
     return RECTANGLE_CROPED
+
+
 def set_rectangle_croped(value: Rectangle) -> None:
     global RECTANGLE_CROPED
     RECTANGLE_CROPED = value
+
+
 def get_use_predicted_pockets() -> bool:
     return USE_PREDICTED_POCKETS
+
+
 def set_use_predicted_pockets(value: bool) -> None:
     global USE_PREDICTED_POCKETS
     USE_PREDICTED_POCKETS = value
 
+
 def get_detected_pockets() -> List[Pocket] | None:
     return DETECTED_POCKETS
+
 
 def set_detected_pockets(value: List[Pocket]) -> None:
     global DETECTED_POCKETS
     DETECTED_POCKETS = value
-
-
-
-
 
 
 MERGE_MAX_Y_DIFF = 65  # מרחק מותר בציר Y

@@ -4,6 +4,7 @@ from game_class.C_pocket import Pocket
 from game_class.C_table import Table
 from const_numbers import *
 
+
 class CalculationsBallToBall:
     def __init__(self, white: Ball, target: Ball, target_helper: Ball, table: Table):
         self.white = white
