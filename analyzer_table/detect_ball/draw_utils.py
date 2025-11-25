@@ -6,8 +6,9 @@ from analyzer_table.detect_ball.Debugger import Debugger
 from analyzer_table.launcher_helper.json_models import (
     PhotoData,
     Rectangle,
-    table_pockets,
 )
+from game_class.C_pocket import Pocket
+from typing import List
 
 
 def draw_balls_on_image(
@@ -15,7 +16,7 @@ def draw_balls_on_image(
     image_path: str,
     output_path: str,
     rectangle: Rectangle = None,
-    all_pockets: table_pockets = None,
+    all_pockets: List[Pocket] = None,
 ):
     Debugger.log(
         f"🖼️ Drawing balls{' and pockets' if all_pockets else ''} on image: {image_path}"
@@ -74,15 +75,15 @@ def draw_balls_on_image(
                 (0, 255, 255),
                 2,
             )
-    if all_pockets is not None and all_pockets.pocket_list:
-        Debugger.log(f"🎯 Drawing {len(all_pockets.pocket_list)} pockets on table")
-        for pocket in all_pockets.pocket_list:
+    if all_pockets is not None:
+        Debugger.log(f"🎯 Drawing {len(all_pockets)} pockets on table")
+        for pocket in all_pockets:
             cx, cy = pocket.pocket_img_cordinates_on_table
             cx, cy = int(cx), int(cy)
-            r = int(pocket.pocker_radius)
+            r = int(pocket.radius)
             cv2.circle(img, (cx, cy), r, (255, 0, 0), 2)
             cv2.circle(img, (cx, cy), 4, (0, 0, 255), -1)
-            label = f"ID {pocket.pocket_id}"
+            label = f"ID {pocket.id}"
             cv2.putText(
                 img,
                 label,
@@ -92,7 +93,7 @@ def draw_balls_on_image(
                 (255, 255, 255),
                 2,
             )
-            Debugger.log(f"🕳️ Pocket {pocket.pocket_id}: Center={cx, cy}, Radius={r}")
+            Debugger.log(f"🕳️ Pocket {pocket.id}: Center={cx, cy}, Radius={r}")
     output_path = get_output_path(output_path)
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     cv2.imwrite(output_path, img)

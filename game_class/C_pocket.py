@@ -1,32 +1,22 @@
-from const_numbers import *
-from typing import Tuple
+from dataclasses import dataclass
+from typing import Tuple, Optional
 
 
+@dataclass
 class Pocket:
-    def __init__(self, pocket_id: int, x_cord: float, y_cord: float, is_corner: bool):
-        """
-        Initialize a Pocket (hole) object.
-
-        Args:
-            pocket_id (int): Unique identifier for the pocket (0–5)
-            x_cord (float): X coordinate of the pocket
-            y_cord (float): Y coordinate of the pocket
-            is_corner (bool): True if pocket is a corner pocket
-        """
-        self.id = pocket_id
-        self.x_cord = x_cord
-        self.y_cord = y_cord
-        self.is_corner = is_corner
-        self.radius = (
-            get_corner_pocket_radius() if is_corner else get_side_pocket_radius()
-        )
+    id: int
+    center: Tuple[float, float]
+    radius: float
+    pocket_img_cordinates_on_table: Optional[Tuple[int, int]] = None
+    location: Optional[str] = None
+    pocket_img_path: Optional[str] = None
 
     def position(self) -> Tuple[float, float]:
         """Return (x, y) position of the pocket."""
-        return (self.x_cord, self.y_cord)
+        return self.center
 
     def __repr__(self):
         return (
-            f"Pocket(id={self.id}, pos=({self.x_cord}, {self.y_cord}), "
-            f"radius={self.radius}, corner={self.is_corner})"
+            f"Pocket(id={self.id}, pos=({self.center[0]}, {self.center[1]}), "
+            f"radius={self.radius}, location={self.location})"
         )

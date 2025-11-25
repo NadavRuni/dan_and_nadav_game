@@ -50,8 +50,8 @@ def draw_table(
             print("Best shot is BestWallShot draw the line later")
         elif isinstance(best_shot, BestShotBallToBall):
             ax.plot(
-                [best_shot.target.x_cord, best_shot.pocket.x_cord],
-                [best_shot.target.y_cord, best_shot.pocket.y_cord],
+                [best_shot.target.x_cord, best_shot.pocket.center[0]],
+                [best_shot.target.y_cord, best_shot.pocket.center[1]],
                 linestyle="-",
                 color="red",
                 linewidth=2,
@@ -60,7 +60,7 @@ def draw_table(
             final_lines.append(
                 (
                     (best_shot.target.x_cord, best_shot.target.y_cord),
-                    (best_shot.pocket.x_cord, best_shot.pocket.y_cord),
+                    (best_shot.pocket.center[0], best_shot.pocket.center[1]),
                 )
             )
             draw_contact_line(
@@ -87,8 +87,8 @@ def draw_table(
             )
         else:
             ax.plot(
-                [best_shot.target.x_cord, best_shot.pocket.x_cord],
-                [best_shot.target.y_cord, best_shot.pocket.y_cord],
+                [best_shot.target.x_cord, best_shot.pocket.center[0]],
+                [best_shot.target.y_cord, best_shot.pocket.center[1]],
                 linestyle="-",
                 color="red",
                 linewidth=2,
@@ -97,7 +97,7 @@ def draw_table(
             final_lines.append(
                 (
                     (best_shot.target.x_cord, best_shot.target.y_cord),
-                    (best_shot.pocket.x_cord, best_shot.pocket.y_cord),
+                    (best_shot.pocket.center[0], best_shot.pocket.center[1]),
                 )
             )
             draw_contact_line(ax, best_shot.white, best_shot.target, best_shot.pocket)
@@ -120,7 +120,7 @@ def draw_table(
                 )
     for pocket in table.pockets:
         pocket_circle = plt.Circle(
-            (pocket.x_cord, pocket.y_cord), pocket.radius, color="black", zorder=3
+            (pocket.center[0], pocket.center[1]), pocket.radius, color="black", zorder=3
         )
         ax.add_patch(pocket_circle)
     for ball in table.balls:
@@ -203,13 +203,13 @@ def draw_white_center_black_to_corner():
     white = Ball(0, x_white, y_white, "white", get_ball_radius())
     bottom_right_pocket = None
     for p in Table(get_table_length(), get_table_width(), []).pockets:
-        if p.x_cord == get_table_length() and p.y_cord == 0:
+        if p.center[0] == get_table_length() and p.center[1] == 0:
             bottom_right_pocket = p
             break
     if bottom_right_pocket is None:
         raise ValueError("לא נמצא חור בפינה הימנית תחתונה")
-    x_black = (x_white + bottom_right_pocket.x_cord) / 2
-    y_black = (y_white + bottom_right_pocket.y_cord) / 2
+    x_black = (x_white + bottom_right_pocket.center[0]) / 2
+    y_black = (y_white + bottom_right_pocket.center[1]) / 2
     black = Ball(8, x_black, y_black, "black", get_ball_radius())
     table = Table(get_table_length(), get_table_width(), [white, black])
     lines = [Line(black, p) for p in table.pockets]
@@ -222,8 +222,8 @@ def draw_white_center_black_to_corner():
 
 def draw_contact_line(ax, white, black, pocket, color="orange"):
     print("Drawing contact line...")
-    vx = pocket.x_cord - black.x_cord
-    vy = pocket.y_cord - black.y_cord
+    vx = pocket.center[0] - black.x_cord
+    vy = pocket.center[1] - black.y_cord
     norm = math.hypot(vx, vy)
     vx /= norm
     vy /= norm
@@ -242,8 +242,8 @@ def draw_contact_line(ax, white, black, pocket, color="orange"):
 
 
 def draw_contact_line_B2B(ax, white, target_helper, target, pocket):
-    vx = pocket.x_cord - target.x_cord
-    vy = pocket.y_cord - target.y_cord
+    vx = pocket.center[0] - target.x_cord
+    vy = pocket.center[1] - target.y_cord
     norm = math.hypot(vx, vy)
     vx /= norm
     vy /= norm
@@ -292,8 +292,8 @@ def draw_ball_contact_view(white, target, pocket):
         color="black" if face_color != "black" else "white",
         zorder=4,
     )
-    vx = pocket.x_cord - target.x_cord
-    vy = pocket.y_cord - target.y_cord
+    vx = pocket.center[0] - target.x_cord
+    vy = pocket.center[1] - target.y_cord
     norm = math.hypot(vx, vy)
     vx /= norm
     vy /= norm

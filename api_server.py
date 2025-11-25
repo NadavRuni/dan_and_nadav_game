@@ -11,6 +11,7 @@ import os
 import json
 import requests
 from analyzer_table.black_white_detect.pocket_api import pocket_detection_api
+from crop_table import crop_image_by_rectangle
 from dan.detect_table_rectangle import detect_table_rectangle
 from dan.pipe_Line import start_pipe_line
 from dan.build_table_from_image import start_build_table_from_img
@@ -37,7 +38,7 @@ app.add_middleware(
 nav_file = Path(__file__).resolve().parent / "frontend_nav.json"
 if nav_file.exists():
     print(f"🧹 Deleting leftover frontend_nav.json on startup: {nav_file}")
-    nav_file.unlink()
+    nav_file.unlink() 
 
 # תיקיות
 BASE_DIR = Path(__file__).resolve().parent
@@ -140,6 +141,38 @@ async def confirm_rectangle(data: dict):
         traceback.print_exc()
         return JSONResponse({"error": str(e)}, status_code=500)
 
+@app.post("/api/best_shot_use_pocket")
+async def best_shot_use_pocket(request: Request):
+    try:
+        data = await request.json()
+        ball_type=data.get("ball_type")
+        print ("[DEBUG] Starting best_shot_use_pocket with ball_type:", ball_type)
+        set_ball_type(ball_type)
+        
+
+        rect_path = Path(BASE_DIR / RECTANGLE_JSON_PATH)
+        rect_path.write_text(json.dumps(asdict(get_rectangle_croped()), indent=2), encoding="utf-8")
+
+        pipeline_result = await start_pipe_line(str(get_pocket_path()))
+        table_result = start_build_table_from_img()
+
+        return JSONResponse(
+            {"status": "ok", "pipeline": pipeline_result, "table": table_result}
+        )
+
+
+    except requests.exceptions.RequestException as e:
+        print(f"[ERROR] Failed to fetch image from URL: {e}")
+        return JSONResponse({"error": f"Failed to fetch image: {e}"}, status_code=500)
+    except Exception as e:
+        import traceback
+
+        print("❌ Exception in /api/set_ball_and_get_pocket:")
+        traceback.print_exc()
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+
 
 @app.post("/api/get_pocket")
 async def get_pocket(request: Request):
@@ -150,18 +183,23 @@ async def get_pocket(request: Request):
         if not image_url:
             return JSONResponse({"error": "Missing 'image_url'"}, status_code=400)
 
-        print(f"[DEBUG] Received request: image_url={image_url}")
-
-        # Fetch the image
+        file_name = Path(image_url).name
+        file_path = UPLOAD_DIR / file_name
         response = requests.get(image_url, stream=True)
         response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
-        # set_ball_type(ball_type)
 
-        # Read image content
-        image_content = response.content
+        with open(file_path, "wb") as f:
+            shutil.copyfileobj(response.raw, f)
 
-        image_content= pocket_detection_api(image_url)
-        return Response(content=image_content)
+        print(f"[DEBUG] Image downloaded and saved to: {file_path}")
+
+        image_path_with_circle , image_path_for_work , rect = pocket_detection_api(str(file_path))
+        set_pocket_path(image_path_for_work)
+        set_rectangle_croped(rect)
+        relative_path = os.path.relpath(image_path_with_circle, start=OUTPUT_DIR)
+        file_url = f"/static/{relative_path.replace(os.sep, '/')}"
+        print(f"[DEBUG] Returning file URL: {file_url}")
+        return JSONResponse({"file_url": file_url})
 
     except requests.exceptions.RequestException as e:
         print(f"[ERROR] Failed to fetch image from URL: {e}")

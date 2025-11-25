@@ -1,34 +1,34 @@
 {
     "cut_name": "cut_3.png",
     "origin": {
-        "x": 1591,
+        "x": 1490,
         "y": 0
     },
     "rectangle": {
         "top_left": [
-            1591,
-            867
+            1490,
+            770
         ],
         "top_right": [
-            2954,
-            867
+            2765,
+            770
         ],
         "bottom_left": [
-            1591,
+            1490,
             0
         ],
         "bottom_right": [
-            2954,
+            2765,
             0
         ]
     },
     "balls": [
         {
             "center": [
-                2717,
-                56
+                1956,
+                670
             ],
-            "radius": 51,
+            "radius": 56,
             "color_score": {
                 "white_score": {
                     "white_score_test_1": 0.0,

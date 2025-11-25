@@ -7,104 +7,26 @@
     "rectangle": {
         "top_left": [
             0,
-            2777
+            2467
         ],
         "top_right": [
-            5458,
-            2777
+            5106,
+            2467
         ],
         "bottom_left": [
             0,
             0
         ],
         "bottom_right": [
-            5458,
+            5106,
             0
         ]
     },
     "balls": [
         {
             "center": [
-                2984,
-                786
-            ],
-            "radius": 59,
-            "color_score": {
-                "white_score": {
-                    "white_score_test_1": 0.0,
-                    "white_score_test_2": 0.0,
-                    "white_score_test_3": 0.0,
-                    "white_score_test_4": 0.0,
-                    "white_score_test_5": 0.0
-                },
-                "black_score": {
-                    "black_score_test_1": 0.0,
-                    "black_score_test_2": 0.0,
-                    "black_score_test_3": 0.0,
-                    "black_score_test_4": 0.0,
-                    "black_score_test_5": 0.0
-                },
-                "solid_score": {
-                    "solid_score_test_1": 0.0,
-                    "solid_score_test_2": 0.0,
-                    "solid_score_test_3": 0.0,
-                    "solid_score_test_4": 0.0,
-                    "solid_score_test_5": 0.0
-                },
-                "striped_score": {
-                    "striped_score_test_1": 0.0,
-                    "striped_score_test_2": 0.0,
-                    "striped_score_test_3": 0.0,
-                    "striped_score_test_4": 0.0,
-                    "striped_score_test_5": 0.0
-                }
-            },
-            "final_color": "undefined",
-            "single_ball_path": ""
-        },
-        {
-            "center": [
-                4010,
-                1526
-            ],
-            "radius": 56,
-            "color_score": {
-                "white_score": {
-                    "white_score_test_1": 0.0,
-                    "white_score_test_2": 0.0,
-                    "white_score_test_3": 0.0,
-                    "white_score_test_4": 0.0,
-                    "white_score_test_5": 0.0
-                },
-                "black_score": {
-                    "black_score_test_1": 0.0,
-                    "black_score_test_2": 0.0,
-                    "black_score_test_3": 0.0,
-                    "black_score_test_4": 0.0,
-                    "black_score_test_5": 0.0
-                },
-                "solid_score": {
-                    "solid_score_test_1": 0.0,
-                    "solid_score_test_2": 0.0,
-                    "solid_score_test_3": 0.0,
-                    "solid_score_test_4": 0.0,
-                    "solid_score_test_5": 0.0
-                },
-                "striped_score": {
-                    "striped_score_test_1": 0.0,
-                    "striped_score_test_2": 0.0,
-                    "striped_score_test_3": 0.0,
-                    "striped_score_test_4": 0.0,
-                    "striped_score_test_5": 0.0
-                }
-            },
-            "final_color": "undefined",
-            "single_ball_path": ""
-        },
-        {
-            "center": [
-                3114,
-                1866
+                1538,
+                1288
             ],
             "radius": 60,
             "color_score": {
@@ -142,10 +64,10 @@
         },
         {
             "center": [
-                4570,
-                2024
+                1026,
+                688
             ],
-            "radius": 63,
+            "radius": 62,
             "color_score": {
                 "white_score": {
                     "white_score_test_1": 0.0,
@@ -181,10 +103,244 @@
         },
         {
             "center": [
-                2710,
+                2126,
+                1818
+            ],
+            "radius": 60,
+            "color_score": {
+                "white_score": {
+                    "white_score_test_1": 0.0,
+                    "white_score_test_2": 0.0,
+                    "white_score_test_3": 0.0,
+                    "white_score_test_4": 0.0,
+                    "white_score_test_5": 0.0
+                },
+                "black_score": {
+                    "black_score_test_1": 0.0,
+                    "black_score_test_2": 0.0,
+                    "black_score_test_3": 0.0,
+                    "black_score_test_4": 0.0,
+                    "black_score_test_5": 0.0
+                },
+                "solid_score": {
+                    "solid_score_test_1": 0.0,
+                    "solid_score_test_2": 0.0,
+                    "solid_score_test_3": 0.0,
+                    "solid_score_test_4": 0.0,
+                    "solid_score_test_5": 0.0
+                },
+                "striped_score": {
+                    "striped_score_test_1": 0.0,
+                    "striped_score_test_2": 0.0,
+                    "striped_score_test_3": 0.0,
+                    "striped_score_test_4": 0.0,
+                    "striped_score_test_5": 0.0
+                }
+            },
+            "final_color": "undefined",
+            "single_ball_path": ""
+        },
+        {
+            "center": [
+                1956,
+                670
+            ],
+            "radius": 56,
+            "color_score": {
+                "white_score": {
+                    "white_score_test_1": 0.0,
+                    "white_score_test_2": 0.0,
+                    "white_score_test_3": 0.0,
+                    "white_score_test_4": 0.0,
+                    "white_score_test_5": 0.0
+                },
+                "black_score": {
+                    "black_score_test_1": 0.0,
+                    "black_score_test_2": 0.0,
+                    "black_score_test_3": 0.0,
+                    "black_score_test_4": 0.0,
+                    "black_score_test_5": 0.0
+                },
+                "solid_score": {
+                    "solid_score_test_1": 0.0,
+                    "solid_score_test_2": 0.0,
+                    "solid_score_test_3": 0.0,
+                    "solid_score_test_4": 0.0,
+                    "solid_score_test_5": 0.0
+                },
+                "striped_score": {
+                    "striped_score_test_1": 0.0,
+                    "striped_score_test_2": 0.0,
+                    "striped_score_test_3": 0.0,
+                    "striped_score_test_4": 0.0,
+                    "striped_score_test_5": 0.0
+                }
+            },
+            "final_color": "undefined",
+            "single_ball_path": ""
+        },
+        {
+            "center": [
+                3834,
+                1664
+            ],
+            "radius": 47,
+            "color_score": {
+                "white_score": {
+                    "white_score_test_1": 0.0,
+                    "white_score_test_2": 0.0,
+                    "white_score_test_3": 0.0,
+                    "white_score_test_4": 0.0,
+                    "white_score_test_5": 0.0
+                },
+                "black_score": {
+                    "black_score_test_1": 0.0,
+                    "black_score_test_2": 0.0,
+                    "black_score_test_3": 0.0,
+                    "black_score_test_4": 0.0,
+                    "black_score_test_5": 0.0
+                },
+                "solid_score": {
+                    "solid_score_test_1": 0.0,
+                    "solid_score_test_2": 0.0,
+                    "solid_score_test_3": 0.0,
+                    "solid_score_test_4": 0.0,
+                    "solid_score_test_5": 0.0
+                },
+                "striped_score": {
+                    "striped_score_test_1": 0.0,
+                    "striped_score_test_2": 0.0,
+                    "striped_score_test_3": 0.0,
+                    "striped_score_test_4": 0.0,
+                    "striped_score_test_5": 0.0
+                }
+            },
+            "final_color": "undefined",
+            "single_ball_path": ""
+        },
+        {
+            "center": [
+                2974,
+                1496
+            ],
+            "radius": 57,
+            "color_score": {
+                "white_score": {
+                    "white_score_test_1": 0.0,
+                    "white_score_test_2": 0.0,
+                    "white_score_test_3": 0.0,
+                    "white_score_test_4": 0.0,
+                    "white_score_test_5": 0.0
+                },
+                "black_score": {
+                    "black_score_test_1": 0.0,
+                    "black_score_test_2": 0.0,
+                    "black_score_test_3": 0.0,
+                    "black_score_test_4": 0.0,
+                    "black_score_test_5": 0.0
+                },
+                "solid_score": {
+                    "solid_score_test_1": 0.0,
+                    "solid_score_test_2": 0.0,
+                    "solid_score_test_3": 0.0,
+                    "solid_score_test_4": 0.0,
+                    "solid_score_test_5": 0.0
+                },
+                "striped_score": {
+                    "striped_score_test_1": 0.0,
+                    "striped_score_test_2": 0.0,
+                    "striped_score_test_3": 0.0,
+                    "striped_score_test_4": 0.0,
+                    "striped_score_test_5": 0.0
+                }
+            },
+            "final_color": "undefined",
+            "single_ball_path": ""
+        },
+        {
+            "center": [
+                2098,
+                1448
+            ],
+            "radius": 45,
+            "color_score": {
+                "white_score": {
+                    "white_score_test_1": 0.0,
+                    "white_score_test_2": 0.0,
+                    "white_score_test_3": 0.0,
+                    "white_score_test_4": 0.0,
+                    "white_score_test_5": 0.0
+                },
+                "black_score": {
+                    "black_score_test_1": 0.0,
+                    "black_score_test_2": 0.0,
+                    "black_score_test_3": 0.0,
+                    "black_score_test_4": 0.0,
+                    "black_score_test_5": 0.0
+                },
+                "solid_score": {
+                    "solid_score_test_1": 0.0,
+                    "solid_score_test_2": 0.0,
+                    "solid_score_test_3": 0.0,
+                    "solid_score_test_4": 0.0,
+                    "solid_score_test_5": 0.0
+                },
+                "striped_score": {
+                    "striped_score_test_1": 0.0,
+                    "striped_score_test_2": 0.0,
+                    "striped_score_test_3": 0.0,
+                    "striped_score_test_4": 0.0,
+                    "striped_score_test_5": 0.0
+                }
+            },
+            "final_color": "undefined",
+            "single_ball_path": ""
+        },
+        {
+            "center": [
+                4116,
+                1108
+            ],
+            "radius": 56,
+            "color_score": {
+                "white_score": {
+                    "white_score_test_1": 0.0,
+                    "white_score_test_2": 0.0,
+                    "white_score_test_3": 0.0,
+                    "white_score_test_4": 0.0,
+                    "white_score_test_5": 0.0
+                },
+                "black_score": {
+                    "black_score_test_1": 0.0,
+                    "black_score_test_2": 0.0,
+                    "black_score_test_3": 0.0,
+                    "black_score_test_4": 0.0,
+                    "black_score_test_5": 0.0
+                },
+                "solid_score": {
+                    "solid_score_test_1": 0.0,
+                    "solid_score_test_2": 0.0,
+                    "solid_score_test_3": 0.0,
+                    "solid_score_test_4": 0.0,
+                    "solid_score_test_5": 0.0
+                },
+                "striped_score": {
+                    "striped_score_test_1": 0.0,
+                    "striped_score_test_2": 0.0,
+                    "striped_score_test_3": 0.0,
+                    "striped_score_test_4": 0.0,
+                    "striped_score_test_5": 0.0
+                }
+            },
+            "final_color": "undefined",
+            "single_ball_path": ""
+        },
+        {
+            "center": [
+                5034,
                 58
             ],
-            "radius": 58,
+            "radius": 46,
             "color_score": {
                 "white_score": {
                     "white_score_test_1": 0.0,
@@ -220,88 +376,10 @@
         },
         {
             "center": [
-                134,
-                2594
+                78,
+                56
             ],
-            "radius": 40,
-            "color_score": {
-                "white_score": {
-                    "white_score_test_1": 0.0,
-                    "white_score_test_2": 0.0,
-                    "white_score_test_3": 0.0,
-                    "white_score_test_4": 0.0,
-                    "white_score_test_5": 0.0
-                },
-                "black_score": {
-                    "black_score_test_1": 0.0,
-                    "black_score_test_2": 0.0,
-                    "black_score_test_3": 0.0,
-                    "black_score_test_4": 0.0,
-                    "black_score_test_5": 0.0
-                },
-                "solid_score": {
-                    "solid_score_test_1": 0.0,
-                    "solid_score_test_2": 0.0,
-                    "solid_score_test_3": 0.0,
-                    "solid_score_test_4": 0.0,
-                    "solid_score_test_5": 0.0
-                },
-                "striped_score": {
-                    "striped_score_test_1": 0.0,
-                    "striped_score_test_2": 0.0,
-                    "striped_score_test_3": 0.0,
-                    "striped_score_test_4": 0.0,
-                    "striped_score_test_5": 0.0
-                }
-            },
-            "final_color": "undefined",
-            "single_ball_path": ""
-        },
-        {
-            "center": [
-                5270,
-                2718
-            ],
-            "radius": 40,
-            "color_score": {
-                "white_score": {
-                    "white_score_test_1": 0.0,
-                    "white_score_test_2": 0.0,
-                    "white_score_test_3": 0.0,
-                    "white_score_test_4": 0.0,
-                    "white_score_test_5": 0.0
-                },
-                "black_score": {
-                    "black_score_test_1": 0.0,
-                    "black_score_test_2": 0.0,
-                    "black_score_test_3": 0.0,
-                    "black_score_test_4": 0.0,
-                    "black_score_test_5": 0.0
-                },
-                "solid_score": {
-                    "solid_score_test_1": 0.0,
-                    "solid_score_test_2": 0.0,
-                    "solid_score_test_3": 0.0,
-                    "solid_score_test_4": 0.0,
-                    "solid_score_test_5": 0.0
-                },
-                "striped_score": {
-                    "striped_score_test_1": 0.0,
-                    "striped_score_test_2": 0.0,
-                    "striped_score_test_3": 0.0,
-                    "striped_score_test_4": 0.0,
-                    "striped_score_test_5": 0.0
-                }
-            },
-            "final_color": "undefined",
-            "single_ball_path": ""
-        },
-        {
-            "center": [
-                5240,
-                4
-            ],
-            "radius": 58,
+            "radius": 46,
             "color_score": {
                 "white_score": {
                     "white_score_test_1": 0.0,

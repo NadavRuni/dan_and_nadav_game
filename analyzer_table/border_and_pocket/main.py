@@ -20,7 +20,7 @@ from analyzer_table.launcher_helper.json_models import Rectangle  # Import Recta
 
 def process_image_for_border(
     image_path: str,
-) -> tuple[str, np.ndarray, np.ndarray, Rectangle | None]:
+) -> tuple[str, np.ndarray, np.ndarray, Rectangle | None , str]:
     """
     Loads an image, creates a binary mask, removes a white border if present,
     and saves the results and debug images.
@@ -114,7 +114,7 @@ def process_image_for_border(
         print(f"  - Unchanged mask saved to: {final_mask_output_path}")
 
     print("--- Process Finished ---")
-    return final_mask_output_path, binary_mask, cropped_original_photo, rectangle_obj
+    return final_mask_output_path, binary_mask, cropped_original_photo, rectangle_obj , output_debug_original_cropped_path
 
 
 if __name__ == "__main__":

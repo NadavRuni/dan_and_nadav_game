@@ -1,6 +1,6 @@
 from typing import List
 from .C_ball import Ball
-from .C_pocket import Pocket
+from game_class.C_pocket import Pocket
 from const_numbers import *
 
 
@@ -19,34 +19,69 @@ class Table:
         self.balls = balls
 
         # initialize 6 pockets (corners + middles of long sides)
-        self.pockets: List[Pocket] = [
-            Pocket(
-                0,
-                0 + get_min_distance_from_pocket(),
-                0 + get_min_distance_from_pocket(),
-                is_corner=True,
-            ),  # bottom-left
-            Pocket(
-                1,
-                length - get_min_distance_from_pocket(),
-                0 + get_min_distance_from_pocket(),
-                is_corner=True,
-            ),  # bottom-right
-            Pocket(
-                2,
-                length - get_min_distance_from_pocket(),
-                width - get_min_distance_from_pocket(),
-                is_corner=True,
-            ),  # top-right
-            Pocket(
-                3,
-                0 + get_min_distance_from_pocket(),
-                width - get_min_distance_from_pocket(),
-                is_corner=True,
-            ),  # top-left
-            Pocket(4, length / 2, 0, is_corner=False),  # middle-bottom
-            Pocket(5, length / 2, width, is_corner=False),  # middle-top
-        ]
+        if get_use_predicted_pockets() :
+            self.pockets: List[Pocket] = [
+                Pocket(
+                    id=0,
+                    center=(0 + get_min_distance_from_pocket(), 0 + get_min_distance_from_pocket()),
+                    radius=get_corner_pocket_radius(),
+                    pocket_img_cordinates_on_table=(0 + get_min_distance_from_pocket(), 0 + get_min_distance_from_pocket()),
+                    location="BL"
+                ),  # bottom-left
+                Pocket(
+                    id=1,
+                    center=(length - get_min_distance_from_pocket(), 0 + get_min_distance_from_pocket()),
+                    radius=get_corner_pocket_radius(),
+                    pocket_img_cordinates_on_table=(length - get_min_distance_from_pocket(), 0 + get_min_distance_from_pocket()),
+                    location="BR"
+                ),  # bottom-right
+                Pocket(
+                    id=2,
+                    center=(length - get_min_distance_from_pocket(), width - get_min_distance_from_pocket()),
+                    radius=get_corner_pocket_radius(),
+                    pocket_img_cordinates_on_table=(length - get_min_distance_from_pocket(), width - get_min_distance_from_pocket()),
+                    location="TR"
+                ),  # top-right
+                Pocket(
+                    id=3,
+                    center=(0 + get_min_distance_from_pocket(), width - get_min_distance_from_pocket()),
+                    radius=get_corner_pocket_radius(),
+                    pocket_img_cordinates_on_table=(0 + get_min_distance_from_pocket(), width - get_min_distance_from_pocket()),
+                    location="TL"
+                ),  # top-left
+                Pocket(id=4, center=(length / 2, 0), radius=get_side_pocket_radius(), pocket_img_cordinates_on_table=(length / 2, 0), location="BM"),  # middle-bottom
+                Pocket(id=5, center=(length / 2, width), radius=get_side_pocket_radius(), pocket_img_cordinates_on_table=(length / 2, width), location="TM"),  # middle-top
+            ]
+        else:
+            self.pockets: List[Pocket] = []
+            predifned_pockets = get_detected_pockets()
+            for pocket in predifned_pockets:
+                p_id=-1
+                match pocket.location:
+                    case "BL":
+                        p_id=0
+                    case "BR":
+                        p_id=1
+                    case "TR":
+                        p_id=2
+                    case "TL":
+                        p_id=3
+                    case "BM":
+                        p_id=4
+                    case "TM":
+                        p_id=5
+                    case _:
+                        p_id=-1
+
+                self.pockets.append(
+                    Pocket(
+                        id=p_id,
+                        center=pocket.center,
+                        radius=pocket.radius,
+                        pocket_img_cordinates_on_table=pocket.center,
+                        location=pocket.location
+                    )
+                )
 
     def show_balls(self):
         for ball in self.balls:

@@ -7,60 +7,20 @@
     "rectangle": {
         "top_left": [
             0,
-            867
+            770
         ],
         "top_right": [
-            1136,
-            867
+            1063,
+            770
         ],
         "bottom_left": [
             0,
             0
         ],
         "bottom_right": [
-            1136,
+            1063,
             0
         ]
     },
-    "balls": [
-        {
-            "center": [
-                80,
-                80
-            ],
-            "radius": 66,
-            "color_score": {
-                "white_score": {
-                    "white_score_test_1": 0.0,
-                    "white_score_test_2": 0.0,
-                    "white_score_test_3": 0.0,
-                    "white_score_test_4": 0.0,
-                    "white_score_test_5": 0.0
-                },
-                "black_score": {
-                    "black_score_test_1": 0.0,
-                    "black_score_test_2": 0.0,
-                    "black_score_test_3": 0.0,
-                    "black_score_test_4": 0.0,
-                    "black_score_test_5": 0.0
-                },
-                "solid_score": {
-                    "solid_score_test_1": 0.0,
-                    "solid_score_test_2": 0.0,
-                    "solid_score_test_3": 0.0,
-                    "solid_score_test_4": 0.0,
-                    "solid_score_test_5": 0.0
-                },
-                "striped_score": {
-                    "striped_score_test_1": 0.0,
-                    "striped_score_test_2": 0.0,
-                    "striped_score_test_3": 0.0,
-                    "striped_score_test_4": 0.0,
-                    "striped_score_test_5": 0.0
-                }
-            },
-            "final_color": "undefined",
-            "single_ball_path": ""
-        }
-    ]
+    "balls": []
 }

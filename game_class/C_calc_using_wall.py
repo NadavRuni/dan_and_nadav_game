@@ -47,8 +47,7 @@ class CalculationsWithWall(Calculations):
             angle_deg (float): הזווית במעלות (ביחס לציר ה־X)
             (impact_x, impact_y): נקודת הפגיעה בקיר
         """
-        pocket_id = pocket.id
-        pocket_y = pocket.y_cord
+        pocket_y = pocket.center[1]
 
         # 1. שיקוף הכיס ביחס לקיר העליון
         mirrored_pocket_y = 2 * get_table_width() - pocket_y
@@ -107,8 +106,8 @@ class CalculationsWithWall(Calculations):
         """
         ball_x = self.target.x_cord
         ball_y = self.target.y_cord
-        pocket_x = pocket.x_cord
-        pocket_y = pocket.y_cord
+        pocket_x = pocket.center[0]
+        pocket_y = pocket.center[1]
 
         # 1. שיקוף הכיס ביחס לקיר העליון
         mirrored_pocket_y = 2 * get_table_width() - pocket_y

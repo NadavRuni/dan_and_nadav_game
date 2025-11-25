@@ -31,8 +31,8 @@ class Calculations:
 
         for pocket in self.pockets:
             # וקטור מטרה→כיס
-            v2x = pocket.x_cord - self.target.x_cord
-            v2y = pocket.y_cord - self.target.y_cord
+            v2x = pocket.center[0] - self.target.x_cord
+            v2y = pocket.center[1] - self.target.y_cord
 
             # dot & cross
             dot = v1x * v2x + v1y * v2y
@@ -72,8 +72,8 @@ class Calculations:
             }
         """
 
-        dx = ball.x_cord - pocket.x_cord
-        dy = ball.y_cord - pocket.y_cord
+        dx = ball.x_cord - pocket.center[0]
+        dy = ball.y_cord - pocket.center[1]
 
         distance = math.hypot(dx, dy)
         angle_rad = math.atan2(dy, dx)  # angle of vector (ball → pocket)
@@ -83,9 +83,9 @@ class Calculations:
                 "for pocket id:",
                 pocket.id,
                 ", (",
-                pocket.x_cord,
+                pocket.center[0],
                 ",",
-                pocket.y_cord,
+                pocket.center[1],
                 ")",
             )
             print("for ball id:", ball.id, ", (", ball.x_cord, ",", ball.y_cord, ")")
@@ -102,8 +102,8 @@ class Calculations:
         """
         # קו מטרה -> חור
         target = self.target
-        dx = pocket.x_cord - target.x_cord
-        dy = pocket.y_cord - target.y_cord
+        dx = pocket.center[0] - target.x_cord
+        dy = pocket.center[1] - target.y_cord
         dist_target_pocket = math.hypot(dx, dy)
 
         for ball in self.balls:

@@ -83,7 +83,7 @@ class BestWallShot(BestShot):
 
         line_wall_to_pocket = (
             self.point_with_the_wall,
-            (self.pocket.x_cord, self.pocket.y_cord),
+            (self.pocket.center[0], self.pocket.center[1]),
         )
 
         return [line_white_to_target, line_target_to_wall, line_wall_to_pocket]

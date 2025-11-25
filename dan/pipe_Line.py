@@ -7,11 +7,12 @@ from const_numbers import OUTPUT_JSON_PATH
 from analyzer_table.balls_from_image import full_analyzer_pipeline
 from analyzer_table.launcher_helper.json_models import (
     Ball,
-    table_pockets,
     AnalyzerResult,
 )
+from game_class.C_pocket import Pocket
 from analyzer_table.detect_ball.Debugger import Debugger
 from pathlib import Path
+from typing import List
 
 UPLOAD_DIR = Path(__file__).resolve().parents[1] / "uploads"
 
@@ -485,7 +486,7 @@ def black_recognizer(stage):
 from dataclasses import asdict
 import cv2, os, json
 import numpy as np
-from analyzer_table.launcher_helper.json_models import AnalyzerResult, table_pockets
+from analyzer_table.launcher_helper.json_models import AnalyzerResult
 from analyzer_table.detect_ball.Debugger import Debugger
 from const_numbers import OUTPUT_JSON_PATH
 
@@ -506,7 +507,7 @@ def image_recognizer(IMAGE_PATH: str) -> dict:
     balls_data = analyzer_result.balls
     white_ball = analyzer_result.white
     black_ball = analyzer_result.black
-    all_pockets: table_pockets = analyzer_result.Pockets
+    all_pockets: List[Pocket] = analyzer_result.pockets
 
     # === 2) קריאת התמונה ===
     img = cv2.imread(IMAGE_PATH)
@@ -531,12 +532,12 @@ def image_recognizer(IMAGE_PATH: str) -> dict:
 
     # === 4) בניית מיקומי כיסים מתוך ה־table_pockets ===
     pockets_json = {}
-    for pocket in all_pockets.pocket_list:
-        label = pocket.pocket_loacation_on_table
+    for pocket in all_pockets:
+        label = pocket.location
         pockets_json[label] = {
             "x": float(pocket.pocket_img_cordinates_on_table[0]),
             "y": float(pocket.pocket_img_cordinates_on_table[1]),
-            "radius": float(pocket.pocker_radius),
+            "radius": float(pocket.radius),
         }
 
     # === 5) יצירת התוצאה הסופית ===

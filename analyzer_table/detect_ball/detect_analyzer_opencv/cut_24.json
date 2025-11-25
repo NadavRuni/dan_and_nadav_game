@@ -1,66 +1,26 @@
 {
     "cut_name": "cut_24.png",
     "origin": {
-        "x": 4318,
-        "y": 1909
+        "x": 4043,
+        "y": 1694
     },
     "rectangle": {
         "top_left": [
-            4318,
-            2777
+            4043,
+            2467
         ],
         "top_right": [
-            5458,
-            2777
+            5106,
+            2467
         ],
         "bottom_left": [
-            4318,
-            1909
+            4043,
+            1694
         ],
         "bottom_right": [
-            5458,
-            1909
+            5106,
+            1694
         ]
     },
-    "balls": [
-        {
-            "center": [
-                4570,
-                2023
-            ],
-            "radius": 64,
-            "color_score": {
-                "white_score": {
-                    "white_score_test_1": 0.0,
-                    "white_score_test_2": 0.0,
-                    "white_score_test_3": 0.0,
-                    "white_score_test_4": 0.0,
-                    "white_score_test_5": 0.0
-                },
-                "black_score": {
-                    "black_score_test_1": 0.0,
-                    "black_score_test_2": 0.0,
-                    "black_score_test_3": 0.0,
-                    "black_score_test_4": 0.0,
-                    "black_score_test_5": 0.0
-                },
-                "solid_score": {
-                    "solid_score_test_1": 0.0,
-                    "solid_score_test_2": 0.0,
-                    "solid_score_test_3": 0.0,
-                    "solid_score_test_4": 0.0,
-                    "solid_score_test_5": 0.0
-                },
-                "striped_score": {
-                    "striped_score_test_1": 0.0,
-                    "striped_score_test_2": 0.0,
-                    "striped_score_test_3": 0.0,
-                    "striped_score_test_4": 0.0,
-                    "striped_score_test_5": 0.0
-                }
-            },
-            "final_color": "undefined",
-            "single_ball_path": ""
-        }
-    ]
+    "balls": []
 }

@@ -23,9 +23,9 @@ import numpy as np
 import os
 from analyzer_table.launcher_helper.json_models import (
     Ball,
-    table_pockets,
     AnalyzerResult,
 )
+from game_class.C_pocket import Pocket
 from analyzer_table.ball_from_image_helper import crop_and_save_balls
 from analyzer_table.launcher_helper.pocket.pocket_detect import analyze_table_pockets
 from analyzer_table.launcher_helper.pocket.pocket_cycle import mark_pocket_circles
@@ -131,8 +131,8 @@ def full_analyzer_pipeline(image_path: str) -> AnalyzerResult:
     if table_rectangle is None:
         Debugger.error("❌ Table rectangle not confirmed or selected.")
         return []
-    all_pocket: table_pockets = analyze_table_pockets(image_path, table_rectangle)
-    Debugger.log(f"path : {all_pocket.pockets_img_paths}")
+    all_pockets: List[Pocket] = analyze_table_pockets(image_path, table_rectangle)
+    Debugger.log(f"path : {[p.pocket_img_path for p in all_pockets]}")
     if not sub_photos or not main_photo:
         Debugger.error("❌ Analysis failed or no data returned.")
         return [], None, None
@@ -152,7 +152,7 @@ def full_analyzer_pipeline(image_path: str) -> AnalyzerResult:
         image_path,
         output_final_path,
         table_rectangle,
-        all_pockets=all_pocket,
+        all_pockets=all_pockets,
     )
     Debugger.log(f"🖼️ Final image saved to {output_final_path}")
     sorted_balls = sorted(merged_photo.balls, key=lambda b: b.center[0])
@@ -199,7 +199,7 @@ def full_analyzer_pipeline(image_path: str) -> AnalyzerResult:
     else:
         Debugger.warn("⚫ Black ball not found")
     analyzerResult = AnalyzerResult(
-        Pockets=all_pocket,
+        pockets=all_pockets,
         balls=sorted_balls,
         black=blackest_ball,
         white=whitest_ball,

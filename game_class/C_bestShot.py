@@ -39,7 +39,7 @@ class BestShot:
 
             # חישוב מרחקים
             self.dist_target_to_pocket = math.hypot(
-                self.pocket.x_cord - target.x_cord, self.pocket.y_cord - target.y_cord
+                self.pocket.center[0] - target.x_cord, self.pocket.center[1] - target.y_cord
             )
             self.dist_white_to_target = math.hypot(
                 target.x_cord - white.x_cord, target.y_cord - white.y_cord
@@ -87,7 +87,7 @@ class BestShot:
         )
         line_target_to_pocket = (
             (self.target.x_cord, self.target.y_cord),
-            (self.pocket.x_cord, self.pocket.y_cord),
+            (self.pocket.center[0], self.pocket.center[1]),
         )
         return [line_white_to_target, line_target_to_pocket]
 
