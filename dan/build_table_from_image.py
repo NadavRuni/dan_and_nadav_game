@@ -142,14 +142,17 @@ def start_build_table_from_img():
             print("second best shot is:", best_shot[1])
         if len(best_shot) > 2:
             print("third best shot is:", best_shot[2])
-            
+
         p, lines = draw_table(table, best_shot=best_shot[0])
         line_drawer = LineDrawer(OUTPUT_JSON_PATH, best_shot[0], OUTPUT_IMAGE_PATH)
         line_drawer.show_contact_hit()  # need to be first before draw_lines
         if isinstance(best_shot[0], BestWallShot):
             print("Drawing wall-based shot lines...")
             line_drawer.draw_lines_with_wall(
-                (best_shot[0].point_with_the_wall[0], best_shot[0].point_with_the_wall[1])
+                (
+                    best_shot[0].point_with_the_wall[0],
+                    best_shot[0].point_with_the_wall[1],
+                )
             )
         elif isinstance(best_shot[0], BestShotBallToBall):
             print("Drawing ball-to-ball shot lines...")
@@ -162,6 +165,7 @@ def start_build_table_from_img():
         analysis = load_analysis(OUTPUT_JSON_PATH)
         if analysis.get("image_path"):
             from shutil import copyfile
+
             copyfile(analysis["image_path"], OUTPUT_IMAGE_PATH)
 
 

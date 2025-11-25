@@ -66,6 +66,8 @@ class Ball:
 
 
 from game_class.C_pocket import Pocket
+
+
 @dataclass
 class AnalyzerResult:
     black: Optional[Ball] = None

@@ -11,6 +11,7 @@ from const_numbers import *
 # 🧩 פונקציות עזר
 # =====================
 
+
 def _load_pocket_image(pocket: Pocket):
     """טוען תמונה של חור ומוודא שהיא תקינה."""
     img_path = pocket.pocket_img_path
@@ -36,7 +37,7 @@ def _detect_circle(img) -> tuple[int, int, int] | None:
         param1=100,
         param2=15,
         minRadius=5,
-        maxRadius=int(min(img.shape[:2]) / 2)
+        maxRadius=int(min(img.shape[:2]) / 2),
     )
     if circles is not None:
         circles = np.uint16(np.around(circles))
@@ -52,7 +53,7 @@ def _draw_and_save_circle(img, circle_data, img_path):
 
     if circle_data is not None:
         x, y, r = circle_data
-        x,y,r = int(x), int(y), int(r)
+        x, y, r = int(x), int(y), int(r)
         cv2.circle(img, (x, y), r, (0, 255, 0), 2)  # ירוק – היקף
         cv2.circle(img, (x, y), 2, (0, 0, 255), 3)  # אדום – מרכז
         Debugger.log(f"✅ Circle drawn at ({x},{y}), radius={r}")
@@ -68,7 +69,10 @@ def _draw_and_save_circle(img, circle_data, img_path):
 # 🎯 פונקציה ראשית
 # =====================
 
-def mark_pocket_circles(all_pockets: List[Pocket], half_size: int = get_crop_half_size()) -> None:
+
+def mark_pocket_circles(
+    all_pockets: List[Pocket], half_size: int = get_crop_half_size()
+) -> None:
     Debugger.log("🎱 Starting pocket circle marking...")
 
     for pocket in all_pockets:

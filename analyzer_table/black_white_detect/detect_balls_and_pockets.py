@@ -224,10 +224,10 @@ def is_close_to_rectangle_borders(
     width = max_x - min_x
     height = max_y - min_y
     midpoints = {}
-    if width > height: # Horizontal table
+    if width > height:  # Horizontal table
         midpoints["TM"] = ((min_x + max_x) // 2, min_y)
         midpoints["BM"] = ((min_x + max_x) // 2, max_y)
-    else: # Vertical table (or square)
+    else:  # Vertical table (or square)
         midpoints["left_middle"] = (min_x, (min_y + max_y) // 2)
         midpoints["right_middle"] = (max_x, (min_y + max_y) // 2)
 
@@ -245,12 +245,26 @@ def is_close_to_rectangle_borders(
 
     # 3. Check if the point is close enough to the *closest* interest point
     if min_dist <= pocket_margin:
-        print ("DEBUG: Point is close enough to interest point. (", point_x, " , ", point_y, " )")
-        print ("DEBUG: Closest location: ", closest_location, " with distance: ", min_dist)
-        print ("DEBUG: Margin allowed: ", pocket_margin)
+        print(
+            "DEBUG: Point is close enough to interest point. (",
+            point_x,
+            " , ",
+            point_y,
+            " )",
+        )
+        print(
+            "DEBUG: Closest location: ", closest_location, " with distance: ", min_dist
+        )
+        print("DEBUG: Margin allowed: ", pocket_margin)
         return True, closest_location, min_dist
 
-    print("DEBUG: Point not close enough to any interest point. (", point_x, " , ", point_y, " )")
+    print(
+        "DEBUG: Point not close enough to any interest point. (",
+        point_x,
+        " , ",
+        point_y,
+        " )",
+    )
     print("DEBUG: Closest location: ", closest_location, " with distance: ", min_dist)
     return False, "UNKNOWN", min_dist
 
@@ -327,9 +341,7 @@ def _circles_from_connected_components(
     return sorted(circles_found, key=lambda item: item[2], reverse=True)
 
 
-def _estimate_missing_pockets(
-    pockets: List[Pocket], rect: Rectangle
-) -> List[Pocket]:
+def _estimate_missing_pockets(pockets: List[Pocket], rect: Rectangle) -> List[Pocket]:
     """
     Estimates the positions of missing pockets based on the locations of found pockets.
     """
@@ -367,14 +379,14 @@ def _estimate_missing_pockets(
         return centers[loc]
 
     estimated_pockets = list(pockets)
-    
+
     # Estimate missing corners by averaging
     for loc in missing_locations:
         center_x, center_y = 0, 0
         if loc == "TL":
             tr = get_point("TR")
             bl = get_point("BL")
-            center_x = bl[0] 
+            center_x = bl[0]
             center_y = tr[1]
         elif loc == "TR":
             tl = get_point("TL")
@@ -391,7 +403,7 @@ def _estimate_missing_pockets(
             tr = get_point("TR")
             center_x = tr[0]
             center_y = bl[1]
-        
+
         # Estimate middle pockets from corners
         elif loc == "TM":
             tl = get_point("TL")
@@ -415,6 +427,7 @@ def _estimate_missing_pockets(
             print(f"  - Estimated placeholder for {loc} at {placeholder.center}")
 
     return estimated_pockets
+
 
 def find_corner_pockets_from_mask(
     mask_path: str, binary_mask: np.array, original_image: np.array, rect: Rectangle
@@ -502,10 +515,16 @@ def find_corner_pockets_from_mask(
         "TM",
         "BM",
     ]
-    final_pockets.sort(key=lambda p: all_locations_order.index(p.location) if p.location in all_locations_order else 99)
+    final_pockets.sort(
+        key=lambda p: (
+            all_locations_order.index(p.location)
+            if p.location in all_locations_order
+            else 99
+        )
+    )
     for i, pocket in enumerate(final_pockets, 1):
         pocket.id = i
-    
+
     detected_pockets = final_pockets
 
     # --- Drawing and Final Summary ---
@@ -513,19 +532,43 @@ def find_corner_pockets_from_mask(
     for pocket in detected_pockets:
         draw_center_x = pocket.center[0] + padding
         draw_center_y = pocket.center[1] + padding
-        cv2.circle(output_display, (draw_center_x, draw_center_y), int(pocket.radius), (0, 255, 0), 2)
-        cv2.putText(output_display, str(pocket.id), (draw_center_x + int(pocket.radius), draw_center_y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 255), 2)
-        cv2.circle(original_image_with_pockets, (pocket.center[0], pocket.center[1]), int(pocket.radius), (0, 0, 255), 10)
+        cv2.circle(
+            output_display,
+            (draw_center_x, draw_center_y),
+            int(pocket.radius),
+            (0, 255, 0),
+            2,
+        )
+        cv2.putText(
+            output_display,
+            str(pocket.id),
+            (draw_center_x + int(pocket.radius), draw_center_y),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.7,
+            (255, 0, 255),
+            2,
+        )
+        cv2.circle(
+            original_image_with_pockets,
+            (pocket.center[0], pocket.center[1]),
+            int(pocket.radius),
+            (0, 0, 255),
+            10,
+        )
 
     debug_output_path = get_output_path("pocket_mask.jpg", sub_dir="black_white_detect")
     cv2.imwrite(debug_output_path, output_display)
-    original_debug_path = get_output_path("original_with_pockets.jpg", sub_dir="black_white_detect")
+    original_debug_path = get_output_path(
+        "original_with_pockets.jpg", sub_dir="black_white_detect"
+    )
     cv2.imwrite(original_debug_path, original_image_with_pockets)
 
     print(f"Found {len(detected_pockets)} final pockets.")
     print("Final Pocket Summary:")
     for p in detected_pockets:
-        print(f"  ID: {p.id}, Location: {p.location}, Center: {p.center}, Radius: {p.radius}")
+        print(
+            f"  ID: {p.id}, Location: {p.location}, Center: {p.center}, Radius: {p.radius}"
+        )
 
     return detected_pockets, debug_output_path, original_debug_path
 
