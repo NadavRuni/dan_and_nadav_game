@@ -156,6 +156,10 @@ async def best_shot_use_pocket(request: Request):
         pipeline_result = await start_pipe_line(str(get_pocket_path()))
         table_result = start_build_table_from_img()
 
+        print ("[DEBUG] best_shot_use_pocket completed successfully.")
+        print ("[DEBUG] Pipeline Result:", pipeline_result)
+        print ("[DEBUG] Table Result:", table_result)
+
         return JSONResponse(
             {"status": "ok", "pipeline": pipeline_result, "table": table_result}
         )
@@ -210,17 +214,31 @@ async def get_pocket(request: Request):
         print("❌ Exception in /api/set_ball_and_get_pocket:")
         traceback.print_exc()
         return JSONResponse({"error": str(e)}, status_code=500)
-
-
-# ✅ קבלת תמונה
 @app.get("/api/get_image")
-async def get_image(path: str):
-    file_name = Path(path).name
-    file_path = UPLOAD_DIR / file_name
-    if not file_path.exists():
-        return JSONResponse({"error": f"Image not found: {file_path}"}, status_code=404)
-    return FileResponse(str(file_path))
+async def get_image():
+    try:
+        file_path = OUTPUT_DIR / 'img.png'
 
+        if not file_path.exists():
+            print(f"❌ Image not found: {file_path}")
+            return JSONResponse(
+                {"error": f"Processed image not found"}, status_code=404
+            )
+
+        print(f"[DEBUG] Found final image: {file_path}")
+
+        # Convert to static served path
+        relative_path = os.path.relpath(file_path, start=OUTPUT_DIR)
+        file_url = f"/static/{relative_path.replace(os.sep, '/')}"
+        
+        print(f"[DEBUG] Returning file URL: {file_url}")
+        return JSONResponse({"file_url": file_url})
+
+    except Exception as e:
+        import traceback
+        print("❌ Exception in /api/get_image:")
+        traceback.print_exc()
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 @app.post("/api/get_output")
 async def get_output(request: Request):
