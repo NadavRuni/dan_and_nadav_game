@@ -20,7 +20,9 @@ class TestRemoveWhiteBorder(unittest.TestCase):
         inner_area[70:80, 60:70] = 255
 
         # Add a 10-pixel white border around it
-        bordered_image = cv2.copyMakeBorder(inner_area, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value=255)
+        bordered_image = cv2.copyMakeBorder(
+            inner_area, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value=255
+        )
 
         # Apply the function
         processed_mask = remove_white_border(bordered_image)
@@ -73,7 +75,9 @@ class TestRemoveWhiteBorder(unittest.TestCase):
         inner_area[0, 50] = 0  # Black pixel at the top edge of the inner area
 
         # Add a 10-pixel white border
-        bordered_image = cv2.copyMakeBorder(inner_area, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value=255)
+        bordered_image = cv2.copyMakeBorder(
+            inner_area, 10, 10, 10, 10, cv2.BORDER_CONSTANT, value=255
+        )
 
         # Apply the function
         processed_mask = remove_white_border(bordered_image)
@@ -83,5 +87,5 @@ class TestRemoveWhiteBorder(unittest.TestCase):
         np.testing.assert_array_equal(processed_mask, inner_area)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

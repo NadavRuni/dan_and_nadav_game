@@ -11,12 +11,14 @@ from typing import List
 
 from output_utils import get_output_path
 from const_numbers import *
-from analyzer_table.launcher_helper.json_models import Ball, PocketDetection
+from analyzer_table.launcher_helper.json_models import (
+    Ball,
+    PocketDetection,
+    Pocket_Location_On_Table,
+)
 from analyzer_table.table.rectangle import parse_rectangle_from_data
 from analyzer_table.launcher_helper.json_models import Rectangle
 from typing import Optional, List
-
-
 
 
 def is_near_border(center, image_width, image_height, margin_fraction=0.2):
@@ -24,7 +26,7 @@ def is_near_border(center, image_width, image_height, margin_fraction=0.2):
     center_x, center_y = center
     margin_x = image_width * margin_fraction
     margin_y = image_height * margin_fraction
-    
+
     return (
         center_x < margin_x
         or center_x > image_width - margin_x
@@ -198,33 +200,56 @@ def touches_border(bbox, image_width, image_height, padding=3):
 
 
 def is_close_to_rectangle_borders(
-    rectangle: "Rectangle", point_x: int, point_y: int, margin: int
-) -> bool:
+    rectangle: Rectangle, point_x: int, point_y: int, margin: int
+) -> tuple[bool, str, float]:
     """
-    Checks if a point is within a specified margin of any of the rectangle's borders.
+    Checks if a point is close to a corner or the middle of a long side of the rectangle.
+    Returns a tuple: (is_valid, location_name, distance)
     """
     if not rectangle:
-        return False
+        return False, Pocket_Location_On_Table.unknown, -1.0
 
     min_x = min(rectangle.top_left[0], rectangle.bottom_left[0])
     max_x = max(rectangle.top_right[0], rectangle.bottom_right[0])
     min_y = min(rectangle.top_left[1], rectangle.top_right[1])
     max_y = max(rectangle.bottom_left[1], rectangle.bottom_right[1])
 
-    # Check if close to left border
-    if abs(point_x - min_x) <= margin:
-        return True
-    # Check if close to right border
-    if abs(point_x - max_x) <= margin:
-        return True
-    # Check if close to top border
-    if abs(point_y - min_y) <= margin:
-        return True
-    # Check if close to bottom border
-    if abs(point_y - max_y) <= margin:
-        return True
+    # 1. Define key points with their names
+    corners = {
+        Pocket_Location_On_Table.top_left: rectangle.top_left,
+        Pocket_Location_On_Table.top_right: rectangle.top_right,
+        Pocket_Location_On_Table.bottom_left: rectangle.bottom_left,
+        Pocket_Location_On_Table.bottom_right: rectangle.bottom_right,
+    }
 
-    return False
+    width = max_x - min_x
+    height = max_y - min_y
+    midpoints = {}
+    if width > height: # Horizontal table
+        midpoints[Pocket_Location_On_Table.top_middle] = ((min_x + max_x) // 2, min_y)
+        midpoints[Pocket_Location_On_Table.buttom_middle] = ((min_x + max_x) // 2, max_y)
+    else: # Vertical table (or square)
+        midpoints["left_middle"] = (min_x, (min_y + max_y) // 2)
+        midpoints["right_middle"] = (max_x, (min_y + max_y) // 2)
+
+    interest_points = {**corners, **midpoints}
+    pocket_margin = margin * 2
+
+    # 2. Find the closest interest point
+    min_dist = float("inf")
+    closest_location = Pocket_Location_On_Table.unknown
+    for name, (p_x, p_y) in interest_points.items():
+        distance = np.sqrt((point_x - p_x) ** 2 + (point_y - p_y) ** 2)
+        if distance < min_dist:
+            min_dist = distance
+            closest_location = name
+
+    # 3. Check if the point is close enough to the *closest* interest point
+    if min_dist <= pocket_margin:
+        return True, closest_location, min_dist
+
+    print("DEBUG: Point not close enough to any interest point. (", point_x, " , ", point_y, " )")
+    return False, Pocket_Location_On_Table.unknown, min_dist
 
 
 def _circles_from_connected_components(
@@ -299,135 +324,212 @@ def _circles_from_connected_components(
     return sorted(circles_found, key=lambda item: item[2], reverse=True)
 
 
+def _estimate_missing_pockets(
+    pockets: List[PocketDetection], rect: Rectangle
+) -> List[PocketDetection]:
+    """
+    Estimates the positions of missing pockets based on the locations of found pockets.
+    """
+    print("DEBUG: Estimating missing pockets...")
+
+    pockets_map = {p.location: p for p in pockets}
+    all_locations = {
+        Pocket_Location_On_Table.top_left,
+        Pocket_Location_On_Table.top_right,
+        Pocket_Location_On_Table.bottom_left,
+        Pocket_Location_On_Table.bottom_right,
+        Pocket_Location_On_Table.top_middle,
+        Pocket_Location_On_Table.buttom_middle,
+    }
+    missing_locations = all_locations - set(pockets_map.keys())
+
+    if not missing_locations:
+        return pockets
+
+    # Helper to get point from pocket or rect
+    def get_point(loc):
+        if loc in pockets_map:
+            return pockets_map[loc].center
+        # Fallback to rect corners if pocket not found
+        min_x, max_x = rect.top_left[0], rect.top_right[0]
+        min_y, max_y = rect.top_left[1], rect.bottom_left[1]
+        centers = {
+            Pocket_Location_On_Table.top_left: (min_x, min_y),
+            Pocket_Location_On_Table.top_right: (max_x, min_y),
+            Pocket_Location_On_Table.bottom_left: (min_x, max_y),
+            Pocket_Location_On_Table.bottom_right: (max_x, max_y),
+            Pocket_Location_On_Table.top_middle: ((min_x + max_x) // 2, min_y),
+            Pocket_Location_On_Table.buttom_middle: ((min_x + max_x) // 2, max_y),
+        }
+        return centers[loc]
+
+    estimated_pockets = list(pockets)
+    
+    # Estimate missing corners by averaging
+    for loc in missing_locations:
+        center_x, center_y = 0, 0
+        if loc == Pocket_Location_On_Table.top_left:
+            tr = get_point(Pocket_Location_On_Table.top_right)
+            bl = get_point(Pocket_Location_On_Table.bottom_left)
+            center_x = bl[0] 
+            center_y = tr[1]
+        elif loc == Pocket_Location_On_Table.top_right:
+            tl = get_point(Pocket_Location_On_Table.top_left)
+            br = get_point(Pocket_Location_On_Table.bottom_right)
+            center_x = br[0]
+            center_y = tl[1]
+        elif loc == Pocket_Location_On_Table.bottom_left:
+            tl = get_point(Pocket_Location_On_Table.top_left)
+            br = get_point(Pocket_Location_On_Table.bottom_right)
+            center_x = tl[0]
+            center_y = br[1]
+        elif loc == Pocket_Location_On_Table.bottom_right:
+            bl = get_point(Pocket_Location_On_Table.bottom_left)
+            tr = get_point(Pocket_Location_On_Table.top_right)
+            center_x = tr[0]
+            center_y = bl[1]
+        
+        # Estimate middle pockets from corners
+        elif loc == Pocket_Location_On_Table.top_middle:
+            tl = get_point(Pocket_Location_On_Table.top_left)
+            tr = get_point(Pocket_Location_On_Table.top_right)
+            center_x = (tl[0] + tr[0]) // 2
+            center_y = (tl[1] + tr[1]) // 2
+        elif loc == Pocket_Location_On_Table.buttom_middle:
+            bl = get_point(Pocket_Location_On_Table.bottom_left)
+            br = get_point(Pocket_Location_On_Table.bottom_right)
+            center_x = (bl[0] + br[0]) // 2
+            center_y = (bl[1] + br[1]) // 2
+
+        if center_x != 0 or center_y != 0:
+            placeholder = PocketDetection(
+                center=(int(center_x), int(center_y)),
+                radius=int(get_pocket_radius()),
+                id=-1,
+                location=loc,
+                distance=-1.0,
+            )
+            estimated_pockets.append(placeholder)
+            print(f"  - Estimated placeholder for {loc} at {placeholder.center}")
+
+    return estimated_pockets
+
 def find_corner_pockets_from_mask(
-    image_path: str 
-) -> tuple[List["PocketDetection"] , str] :
+    mask_path: str, binary_mask: np.array, original_image: np.array, rect: Rectangle
+) -> tuple[List["PocketDetection"], str, str]:
     """
     Finds and circles white polygonal shapes in the corners of a binary mask.
-    Saves the output as 'pocket_mask.jpg' near the original path.
+    It ensures that exactly 6 pockets are returned by selecting the best candidate for each location.
     """
-
-
-    # 1. Handle Default Table Rectangle
     from const_numbers import set_table_length, set_table_width
 
-
-    mask_path, binary_mask, original_image = crate_mask_table(image_path)
     set_table_width(original_image.shape[0])
     set_table_length(original_image.shape[1])
     print(f"DEBUG: find_corner_pockets - Loading mask from: {mask_path}")
 
-    # 2. Load Mask
     mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
     if mask is None:
         print(f"❌ Could not read mask image: {mask_path}")
-        return []
+        return [], "", ""
 
-    kernel_size = 9
-    kernel = np.ones((kernel_size, kernel_size), np.uint8)
-
-    # Erode: shrinks white areas.
-    # 1. Deletes the tiny noise dots (small circles go away).
-    # 2. Cuts the connection to the rail (big object becomes a pocket again).
+    kernel = np.ones((9, 9), np.uint8)
     mask = cv2.erode(mask, kernel, iterations=1)
-
-    # 3. Add Padding (Fixes pockets touching edges)
     padding = 50
     padded_mask = cv2.copyMakeBorder(
-    mask, padding, padding, padding, padding,
-    cv2.BORDER_CONSTANT, value=0
+        mask, padding, padding, padding, padding, cv2.BORDER_CONSTANT, value=0
     )
     output_path = get_output_path("padded_mask.jpg")
     cv2.imwrite(output_path, padded_mask)
-    print(f"DEBUG: Saved padded_mask to: {output_path}")
 
-    print(f"DEBUG: find_corner_pockets - Mask loaded. Shape: {mask.shape}")
-
-    # 4. Find Contours on PADDED mask
     contours, _ = cv2.findContours(padded_mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
-    print(f"DEBUG: find_corner_pockets - Found {len(contours)} contours.")
-
-    # Create a display image from the PADDED mask
     output_display = cv2.cvtColor(padded_mask, cv2.COLOR_GRAY2BGR)
 
-    detected_pockets = []
-    count = 0
-
+    all_valid_pockets = []
     for i, contour in enumerate(contours):
-        # Filter by area (adjust MIN_AREA as needed to ignore noise)
         area = cv2.contourArea(contour)
-        if area < 50:  # Example: Ignore very small noise
+        if area < 50:
             continue
 
-        # Get bounding circle on the PADDED image
         (x, y), radius = cv2.minEnclosingCircle(contour)
-
-        # Filter by radius size
-        if not (get_pocket_radius()-30 < radius < get_pocket_radius()+30 ):
-            print (" didnt pass radius check " , radius , 'not in valid range ' , get_pocket_radius()-30 , ' - ' , get_pocket_radius()+30
-                   )
+        if not (get_pocket_down_radius() < radius < get_pocket_up_radius()):
             continue
 
-        # 5. Calculate Coordinates
-        # center_x/y are currently on the PADDED image (shifted by +5)
-        center_x_padded, center_y_padded = int(x), int(y)
+        real_center_x = int(x) - padding
+        real_center_y = int(y) - padding
 
-        # real_x/y are on the ORIGINAL image (shifted back by -5)
-        real_center_x = center_x_padded - padding
-        real_center_y = center_y_padded - padding
-
-        print(
-            f"DEBUG: Contour {i} - Padded: ({center_x_padded},{center_y_padded}) | Real: ({real_center_x},{real_center_y}) | Radius: {radius:.2f}"
+        is_valid, location, distance = is_close_to_rectangle_borders(
+            rect, real_center_x, real_center_y, margin=get_pocket_radius() * 5
         )
 
-        # 6. Validation Logic
-        is_valid_pocket = True
-
-        # If you have specific border logic, enable it here:
-        if get_table_rect() and not is_close_to_rectangle_borders(
-            get_table_rect(), real_center_x, real_center_y, margin=50
-        ):
-            is_valid_pocket = False
-
-        if is_valid_pocket:
-            count += 1
-
-            # Draw on the PADDED display image (use padded coordinates)
-            cv2.circle(
-                output_display,
-                (center_x_padded, center_y_padded),
-                int(radius),
-                (0, 255, 0),
-                2,
+        if is_valid:
+            pocket = PocketDetection(
+                center=(real_center_x, real_center_y),
+                radius=int(radius),
+                id=i,
+                location=location,
+                distance=distance,
             )
+            all_valid_pockets.append(pocket)
 
-            # Save the REAL coordinates to the result list
-            # Assuming PocketDetection takes (center, radius)
-            try:
-                pocket = PocketDetection(
-                    center=(real_center_x, real_center_y), radius=int(radius)
-                )
-                detected_pockets.append(pocket)
-                print(f"✅ Accepted Pocket: ({real_center_x}, {real_center_y}) radius={int(radius)}")
-            except NameError:
-                # Fallback if PocketDetection class isn't imported in this scope
-                detected_pockets.append(
-                    {"center": (real_center_x, real_center_y), "radius": int(radius)}
-                )
+    # --- Deduplication ---
+    pockets_by_location = {}
+    for p in all_valid_pockets:
+        if p.location not in pockets_by_location:
+            pockets_by_location[p.location] = []
+        pockets_by_location[p.location].append(p)
 
-    # 7. Save Output
-    try:
-        output_path = get_output_path("pocket_mask.jpg", sub_dir="black_white_detect")
-        cv2.imwrite(output_path, output_display)
-        print(f"DEBUG: Saved debug image to: {output_path}")
-    except NameError:
-        cv2.imwrite("pocket_mask_debug.jpg", output_display)
-        print("DEBUG: Saved debug image to: pocket_mask_debug.jpg")
+    final_pockets = []
+    for location, candidates in pockets_by_location.items():
+        if len(candidates) > 1:
+            best_pocket = min(candidates, key=lambda p: p.distance)
+            final_pockets.append(best_pocket)
+        else:
+            final_pockets.append(candidates[0])
 
-    print(f"Found {count} corner pockets.")
-    return detected_pockets , output_path
+    # --- Placeholder Logic ---
+    if len(final_pockets) < 6:
+        final_pockets = _estimate_missing_pockets(final_pockets, rect)
 
-def crate_mask_table(input_path:str ,) -> tuple[str , np.ndarray , np.ndarray]: 
+    # --- Final ID assignment and sorting ---
+    all_locations_order = [
+        Pocket_Location_On_Table.top_left,
+        Pocket_Location_On_Table.top_right,
+        Pocket_Location_On_Table.bottom_left,
+        Pocket_Location_On_Table.bottom_right,
+        Pocket_Location_On_Table.top_middle,
+        Pocket_Location_On_Table.buttom_middle,
+    ]
+    final_pockets.sort(key=lambda p: all_locations_order.index(p.location) if p.location in all_locations_order else 99)
+    for i, pocket in enumerate(final_pockets, 1):
+        pocket.id = i
+    
+    detected_pockets = final_pockets
+
+    # --- Drawing and Final Summary ---
+    original_image_with_pockets = original_image.copy()
+    for pocket in detected_pockets:
+        draw_center_x = pocket.center[0] + padding
+        draw_center_y = pocket.center[1] + padding
+        cv2.circle(output_display, (draw_center_x, draw_center_y), int(pocket.radius), (0, 255, 0), 2)
+        cv2.putText(output_display, str(pocket.id), (draw_center_x + int(pocket.radius), draw_center_y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 255), 2)
+        cv2.circle(original_image_with_pockets, (pocket.center[0], pocket.center[1]), int(pocket.radius), (0, 0, 255), 3)
+
+    debug_output_path = get_output_path("pocket_mask.jpg", sub_dir="black_white_detect")
+    cv2.imwrite(debug_output_path, output_display)
+    original_debug_path = get_output_path("original_with_pockets.jpg", sub_dir="black_white_detect")
+    cv2.imwrite(original_debug_path, original_image_with_pockets)
+
+    print(f"Found {len(detected_pockets)} final pockets.")
+    print("Final Pocket Summary:")
+    for p in detected_pockets:
+        print(f"  ID: {p.id}, Location: {p.location}, Center: {p.center}, Radius: {p.radius}, Dist: {p.distance:.2f}")
+
+    return detected_pockets, debug_output_path, original_debug_path
+
+
+def crate_mask_table(
+    input_path: str,
+) -> tuple[str, np.ndarray, np.ndarray]:
     original_image = cv2.imread(input_path)
     MASK_OUTPUT_PATH = get_output_path("01_felt_mask.jpg", sub_dir="black_white_detect")
     if original_image is None:
@@ -463,14 +565,12 @@ def crate_mask_table(input_path:str ,) -> tuple[str , np.ndarray , np.ndarray]:
     binary_mask = cv2.morphologyEx(inverted_mask, cv2.MORPH_CLOSE, kernel, iterations=1)
     cv2.imwrite(MASK_OUTPUT_PATH, binary_mask)
 
-    return MASK_OUTPUT_PATH , binary_mask , original_image
-
-
+    return MASK_OUTPUT_PATH, binary_mask, original_image
 
 
 def detect_balls_pipeline(input_path: str) -> List[Ball]:
 
-    _ , binary_mask, original_image = crate_mask_table(input_path)
+    _, binary_mask, original_image = crate_mask_table(input_path)
     gray_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)
     raw_balls = _circles_from_connected_components(
         binary_mask, gray_image, 0.00015, 0.0055
@@ -593,25 +693,32 @@ def detect_only_pockets_and_draw(image_path: str) -> str:
     """
     from const_numbers import set_table_length, set_table_width
 
-
     mask_path, binary_mask, original_image = crate_mask_table(image_path)
     set_table_width(original_image.shape[0])
     set_table_length(original_image.shape[1])
     # Load the original image
     if original_image is None:
         raise FileNotFoundError(f"❌ Could not read input image: {image_path}")
-    print(f"DEBUG: detect_only_pockets_and_draw - Original image loaded. Shape: {original_image.shape}")
+    print(
+        f"DEBUG: detect_only_pockets_and_draw - Original image loaded. Shape: {original_image.shape}"
+    )
 
     if binary_mask is None:
         raise FileNotFoundError(f"❌ Could not read mask image: {mask_path}")
-    print(f"DEBUG: detect_only_pockets_and_draw - Mask loaded. Shape: {binary_mask.shape}")
+    print(
+        f"DEBUG: detect_only_pockets_and_draw - Mask loaded. Shape: {binary_mask.shape}"
+    )
 
     gray_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)
-    print(f"DEBUG: detect_only_pockets_and_draw - Original image converted to grayscale. gray_image shape: {gray_image.shape}")
+    print(
+        f"DEBUG: detect_only_pockets_and_draw - Original image converted to grayscale. gray_image shape: {gray_image.shape}"
+    )
 
     # Detect pockets using the provided mask and grayscale image
     detected_pockets = detect_pockets_as_dataclasses(binary_mask, gray_image)
-    print(f"DEBUG: detect_only_pockets_and_draw - Found {len(detected_pockets)} pockets.")
+    print(
+        f"DEBUG: detect_only_pockets_and_draw - Found {len(detected_pockets)} pockets."
+    )
 
     # Create a copy of the original image to draw on
     output_image = original_image.copy()
@@ -644,7 +751,9 @@ def detect_only_pockets_and_draw(image_path: str) -> str:
         )
 
     # Define the output path
-    output_path = get_output_path("output_pockets_only.jpg", sub_dir="black_white_detect")
+    output_path = get_output_path(
+        "output_pockets_only.jpg", sub_dir="black_white_detect"
+    )
     cv2.imwrite(output_path, output_image)
     print(f"✅ Image with only pockets circled saved to: {output_path}")
 
@@ -745,8 +854,6 @@ if __name__ == "__main__":
     pockets_only_output_path = detect_only_pockets_and_draw(
         original_image_path, FELT_MASK_FOR_POCKETS
     )
-    print(
-        f"✅ Image with only pockets drawn saved to: {pockets_only_output_path}"
-    )
+    print(f"✅ Image with only pockets drawn saved to: {pockets_only_output_path}")
 
     print("[OK] Example finished.")

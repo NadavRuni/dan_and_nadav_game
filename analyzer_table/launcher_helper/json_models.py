@@ -69,6 +69,9 @@ class Ball:
 class PocketDetection:
     center: Tuple[int, int]
     radius: int
+    id: int
+    location: str = "UNKNOWN"
+    distance: float = -1.0
 
 
 @dataclass

@@ -45,6 +45,6 @@ def remove_white_border(binary_mask: np.ndarray) -> np.ndarray:
 
     # Crop the image to the determined bounding box.
     # The slice is inclusive of the start and exclusive of the end, so +1 is needed.
-    cropped_mask = binary_mask[top:bottom + 1, left:right + 1]
+    cropped_mask = binary_mask[top : bottom + 1, left : right + 1]
 
     return cropped_mask

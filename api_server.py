@@ -10,7 +10,7 @@ from dataclasses import asdict
 import os
 import json
 import requests
-from analyzer_table.crop_table import crop_image_by_rectangle
+from analyzer_table.border_and_pocket.crop_table import remove_white_border
 
 from dan.detect_table_rectangle import detect_table_rectangle
 from dan.pipe_Line import start_pipe_line
@@ -18,7 +18,9 @@ from dan.build_table_from_image import start_build_table_from_img
 from const_numbers import *
 from analyzer_table.launcher_helper.data_to_rectangle import create_rectangle_from_data
 from dan.detect_table_rectangle import update_table_size_from_rectangle
-from analyzer_table.black_white_detect.detect_balls_and_pockets import detect_only_pockets_and_draw
+from analyzer_table.black_white_detect.detect_balls_and_pockets import (
+    detect_only_pockets_and_draw,
+)
 
 # ✅ יצירת אפליקציה עם Response כברירת מחדל
 app = FastAPI(default_response_class=Response)
@@ -139,6 +141,7 @@ async def confirm_rectangle(data: dict):
         traceback.print_exc()
         return JSONResponse({"error": str(e)}, status_code=500)
 
+
 @app.post("/api/set_ball_and_get_pocket")
 async def set_ball_and_get_pocket(request: Request):
     try:
@@ -150,20 +153,20 @@ async def set_ball_and_get_pocket(request: Request):
             return JSONResponse({"error": "Missing 'image_url'"}, status_code=400)
         if not ball_type:
             return JSONResponse({"error": "Missing 'ball_type'"}, status_code=400)
-        
+
         print(f"[DEBUG] Received request: image_url={image_url}, ball_type={ball_type}")
 
         # Fetch the image
         response = requests.get(image_url, stream=True)
-        response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
+        response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
 
         set_ball_type(ball_type)
 
         # Read image content
         image_content = response.content
 
-        image_content= detect_only_pockets_and_draw(image_content)
-        
+        image_content = detect_only_pockets_and_draw(image_content)
+
         return Response(content=image_content)
 
     except requests.exceptions.RequestException as e:
@@ -171,9 +174,11 @@ async def set_ball_and_get_pocket(request: Request):
         return JSONResponse({"error": f"Failed to fetch image: {e}"}, status_code=500)
     except Exception as e:
         import traceback
+
         print("❌ Exception in /api/set_ball_and_get_pocket:")
         traceback.print_exc()
         return JSONResponse({"error": str(e)}, status_code=500)
+
 
 # ✅ קבלת תמונה
 @app.get("/api/get_image")

@@ -95,6 +95,14 @@ def get_pocket_radius() -> int | float:
     return get_table_length() / 50
 
 
+def get_pocket_up_radius() -> int | float:
+    return get_pocket_radius() * 1.5
+
+
+def get_pocket_down_radius() -> int | float:
+    return get_pocket_radius() * 0.2
+
+
 def get_pocket_radius_determinate() -> int | float:
     return get_pocket_radius() * 0.5
 
@@ -126,15 +134,19 @@ def get_safe_from_wall() -> int | float:
 def get_merge_max_diff() -> int:
     return int(get_table_length() / 20)  # מרחק מותר בציר X
 
+
 def get_ball_type() -> str:
     return BALL_TYPE
 
+
 def set_ball_type(value: str) -> None:
-    if value not in {Ball_Color.SOLID,Ball_Color.STRIPED,}:
+    if value not in {
+        Ball_Color.SOLID,
+        Ball_Color.STRIPED,
+    }:
         raise ValueError("Invalid ball type.")
     global BALL_TYPE
     BALL_TYPE = value
-    
 
 
 MERGE_MAX_Y_DIFF = 65  # מרחק מותר בציר Y
