@@ -13,7 +13,7 @@ sys.path.insert(0, str(project_root))
 
 # --- Imports from project ---
 from analyzer_table.black_white_detect.detect_balls_and_pockets import crate_mask_table
-from analyzer_table.crop_table import remove_white_border
+from analyzer_table.border_and_pocket.crop_table import remove_white_border
 from output_utils import get_output_path
 
 def process_image_for_border(image_path: str):
