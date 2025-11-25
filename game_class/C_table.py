@@ -73,20 +73,8 @@ class Table:
                     ),
                     location="TL",
                 ),  # top-left
-                Pocket(
-                    id=4,
-                    center=(length / 2, 0),
-                    radius=get_side_pocket_radius(),
-                    pocket_img_cordinates_on_table=(length / 2, 0),
-                    location="BM",
-                ),  # middle-bottom
-                Pocket(
-                    id=5,
-                    center=(length / 2, width),
-                    radius=get_side_pocket_radius(),
-                    pocket_img_cordinates_on_table=(length / 2, width),
-                    location="TM",
-                ),  # middle-top
+            Pocket(id=4, center=(length / 2, width), radius=get_side_pocket_radius(), pocket_img_cordinates_on_table=(length / 2, width), location="BM"),  # middle-bottom
+            Pocket(id=5, center=(length / 2, 0), radius=get_side_pocket_radius(), pocket_img_cordinates_on_table=(length / 2, 0), location="TM"),  # middle-top
             ]
         else:
             self.pockets: List[Pocket] = []

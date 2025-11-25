@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import shutil
+import matplotlib.pyplot as plt
 
 # ===== Make local imports work no matter where you run from =====
 CUR_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -144,6 +145,13 @@ def start_build_table_from_img():
             print("third best shot is:", best_shot[2])
 
         p, lines = draw_table(table, best_shot=best_shot[0])
+
+        plot_output_dir = BASE_DIR / "out" / "debug" / "plot"
+        plot_output_dir.mkdir(parents=True, exist_ok=True)
+        plot_file_path = plot_output_dir / "table_simulation.png"
+        plt.savefig(plot_file_path)
+        plt.close(p) # Close the figure to free up memory
+
         line_drawer = LineDrawer(OUTPUT_JSON_PATH, best_shot[0], OUTPUT_IMAGE_PATH)
         line_drawer.show_contact_hit()  # need to be first before draw_lines
         if isinstance(best_shot[0], BestWallShot):

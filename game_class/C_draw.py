@@ -46,7 +46,7 @@ def draw_table(
             final_lines.append(((x1, y1), (x2, y2)))
     if best_shot:
         print(isinstance(best_shot, BestWallShot))
-        if not isinstance(best_shot, BestWallShot) or best_shot.angle > 90:
+        if isinstance(best_shot, BestWallShot) or best_shot.angle > 90:
             print("Best shot is BestWallShot draw the line later")
         elif isinstance(best_shot, BestShotBallToBall):
             ax.plot(

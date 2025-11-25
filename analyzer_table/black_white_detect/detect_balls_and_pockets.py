@@ -415,12 +415,27 @@ def _estimate_missing_pockets(pockets: List[Pocket], rect: Rectangle) -> List[Po
             br = get_point("BR")
             center_x = (bl[0] + br[0]) // 2
             center_y = (bl[1] + br[1]) // 2
+        match loc:
+                    case "BL":
+                        p_id = 0
+                    case "BR":
+                        p_id = 1
+                    case "TR":
+                        p_id = 2
+                    case "TL":
+                        p_id = 3
+                    case "BM":
+                        p_id = 4
+                    case "TM":
+                        p_id = 5
+                    case _:
+                        p_id = -1
 
         if center_x != 0 or center_y != 0:
             placeholder = Pocket(
                 center=(int(center_x), int(center_y)),
                 radius=int(get_pocket_radius()),
-                id=-1,
+                id=p_id,
                 location=loc,
             )
             estimated_pockets.append(placeholder)
@@ -476,6 +491,7 @@ def find_corner_pockets_from_mask(
             rect, real_center_x, real_center_y, margin=get_pocket_radius() * 3
         )
 
+
         if is_valid:
             pocket = Pocket(
                 center=(real_center_x, real_center_y),
@@ -507,23 +523,27 @@ def find_corner_pockets_from_mask(
         final_pockets = _estimate_missing_pockets(final_pockets, rect)
 
     # --- Final ID assignment and sorting ---
-    all_locations_order = [
-        "TL",
-        "TR",
-        "BL",
-        "BR",
-        "TM",
-        "BM",
-    ]
-    final_pockets.sort(
-        key=lambda p: (
-            all_locations_order.index(p.location)
-            if p.location in all_locations_order
-            else 99
-        )
-    )
+
+    
     for i, pocket in enumerate(final_pockets, 1):
-        pocket.id = i
+        match pocket.location:
+                case "BL":
+                        p_id = 0
+                case "BR":
+                        p_id = 1
+                case "TR":
+                        p_id = 2
+                case "TL":
+                        p_id = 3
+                case "BM":
+                        p_id = 4
+                case "TM":
+                        p_id = 5
+                case _:
+                        p_id = -1
+        pocket.id = p_id
+                
+        print (f"  - Final pocket ID {pocket.id} at location {pocket.location} center {pocket.center}")
 
     detected_pockets = final_pockets
 

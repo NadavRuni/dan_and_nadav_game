@@ -31,6 +31,7 @@ class BestShot:
             self.pocket: Pocket = next(
                 p for p in table.pockets if p.id == best_pocket_id
             )
+            print(f"Selected pocket: {self.pocket}")
             self.angle: float = best_angle
 
             if abs(self.angle) > 75:
