@@ -10,8 +10,7 @@ from dataclasses import asdict
 import os
 import json
 import requests
-from analyzer_table.border_and_pocket.crop_table import remove_white_border
-
+from analyzer_table.black_white_detect.pocket_api import pocket_detection_api
 from dan.detect_table_rectangle import detect_table_rectangle
 from dan.pipe_Line import start_pipe_line
 from dan.build_table_from_image import start_build_table_from_img
@@ -165,8 +164,7 @@ async def set_ball_and_get_pocket(request: Request):
         # Read image content
         image_content = response.content
 
-        image_content = detect_only_pockets_and_draw(image_content)
-
+        pocket_detection_api(image_url)
         return Response(content=image_content)
 
     except requests.exceptions.RequestException as e:
