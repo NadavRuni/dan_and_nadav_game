@@ -1,7 +1,10 @@
 # analyzer_table/launcher_helper/score_helper/striped_tests/test_edge_contrast.py
 import cv2, numpy as np
 from analyzer_table.launcher_helper.json_models import Ball
-from analyzer_table.launcher_helper.score_helper.common import get_ball_image, clamp_0_100
+from analyzer_table.launcher_helper.score_helper.common import (
+    get_ball_image,
+    clamp_0_100,
+)
 
 
 def run(ball: Ball) -> float:
@@ -33,15 +36,20 @@ def run(ball: Ball) -> float:
     ksize = max(9, (min(h, w) // 8) | 1)
     sigmas = [ksize / 3.5, ksize / 2.5]
     lambdas = [max(4, min(h, w) // 6)]
-    thetas = [0, np.pi/4, np.pi/2, 3*np.pi/4]
+    thetas = [0, np.pi / 4, np.pi / 2, 3 * np.pi / 4]
 
     responses = []
     for th in thetas:
         for sig in sigmas:
             for lam in lambdas:
                 kernel = cv2.getGaborKernel(
-                    (ksize, ksize), sigma=sig, theta=th,
-                    lambd=lam, gamma=0.5, psi=0, ktype=cv2.CV_32F
+                    (ksize, ksize),
+                    sigma=sig,
+                    theta=th,
+                    lambd=lam,
+                    gamma=0.5,
+                    psi=0,
+                    ktype=cv2.CV_32F,
                 )
                 resp = cv2.filter2D(gray, cv2.CV_32F, kernel)
                 responses.append(np.mean(np.abs(resp[mask > 0])))
@@ -67,5 +75,7 @@ def run(ball: Ball) -> float:
     bright_penalty = max(0.0, (mean_brightness - 200) / 55.0)  # 0–1
 
     # --- שלב 7: חישוב סופי ---
-    score = (anisotropy * (0.6 + 0.4 * rel_contrast)) * (1.0 - 0.4 * bright_penalty) * 100.0
+    score = (
+        (anisotropy * (0.6 + 0.4 * rel_contrast)) * (1.0 - 0.4 * bright_penalty) * 100.0
+    )
     return clamp_0_100(score)

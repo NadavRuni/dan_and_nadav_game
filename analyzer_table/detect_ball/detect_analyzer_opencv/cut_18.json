@@ -1,0 +1,66 @@
+{
+    "cut_name": "cut_18.png",
+    "origin": {
+        "x": 4318,
+        "y": 1215
+    },
+    "rectangle": {
+        "top_left": [
+            4318,
+            2255
+        ],
+        "top_right": [
+            5458,
+            2255
+        ],
+        "bottom_left": [
+            4318,
+            1215
+        ],
+        "bottom_right": [
+            5458,
+            1215
+        ]
+    },
+    "balls": [
+        {
+            "center": [
+                4564,
+                2023
+            ],
+            "radius": 59,
+            "color_score": {
+                "white_score": {
+                    "white_score_test_1": 0.0,
+                    "white_score_test_2": 0.0,
+                    "white_score_test_3": 0.0,
+                    "white_score_test_4": 0.0,
+                    "white_score_test_5": 0.0
+                },
+                "black_score": {
+                    "black_score_test_1": 0.0,
+                    "black_score_test_2": 0.0,
+                    "black_score_test_3": 0.0,
+                    "black_score_test_4": 0.0,
+                    "black_score_test_5": 0.0
+                },
+                "solid_score": {
+                    "solid_score_test_1": 0.0,
+                    "solid_score_test_2": 0.0,
+                    "solid_score_test_3": 0.0,
+                    "solid_score_test_4": 0.0,
+                    "solid_score_test_5": 0.0
+                },
+                "striped_score": {
+                    "striped_score_test_1": 0.0,
+                    "striped_score_test_2": 0.0,
+                    "striped_score_test_3": 0.0,
+                    "striped_score_test_4": 0.0,
+                    "striped_score_test_5": 0.0
+                }
+            },
+            "final_color": "undefined",
+            "single_ball_path": ""
+        }
+    ]
+}

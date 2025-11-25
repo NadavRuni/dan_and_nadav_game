@@ -36,7 +36,6 @@ class LineDrawer:
         self.pockets = meta.get("pockets", {})
         print("[DEBUG] Loaded pockets:", self.pockets.keys())
 
-
         self.img = Image.open(self.input_path).convert("RGB")
         base_dir = os.getcwd()
         self.output_path = os.path.join(
@@ -60,13 +59,15 @@ class LineDrawer:
         if 0 <= pocket_id < len(mapping):
             name = mapping[pocket_id]
             print("Mapped pocket name:", name)
-            print ("Available pockets:", self.pockets.keys())
-            print ("Pocket data:", self.pockets[name])
+            print("Available pockets:", self.pockets.keys())
+            print("Pocket data:", self.pockets[name])
             if name in self.pockets and self.pockets[name]:
                 return (self.pockets[name]["x"], self.pockets[name]["y"])
         return None
 
-    def draw_lines(self, color_target=(255, 0, 0), color_white=(0, 0, 255), width=3) -> str:
+    def draw_lines(
+        self, color_target=(255, 0, 0), color_white=(0, 0, 255), width=3
+    ) -> str:
         """
         מצייר את המסלול הפיזיקלי הנכון:
         לבן → נקודת מגע על המטרה
@@ -108,7 +109,9 @@ class LineDrawer:
             white_px[1] + uy_w * get_ball_radius_photo(),
         )
 
-        def draw_dashed_line(draw, start, end, fill, width=3, dash_length=15, gap_length=10):
+        def draw_dashed_line(
+            draw, start, end, fill, width=3, dash_length=15, gap_length=10
+        ):
             x1, y1 = start
             x2, y2 = end
             total_length = math.hypot(x2 - x1, y2 - y1)
@@ -127,7 +130,9 @@ class LineDrawer:
                 pos += gap_length
 
         # לבן → נקודת מגע
-        draw_dashed_line(draw, start_white, contact_target, fill=color_white, width=width)
+        draw_dashed_line(
+            draw, start_white, contact_target, fill=color_white, width=width
+        )
 
         # --- מטרה (צד שפונה לכיס) → כיס ---
         start_target = (
@@ -138,13 +143,19 @@ class LineDrawer:
             pocket_px[0] - ux_p * get_pocket_margin(),
             pocket_px[1] - uy_p * get_pocket_margin(),
         )
-        draw_dashed_line(draw, start_target, pocket_before, fill=color_target, width=width)
+        draw_dashed_line(
+            draw, start_target, pocket_before, fill=color_target, width=width
+        )
 
         self.img.save(self.output_path, quality=95)
         return self.output_path
 
     def show_contact_hit(
-        self, ball_radius: int = get_ball_radius_photo()-3, color=(255, 0, 0), size: int = 8, crop_size: int = 120
+        self,
+        ball_radius: int = get_ball_radius_photo() - 3,
+        color=(255, 0, 0),
+        size: int = 8,
+        crop_size: int = 120,
     ) -> str:
         """
         מצייר נקודת מגע על הכדור המטרה בצד שפונה לכיס (ולא בצד שפונה ללב),
@@ -173,9 +184,9 @@ class LineDrawer:
         contact_y = target_px[1] - uy * ball_radius
 
         # חיתוך סביב הכדור (zoom-in)
-        left   = int(target_px[0] - crop_size)
-        top    = int(target_px[1] - crop_size)
-        right  = int(target_px[0] + crop_size)
+        left = int(target_px[0] - crop_size)
+        top = int(target_px[1] - crop_size)
+        right = int(target_px[0] + crop_size)
         bottom = int(target_px[1] + crop_size)
 
         cropped = self.img.crop((left, top, right, bottom)).copy()
@@ -201,7 +212,14 @@ class LineDrawer:
             f"[DEBUG] Contact-to-pocket point drawn at ({contact_x:.2f}, {contact_y:.2f}), zoom saved."
         )
         return str(OUTPUT_CONTACT_VIEW_PATH)
-    def draw_combo_lines(self, color_mid=(0, 255, 255), color_target=(255, 0, 0), color_white=(0, 0, 255), width=6) -> str:
+
+    def draw_combo_lines(
+        self,
+        color_mid=(0, 255, 255),
+        color_target=(255, 0, 0),
+        color_white=(0, 0, 255),
+        width=6,
+    ) -> str:
         """
         מצייר מסלול קומבינציה (3 שלבים) מתוך אובייקט BestShotBallToBall:
         1. לבן (White) → כדור עזר (Helper / Mid)
@@ -212,23 +230,25 @@ class LineDrawer:
         """
         print("=== Starting Combo Drawing ===")
         draw = ImageDraw.Draw(self.img)
-        
+
         # בדיקה שהשוט תקין
-        if hasattr(self.best_shot, 'valid') and not self.best_shot.valid:
+        if hasattr(self.best_shot, "valid") and not self.best_shot.valid:
             print("❌ Combo shot is marked as invalid.")
             return self.output_path
 
         # חילוץ הנתונים מתוך אובייקט BestShotBallToBall
         try:
             white_id = self.best_shot.white.id
-            mid_ball_id = self.best_shot.target_helper.id   # הכדור הראשון שנפגע (העזר)
-            target_ball_id = self.best_shot.target.id       # הכדור שנכנס לכיס
+            mid_ball_id = self.best_shot.target_helper.id  # הכדור הראשון שנפגע (העזר)
+            target_ball_id = self.best_shot.target.id  # הכדור שנכנס לכיס
             pocket_id = self.best_shot.pocket.id
         except AttributeError as e:
             print(f"❌ Error accessing attributes in best_shot: {e}")
             return self.output_path
 
-        print(f"Drawing COMBO lines: White({white_id}) -> Helper({mid_ball_id}) -> Target({target_ball_id}) -> Pocket({pocket_id})")
+        print(
+            f"Drawing COMBO lines: White({white_id}) -> Helper({mid_ball_id}) -> Target({target_ball_id}) -> Pocket({pocket_id})"
+        )
 
         # 1. השגת קואורדינטות פיקסלים
         white_px = self.get_ball_px(white_id)
@@ -244,13 +264,16 @@ class LineDrawer:
         def get_dir_unit(p1, p2):
             dx, dy = p2[0] - p1[0], p2[1] - p1[1]
             dist = math.hypot(dx, dy)
-            return (0, 0) if dist == 0 else (dx/dist, dy/dist)
+            return (0, 0) if dist == 0 else (dx / dist, dy / dist)
 
-        def draw_dashed_line(draw, start, end, fill, width=3, dash_length=15, gap_length=10):
+        def draw_dashed_line(
+            draw, start, end, fill, width=3, dash_length=15, gap_length=10
+        ):
             x1, y1 = start
             x2, y2 = end
             total_length = math.hypot(x2 - x1, y2 - y1)
-            if total_length == 0: return
+            if total_length == 0:
+                return
             dx, dy = (x2 - x1) / total_length, (y2 - y1) / total_length
 
             pos = 0
@@ -258,7 +281,8 @@ class LineDrawer:
                 x_start = x1 + dx * pos
                 y_start = y1 + dy * pos
                 pos += dash_length
-                if pos > total_length: pos = total_length
+                if pos > total_length:
+                    pos = total_length
                 x_end = x1 + dx * pos
                 y_end = y1 + dy * pos
                 draw.line([(x_start, y_start), (x_end, y_end)], fill=fill, width=width)
@@ -268,51 +292,50 @@ class LineDrawer:
 
         # --- שלב 3 (הסוף): כדור מטרה (Target) → כיס ---
         ux_3, uy_3 = get_dir_unit(target_px, pocket_px)
-        
+
         start_3 = (target_px[0] + ux_3 * radius, target_px[1] + uy_3 * radius)
-        end_3 = (pocket_px[0] - ux_3 * get_pocket_margin(), pocket_px[1] - uy_3 * get_pocket_margin())
-        
+        end_3 = (
+            pocket_px[0] - ux_3 * get_pocket_margin(),
+            pocket_px[1] - uy_3 * get_pocket_margin(),
+        )
+
         draw_dashed_line(draw, start_3, end_3, fill=color_target, width=width)
 
         # --- שלב 2 (האמצע): כדור עזר (Helper) → כדור מטרה ---
         # נקודת המגע הנדרשת על כדור המטרה (בצד ההפוך לכיס)
-        contact_on_target = (
-            target_px[0] - ux_3 * radius,
-            target_px[1] - uy_3 * radius
-        )
-        
+        contact_on_target = (target_px[0] - ux_3 * radius, target_px[1] - uy_3 * radius)
+
         # כיוון התנועה של העזר: מהמרכז שלו אל עבר נקודת המגע
         ux_2, uy_2 = get_dir_unit(mid_px, contact_on_target)
-        
+
         start_2 = (mid_px[0] + ux_2 * radius, mid_px[1] + uy_2 * radius)
-        
+
         draw_dashed_line(draw, start_2, contact_on_target, fill=color_mid, width=width)
 
         # --- שלב 1 (ההתחלה): לבן → כדור עזר ---
         # נקודת המגע הנדרשת על כדור העזר (כדי שיעוף לכיוון המטרה)
-        contact_on_mid = (
-            mid_px[0] - ux_2 * radius,
-            mid_px[1] - uy_2 * radius
-        )
-        
+        contact_on_mid = (mid_px[0] - ux_2 * radius, mid_px[1] - uy_2 * radius)
+
         ux_1, uy_1 = get_dir_unit(white_px, contact_on_mid)
         start_1 = (white_px[0] + ux_1 * radius, white_px[1] + uy_1 * radius)
-        
+
         draw_dashed_line(draw, start_1, contact_on_mid, fill=color_white, width=width)
 
         print("=== Finished Combo Drawing ===")
         self.img.save(self.output_path, quality=95)
         return self.output_path
-        
-    def table_to_px(self, x: float, y: float, smart_wall_margin=False) -> tuple[float, float]:
+
+    def table_to_px(
+        self, x: float, y: float, smart_wall_margin=False
+    ) -> tuple[float, float]:
         """
         ממיר נקודה מיחידות שולחן (x,y) לפיקסלים בתמונה.
-        
+
         סדר פעולות (כאשר smart_wall_margin=True):
         1. המרה מלאה לפיקסלים.
         2. הזזת הנקודה בפיקסלים (Margin) פנימה, אם זוהתה כדופן.
         """
-        
+
         # 1. קבלת מידות
         width_px, height_px = self.img.size
         table_length = get_table_length()
@@ -329,7 +352,7 @@ class LineDrawer:
         v = y / table_width
 
         px = u * width_px
-        py = height_px - (v * height_px) # היפוך ציר Y
+        py = height_px - (v * height_px)  # היפוך ציר Y
 
         # -------------------------------------------
         # 3. לוגיקה חכמה: הוספת Margin בפיקסלים
@@ -340,19 +363,19 @@ class LineDrawer:
             epsilon = 2.0  # זיהוי קיר לפי יחידות שולחן מקוריות
 
             # -- ציר X --
-            
+
             # דופן שמאל (x=0) -> בתמונה זה 0 -> דחיפה ימינה (+)
             if abs(x - 0) < epsilon:
                 print(f"🛡️ Wall (Left): Pushing px {px:.1f} -> {px + margin:.1f}")
                 px += margin
-            
+
             # דופן ימין (x=Length) -> בתמונה זה Width -> דחיפה שמאלה (-)
             elif abs(x - table_length) < epsilon:
                 print(f"🛡️ Wall (Right): Pushing px {px:.1f} -> {px - margin:.1f}")
                 px -= margin
 
             # -- ציר Y --
-            
+
             # דופן תחתונה (y=0) -> בתמונה זה Height (למטה) -> דחיפה למעלה (-)
             # הערה: בתמונה Y עולה ככל שיושבים למטה, לכן כדי לעלות למעלה צריך להחסיר
             if abs(y - 0) < epsilon:
@@ -364,11 +387,14 @@ class LineDrawer:
                 print(f"🛡️ Wall (Top): Pushing py {py:.1f} -> {py + margin:.1f}")
                 py += margin
 
-        print(f"Converting: Table({x:.1f}, {y:.1f}) -> Px({px:.1f}, {py:.1f}) [SmartMargin={smart_wall_margin}]")
+        print(
+            f"Converting: Table({x:.1f}, {y:.1f}) -> Px({px:.1f}, {py:.1f}) [SmartMargin={smart_wall_margin}]"
+        )
         return (px, py)
+
     def draw_lines_with_wall(
         self,
-        wall_point: tuple[float, float],   # ביחידות שולחן (x,y)
+        wall_point: tuple[float, float],  # ביחידות שולחן (x,y)
         color_target=(255, 0, 0),
         color_white=(0, 0, 255),
         color_wall=(0, 255, 0),
@@ -383,15 +409,25 @@ class LineDrawer:
         wall_point מתקבל ביחידות שולחן (290x145) ולכן מומר לפיקסלים.
         """
 
-        def v_sub(a, b): return (a[0]-b[0], a[1]-b[1])
-        def v_add(a, b): return (a[0]+b[0], a[1]+b[1])
-        def v_len(v): return math.hypot(v[0], v[1])
+        def v_sub(a, b):
+            return (a[0] - b[0], a[1] - b[1])
+
+        def v_add(a, b):
+            return (a[0] + b[0], a[1] + b[1])
+
+        def v_len(v):
+            return math.hypot(v[0], v[1])
+
         def v_unit(v):
             L = v_len(v)
-            return (0.0, 0.0) if L == 0 else (v[0]/L, v[1]/L)
-        def v_scale(v, s): return (v[0]*s, v[1]*s)
+            return (0.0, 0.0) if L == 0 else (v[0] / L, v[1] / L)
 
-        def draw_dashed_line(draw, start, end, fill, width=6, dash_length=15, gap_length=10):
+        def v_scale(v, s):
+            return (v[0] * s, v[1] * s)
+
+        def draw_dashed_line(
+            draw, start, end, fill, width=6, dash_length=15, gap_length=10
+        ):
             x1, y1 = start
             x2, y2 = end
             total_length = math.hypot(x2 - x1, y2 - y1)
@@ -411,15 +447,15 @@ class LineDrawer:
                 pos += gap_length
 
         # --- נקודות הכדורים/כיס (כבר בפיקסלים) ---
-        white_c   = self.get_ball_px(self.best_shot.white.id)
-        target_c  = self.get_ball_px(self.best_shot.target.id)
-        pocket_c  = self.get_pocket_px(self.best_shot.pocket.id)
+        white_c = self.get_ball_px(self.best_shot.white.id)
+        target_c = self.get_ball_px(self.best_shot.target.id)
+        pocket_c = self.get_pocket_px(self.best_shot.pocket.id)
 
         # --- נקודת הקיר (המרה) ---
         wall_px = self.table_to_px(wall_point[0], wall_point[1], True)
-        print ("Converted wall point to px:", wall_px)
-        tw_dir = v_unit(v_sub(wall_px, target_c))  
-        
+        print("Converted wall point to px:", wall_px)
+        tw_dir = v_unit(v_sub(wall_px, target_c))
+
         # FIXED: added () to get_wall_margin
         # wall_px = v_add(wall_px, v_scale(tw_dir, -get_wall_margin()))
 
@@ -438,26 +474,30 @@ class LineDrawer:
         # --- 1) לבן → מטרה ---
         wt_dir = v_unit(v_sub(target_c, white_c))
         # FIXED: added () to get_ball_radius_photo
-        start_white   = v_add(white_c,  v_scale(wt_dir, get_ball_radius_photo()))
+        start_white = v_add(white_c, v_scale(wt_dir, get_ball_radius_photo()))
         # FIXED: added () to get_ball_radius_photo
         end_on_target = v_add(target_c, v_scale(wt_dir, -get_ball_radius_photo()))
-        
+
         print(f"Line 1: White edge {start_white} → Target edge {end_on_target}")
-        draw_dashed_line(draw, start_white, end_on_target, fill=color_white, width=width)
+        draw_dashed_line(
+            draw, start_white, end_on_target, fill=color_white, width=width
+        )
 
         # --- 2) מטרה → קיר ---
         tw_dir = v_unit(v_sub(wall_px, target_c))
         # FIXED: added () to get_ball_radius_photo
         start_target_wall = v_add(target_c, v_scale(tw_dir, get_ball_radius_photo()))
-        
+
         print(f"Line 2: Target edge {start_target_wall} → Wall {wall_px}")
-        draw_dashed_line(draw, start_target_wall, wall_px, fill=color_target, width=width)
+        draw_dashed_line(
+            draw, start_target_wall, wall_px, fill=color_target, width=width
+        )
 
         # --- 3) קיר → חור ---
         wp_dir = v_unit(v_sub(pocket_c, wall_px))
         # FIXED: added () to get_pocket_margin
         pocket_before = v_add(pocket_c, v_scale(wp_dir, -get_pocket_margin()))
-        
+
         print(f"Line 3: Wall {wall_px} → Pocket-before {pocket_before}")
         draw_dashed_line(draw, wall_px, pocket_before, fill=color_wall, width=width)
 

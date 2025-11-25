@@ -2,6 +2,7 @@ from dataclasses import dataclass, asdict, field
 from typing import List, Optional, Tuple, Dict
 import json
 
+
 @dataclass
 class White_Score:
     white_score_test_1: float = 0.0
@@ -9,6 +10,7 @@ class White_Score:
     white_score_test_3: float = 0.0
     white_score_test_4: float = 0.0
     white_score_test_5: float = 0.0
+
 
 @dataclass
 class Black_Score:
@@ -18,6 +20,7 @@ class Black_Score:
     black_score_test_4: float = 0.0
     black_score_test_5: float = 0.0
 
+
 @dataclass
 class Solid_Score:
     solid_score_test_1: float = 0.0
@@ -25,6 +28,7 @@ class Solid_Score:
     solid_score_test_3: float = 0.0
     solid_score_test_4: float = 0.0
     solid_score_test_5: float = 0.0
+
 
 @dataclass
 class Striped_Score:
@@ -34,12 +38,14 @@ class Striped_Score:
     striped_score_test_4: float = 0.0
     striped_score_test_5: float = 0.0
 
+
 @dataclass
 class Color_Score:
-    white_score : White_Score =field(default_factory=White_Score)
-    black_score : Black_Score = field(default_factory=Black_Score)
-    solid_score : Solid_Score = field(default_factory=Solid_Score)
-    striped_score : Striped_Score = field(default_factory=Striped_Score)
+    white_score: White_Score = field(default_factory=White_Score)
+    black_score: Black_Score = field(default_factory=Black_Score)
+    solid_score: Solid_Score = field(default_factory=Solid_Score)
+    striped_score: Striped_Score = field(default_factory=Striped_Score)
+
 
 @dataclass
 class Ball_Color:
@@ -49,6 +55,7 @@ class Ball_Color:
     STRIPED = "striped"
     UNDEFINED = "undefined"
 
+
 @dataclass
 class Ball:
     center: Tuple[int, int]
@@ -57,43 +64,53 @@ class Ball:
     final_color: Ball_Color = Ball_Color.UNDEFINED
     single_ball_path: str = ""
 
+
+@dataclass
+class PocketDetection:
+    center: Tuple[int, int]
+    radius: int
+    id: int
+    location: str = "UNKNOWN"
+    distance: float = -1.0
+
+
 @dataclass
 class Pockets_img_paths:
-    top_left_path: str =""
-    top_right_path: str =""
-    bottom_left_path: str =""
-    bottom_right_path: str =""
-    top_middle_path: str =""
-    buttom_middle_path: str =""
+    top_left_path: str = ""
+    top_right_path: str = ""
+    bottom_left_path: str = ""
+    bottom_right_path: str = ""
+    top_middle_path: str = ""
+    buttom_middle_path: str = ""
+
 
 @dataclass
 class Pocket_Location_On_Table:
-    top_left: str ="TL"
-    top_right: str ="TR"
-    bottom_left: str ="BL"
-    bottom_right: str ="BR"
-    top_middle: str ="TM"
-    buttom_middle: str ="BM"
-    unknown: str ="UNKNOWN"
+    top_left: str = "TL"
+    top_right: str = "TR"
+    bottom_left: str = "BL"
+    bottom_right: str = "BR"
+    top_middle: str = "TM"
+    buttom_middle: str = "BM"
+    unknown: str = "UNKNOWN"
 
 
 @dataclass
-class Pocket :
-    pocket_id : int
-    pocket_center :Tuple[int,int]
-    pocker_radius : int
-    pocket_img_path : str
-    pocket_img_cordinates_on_table : Tuple[int,int] 
-    pocket_loacation_on_table : Pocket_Location_On_Table = Pocket_Location_On_Table.unknown
-
+class Pocket:
+    pocket_id: int
+    pocket_center: Tuple[int, int]
+    pocker_radius: int
+    pocket_img_path: str
+    pocket_img_cordinates_on_table: Tuple[int, int]
+    pocket_loacation_on_table: Pocket_Location_On_Table = (
+        Pocket_Location_On_Table.unknown
+    )
 
 
 @dataclass
 class table_pockets:
     pockets_img_paths: Pockets_img_paths = field(default_factory=Pockets_img_paths)
     pocket_list: List[Pocket] = field(default_factory=list)
-
-
 
 
 @dataclass
@@ -104,7 +121,6 @@ class AnalyzerResult:
     balls: List[Ball] = field(default_factory=list)
 
 
-    
 @dataclass
 class Rectangle:
     top_left: Tuple[int, int]
@@ -113,11 +129,11 @@ class Rectangle:
     bottom_right: Tuple[int, int]
 
 
-
 @dataclass
 class Origin:
     x: int
     y: int
+
 
 @dataclass
 class PhotoData:
@@ -141,7 +157,10 @@ class PhotoData:
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
-        balls = [Ball(tuple(ball["center"]), ball["radius"]) for ball in data.get("balls", [])]
+        balls = [
+            Ball(tuple(ball["center"]), ball["radius"])
+            for ball in data.get("balls", [])
+        ]
         rect = data["rectangle"]
         rectangle = Rectangle(
             tuple(rect["top_left"]),
@@ -152,8 +171,5 @@ class PhotoData:
         origin = Origin(data["origin"]["x"], data["origin"]["y"])
 
         return PhotoData(
-            cut_name=data["cut_name"],
-            origin=origin,
-            rectangle=rectangle,
-            balls=balls
+            cut_name=data["cut_name"], origin=origin, rectangle=rectangle, balls=balls
         )

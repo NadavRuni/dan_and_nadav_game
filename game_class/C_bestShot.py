@@ -17,7 +17,7 @@ class BestShot:
         calc = Calculations(white, target, table)
         best_pocket_id, best_angle = calc.min_abs_angle()
 
-        if best_pocket_id == NOT_FREE_SHOT or best_angle == float("inf") :
+        if best_pocket_id == NOT_FREE_SHOT or best_angle == float("inf"):
             # לא קיים שוט חוקי
             self.no_valid_shot()
         elif FORSE_WALL_SHOT:
@@ -93,10 +93,10 @@ class BestShot:
 
     @staticmethod
     def calculate_score_distance(
-    dist_white_to_target: float,
-    dist_target_to_pocket: float,
-    weight_target_to_pocket: float = 0.7,  # משקל גבוה יותר למרחק מהחור
-) -> float:
+        dist_white_to_target: float,
+        dist_target_to_pocket: float,
+        weight_target_to_pocket: float = 0.7,  # משקל גבוה יותר למרחק מהחור
+    ) -> float:
         """
         מחשב ניקוד על בסיס מרחקים, עם דגש חזק יותר על המרחק מהמטרה אל החור.
         ככל שהמרחקים קצרים יותר → הניקוד גבוה יותר.
@@ -107,13 +107,11 @@ class BestShot:
 
         # שילוב עם משקל
         weighted_avg = (
-            (1 - weight_target_to_pocket) * norm_white
-            + weight_target_to_pocket * norm_target
-        )
+            1 - weight_target_to_pocket
+        ) * norm_white + weight_target_to_pocket * norm_target
 
         score = 1 - weighted_avg
         return max(0.0, min(1.0, score))
-
 
     def get_pocket(self) -> int | None:
         """מחזירה את ה־ID של הכיס שנבחר, או None אם אין שוט חוקי"""

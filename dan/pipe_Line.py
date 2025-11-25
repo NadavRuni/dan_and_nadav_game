@@ -4,13 +4,16 @@ from ultralytics import YOLO
 import numpy as np
 import os, json
 from const_numbers import OUTPUT_JSON_PATH
-from analyzer_table.balls_from_image import full_analyzer_pipeline 
-from analyzer_table.launcher_helper.json_models import Ball , table_pockets , AnalyzerResult
+from analyzer_table.balls_from_image import full_analyzer_pipeline
+from analyzer_table.launcher_helper.json_models import (
+    Ball,
+    table_pockets,
+    AnalyzerResult,
+)
 from analyzer_table.detect_ball.Debugger import Debugger
 from pathlib import Path
 
 UPLOAD_DIR = Path(__file__).resolve().parents[1] / "uploads"
-
 
 
 # ====== YOLO / Hough ======
@@ -28,6 +31,7 @@ MIN_RADIUS_REL = 0.010
 MIN_RADIUS_PX_OVERRIDE = None
 
 POCKET_INCLUSION_FACTOR = 1.05  # factor for pocket inclusionע
+
 
 # ---------------- Utils ----------------
 def iou_xyxy(a, b):
@@ -477,6 +481,7 @@ def black_recognizer(stage):
     stage["black"] = best
     return stage
 
+
 from dataclasses import asdict
 import cv2, os, json
 import numpy as np
@@ -552,6 +557,7 @@ def image_recognizer(IMAGE_PATH: str) -> dict:
     Debugger.log(f"✅ JSON saved successfully → {OUTPUT_JSON_PATH}")
     return result
 
+
 # =========================================================
 #                         MAIN
 # =========================================================
@@ -561,7 +567,7 @@ def main():
     if img is None:
         raise FileNotFoundError(f"Image not found: {IMAGE_PATH}")
 
-    image_recognizer( IMAGE_PATH)
+    image_recognizer(IMAGE_PATH)
 
 
 async def start_pipe_line(image_path: str):
@@ -582,12 +588,11 @@ async def start_pipe_line(image_path: str):
         image_path = str(local_path)
         print(f"[DEBUG] Saved remote image locally to: {image_path}")
 
-    
     img = cv2.imread(image_path)
     if img is None:
         raise FileNotFoundError(f"Image not found: {image_path}")
 
-    image_recognizer( image_path)
+    image_recognizer(image_path)
 
 
 if __name__ == "__main__":

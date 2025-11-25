@@ -1,25 +1,25 @@
 {
-  "image_path": "/Users/danbenzvi/Desktop/dan_nadav_game/dan_and_nadav_game/uploads/cropped_c28620f97_IMG_1928.jpeg",
+  "image_path": "output/debug/cropped_63a578eaa_test3_b2b.jpeg",
   "image_size_px": {
-    "width": 5375.0,
-    "height": 2810.0
+    "width": 5458.0,
+    "height": 2777.0
   },
   "balls": [
     {
       "index": 0,
-      "type": "solid",
+      "type": "white",
       "center_px": {
-        "x": 720.0,
-        "y": 2234.0
+        "x": 2984.0,
+        "y": 786.0
       },
-      "radius_px": 61.0
+      "radius_px": 59.0
     },
     {
       "index": 1,
       "type": "black",
       "center_px": {
-        "x": 1562.0,
-        "y": 1012.0
+        "x": 3114.0,
+        "y": 1866.0
       },
       "radius_px": 60.0
     },
@@ -27,46 +27,37 @@
       "index": 2,
       "type": "solid",
       "center_px": {
-        "x": 3262.0,
-        "y": 886.0
+        "x": 4010.0,
+        "y": 1526.0
       },
-      "radius_px": 57.0
+      "radius_px": 56.0
     },
     {
       "index": 3,
-      "type": "white",
+      "type": "solid",
       "center_px": {
-        "x": 3836.0,
-        "y": 1458.0
+        "x": 4570.0,
+        "y": 2024.0
       },
-      "radius_px": 58.0
-    },
-    {
-      "index": 4,
-      "type": "striped",
-      "center_px": {
-        "x": 4400.0,
-        "y": 626.0
-      },
-      "radius_px": 69.0
+      "radius_px": 63.0
     }
   ],
   "white_ball": {
     "center": [
-      3836,
-      1458
+      2984,
+      786
     ],
-    "radius": 58,
+    "radius": 59,
     "color_score": {
       "white_score": {
-        "white_score_test_1": 72.51896876914829,
+        "white_score_test_1": 79.39425000957414,
         "white_score_test_2": 0.0,
-        "white_score_test_3": 0.0,
-        "white_score_test_4": 75.49798011779785,
-        "white_score_test_5": 84.62217939452341
+        "white_score_test_3": 0.20129103907822588,
+        "white_score_test_4": 76.70318365097046,
+        "white_score_test_5": 83.11678207422392
       },
       "black_score": {
-        "black_score_test_1": 27.481031230851716,
+        "black_score_test_1": 20.60574999042586,
         "black_score_test_2": 0.0,
         "black_score_test_3": 0.0,
         "black_score_test_4": 0.0,
@@ -88,27 +79,27 @@
       }
     },
     "final_color": "white",
-    "single_ball_path": "out/balls/ball_4_3836_1458.png"
+    "single_ball_path": "output/debug/balls/ball_1_2984_786.png"
   },
   "black_ball": {
     "center": [
-      1562,
-      1012
+      3114,
+      1866
     ],
     "radius": 60,
     "color_score": {
       "white_score": {
-        "white_score_test_1": 46.66347728056066,
-        "white_score_test_2": 0.0,
-        "white_score_test_3": 3.5493324649951155,
-        "white_score_test_4": 39.061636924743645,
-        "white_score_test_5": 76.96189570686755
+        "white_score_test_1": 42.518708472158394,
+        "white_score_test_2": 9.467544555664064,
+        "white_score_test_3": 8.145668492594847,
+        "white_score_test_4": 33.155012130737305,
+        "white_score_test_5": 69.31909602866963
       },
       "black_score": {
-        "black_score_test_1": 53.33652271943934,
+        "black_score_test_1": 57.481291527841606,
         "black_score_test_2": 0.0,
         "black_score_test_3": 100.0,
-        "black_score_test_4": 87.93098449707031,
+        "black_score_test_4": 84.53964926979758,
         "black_score_test_5": 0.0
       },
       "solid_score": {
@@ -127,7 +118,7 @@
       }
     },
     "final_color": "black",
-    "single_ball_path": "out/balls/ball_2_1562_1012.png"
+    "single_ball_path": "output/debug/balls/ball_2_3114_1866.png"
   },
   "pockets": {
     "TL": {
@@ -136,28 +127,28 @@
       "radius": 30.526315789473685
     },
     "TM": {
-      "x": 2687.0,
+      "x": 2728.0,
       "y": 0.0,
       "radius": 30.526315789473685
     },
     "TR": {
-      "x": 5374.0,
+      "x": 5457.0,
       "y": 0.0,
       "radius": 30.526315789473685
     },
     "BL": {
       "x": 0.0,
-      "y": 2809.0,
+      "y": 2776.0,
       "radius": 30.526315789473685
     },
     "BM": {
-      "x": 2687.0,
-      "y": 2809.0,
+      "x": 2728.0,
+      "y": 2776.0,
       "radius": 30.526315789473685
     },
     "BR": {
-      "x": 5374.0,
-      "y": 2809.0,
+      "x": 5457.0,
+      "y": 2776.0,
       "radius": 30.526315789473685
     }
   }

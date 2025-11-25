@@ -17,7 +17,9 @@ class Pocket:
         self.x_cord = x_cord
         self.y_cord = y_cord
         self.is_corner = is_corner
-        self.radius = get_corner_pocket_radius()  if is_corner else get_side_pocket_radius()
+        self.radius = (
+            get_corner_pocket_radius() if is_corner else get_side_pocket_radius()
+        )
 
     def position(self) -> Tuple[float, float]:
         """Return (x, y) position of the pocket."""

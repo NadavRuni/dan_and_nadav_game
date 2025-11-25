@@ -7,6 +7,7 @@ black_and_white_launcher.py
 import cv2
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parent / "black_white_detect"))
 
 from analyzer_table.black_white_detect.mark_balls_v4 import detect_balls_full_pipeline
@@ -32,7 +33,6 @@ def run_ball_detection(image_path: str):
 
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    
     # מפעיל את פונקציית הזיהוי מהמודול שלך
     balls: list[Ball] = detect_balls_full_pipeline(image_path)
 

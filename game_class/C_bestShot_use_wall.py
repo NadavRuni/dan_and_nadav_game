@@ -30,7 +30,6 @@ class BestWallShot(BestShot):
         self.valid = not self.has_obstacle_on_lines()
         if self.valid:
             self.score = self.score_shot()
-            
 
     @staticmethod
     def point_segment_distance(px, py, x1, y1, x2, y2) -> float:
@@ -97,6 +96,7 @@ class BestWallShot(BestShot):
             f"pocket.id={self.pocket.id}, "
             f"impact_point={self.point_with_the_wall}"
         )
+
     import math
 
     def score_shot(self) -> float:
@@ -117,7 +117,7 @@ class BestWallShot(BestShot):
             return math.hypot(v[0], v[1])
 
         def angle_between(v1, v2):
-            dot = v1[0]*v2[0] + v1[1]*v2[1]
+            dot = v1[0] * v2[0] + v1[1] * v2[1]
             norm1 = length(v1)
             norm2 = length(v2)
             if norm1 == 0 or norm2 == 0:
@@ -156,9 +156,8 @@ class BestWallShot(BestShot):
         # ----------------
         # משקלול
         # ----------------
-        final_score = (0.7 * angle_score + 0.3 * dist_score)  # בין 0 ל-1
+        final_score = 0.7 * angle_score + 0.3 * dist_score  # בין 0 ל-1
 
         # מיפוי ל־[1, 50]
         score = 1 + final_score * 49
         return round(score, 2)
-

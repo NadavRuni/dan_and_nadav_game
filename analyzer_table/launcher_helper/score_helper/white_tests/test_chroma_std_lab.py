@@ -1,7 +1,11 @@
 # analyzer_table/launcher_helper/score_helper/white_tests/test_chroma_std_lab.py
 import cv2, numpy as np
 from analyzer_table.launcher_helper.json_models import Ball
-from analyzer_table.launcher_helper.score_helper.common import get_ball_image, clamp_0_100
+from analyzer_table.launcher_helper.score_helper.common import (
+    get_ball_image,
+    clamp_0_100,
+)
+
 
 def _circular_mask(shape, shrink=0.85):
     h, w = shape[:2]
@@ -10,6 +14,7 @@ def _circular_mask(shape, shrink=0.85):
     m = np.zeros((h, w), np.uint8)
     cv2.circle(m, (cx, cy), r, 255, -1)
     return m
+
 
 def run(ball: Ball) -> float:
     """
@@ -23,9 +28,9 @@ def run(ball: Ball) -> float:
 
     mask = _circular_mask(img.shape, 0.85)
     lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
-    a = lab[...,1].astype(np.float32) - 128.0
-    b = lab[...,2].astype(np.float32) - 128.0
-    r = np.sqrt(a*a + b*b)
+    a = lab[..., 1].astype(np.float32) - 128.0
+    b = lab[..., 2].astype(np.float32) - 128.0
+    r = np.sqrt(a * a + b * b)
     r_roi = r[mask > 0]
     if r_roi.size == 0:
         return 0.0

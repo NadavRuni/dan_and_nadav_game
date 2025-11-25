@@ -13,6 +13,7 @@ app = FastAPI()
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 
+
 @app.post("/run-heavy-process")
 async def run_heavy_process(file: UploadFile = File(...)):
     try:
@@ -23,7 +24,9 @@ async def run_heavy_process(file: UploadFile = File(...)):
 
         # קריאה לפונקציות שלך (קיימות)
         detect_table_rectangle(str(file_path))
-        pipeline_result = await asyncio.get_event_loop().run_in_executor(None, start_pipe_line, str(file_path))
+        pipeline_result = await asyncio.get_event_loop().run_in_executor(
+            None, start_pipe_line, str(file_path)
+        )
         table_result = start_build_table_from_img()
 
         return {
@@ -36,5 +39,6 @@ async def run_heavy_process(file: UploadFile = File(...)):
 
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         return JSONResponse({"error": str(e)}, status_code=500)

@@ -1,86 +1,77 @@
 #!/usr/bin/env python3
-"""
-🎯 Full pipeline for automatic billiard ball detection.
-Steps:
-1️⃣ Generate blue-felt mask
-2️⃣ Detect connected components (CC)
-3️⃣ Refine with HoughCircles
-4️⃣ Draw green circles and labels on the original image
-5️⃣ Save debug & output files
-"""
 import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+
+from output_utils import get_output_path
 import cv2
 import numpy as np
-from pathlib import Path
 from typing import List, Tuple
-sys.path.append(str(Path(__file__).resolve().parent.parent))
+
 from const_numbers import *
 from analyzer_table.launcher_helper.json_models import Ball
+from const_numbers import FELT_MASK_PATH
 
-
-# ================= Helper Functions ================= #
 
 def preprocess_roi(roi_gray):
-    """מחזק ניגודיות בתמונת ROI"""
+    """Applies a series of preprocessing steps to a region of interest."""
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4, 4))
-    eq = clahe.apply(roi_gray)
-    den = cv2.bilateralFilter(eq, d=7, sigmaColor=50, sigmaSpace=7)
-    blur = cv2.GaussianBlur(den, (5, 5), 0)
-    return blur
+    equalized_roi = clahe.apply(roi_gray)
+    denoised_roi = cv2.bilateralFilter(equalized_roi, d=7, sigmaColor=50, sigmaSpace=7)
+    blurred_roi = cv2.GaussianBlur(denoised_roi, (5, 5), 0)
+    return blurred_roi
 
 
-def edge_support_ratio(edges, cx, cy, r):
-    # edges: תמונת קצוות בינארית (numpy array)
-    h, w = edges.shape[:2]
-    r = int(max(1, r))
-    cx, cy = int(cx), int(cy)
-
-    # חלון קטן מסביב למעגל
-    pad = 1
-    x1 = max(0, cx - r - pad)
-    x2 = min(w - 1, cx + r + pad)
-    y1 = max(0, cy - r - pad)
-    y2 = min(h - 1, cy + r + pad)
-
-    # אם החלון לא תקין/ריק – אין תמיכה
-    if x2 < x1 or y2 < y1:
+def edge_support_ratio(edges, center_x, center_y, radius):
+    """Calculates the ratio of edge pixels within a circular region."""
+    height, width = edges.shape[:2]
+    radius = int(max(1, radius))
+    center_x, center_y = int(center_x), int(center_y)
+    padding = 1
+    roi_x1 = max(0, center_x - radius - padding)
+    roi_x2 = min(width - 1, center_x + radius + padding)
+    roi_y1 = max(0, center_y - radius - padding)
+    roi_y2 = min(height - 1, center_y + radius + padding)
+    if roi_x2 < roi_x1 or roi_y2 < roi_y1:
         return 0.0
-
-    roi = edges[y1:y2+1, x1:x2+1]
+    roi = edges[roi_y1 : roi_y2 + 1, roi_x1 : roi_x2 + 1]
     if roi.size == 0:
         return 0.0
     if roi.max() == 0:
         return 0.0
-
-    support_ratio = float(roi.sum() > 0)  # או roi.mean()/255 אם edges הוא 0/255
+    support_ratio = float(roi.sum() > 0)
     return support_ratio
 
 
-def refine_with_hough(gray, x, y, w, h, pad=20):
-    """מריץ HoughCircles בתוך ROI ומחזיר (cx, cy, r) אם נמצא עיגול תקין"""
-    H, W = gray.shape[:2]
-    x1 = max(0, x - pad)
-    y1 = max(0, y - pad)
-    x2 = min(W, x + w + pad)
-    y2 = min(H, y + h + pad)
-    roi = gray[y1:y2, x1:x2]
+def refine_with_hough(gray_image, bbox_x, bbox_y, bbox_width, bbox_height, padding=20):
+    """Refines a bounding box to a circle using Hough Circle Transform."""
+    image_height, image_width = gray_image.shape[:2]
+    roi_x1 = max(0, bbox_x - padding)
+    roi_y1 = max(0, bbox_y - padding)
+    roi_x2 = min(image_width, bbox_x + bbox_width + padding)
+    roi_y2 = min(image_height, bbox_y + bbox_height + padding)
+    roi = gray_image[roi_y1:roi_y2, roi_x1:roi_x2]
     if roi.size == 0:
         return None
-    if roi.max() ==0:
+    if roi.max() == 0:
         return None
+    preprocessed_roi = preprocess_roi(roi)
+    edges = cv2.Canny(preprocessed_roi, 60, 160)
+    estimated_radius = 0.5 * min(bbox_width, bbox_height)
 
-    roi_prep = preprocess_roi(roi)
-    edges = cv2.Canny(roi_prep, 60, 160)
-    r_est = 0.5 * min(w, h)
-
-    def try_hough(p2, r_lo_mul, r_hi_mul):
-        min_r = max(6, int(r_lo_mul * r_est))
-        max_r = max(min_r + 2, int(r_hi_mul * r_est))
+    def try_hough(hough_param2, min_radius_multiplier, max_radius_multiplier):
+        min_radius = max(6, int(min_radius_multiplier * estimated_radius))
+        max_radius = max(min_radius + 2, int(max_radius_multiplier * estimated_radius))
         return cv2.HoughCircles(
-            roi_prep, cv2.HOUGH_GRADIENT,
-            dp=1.2, minDist=max(10, int(0.8 * r_est)),
-            param1=120, param2=p2,
-            minRadius=min_r, maxRadius=max_r
+            preprocessed_roi,
+            cv2.HOUGH_GRADIENT,
+            dp=1.2,
+            minDist=max(10, int(0.8 * estimated_radius)),
+            param1=120,
+            param2=hough_param2,
+            minRadius=min_radius,
+            maxRadius=max_radius,
         )
 
     circles = try_hough(22, 0.7, 1.35)
@@ -88,180 +79,173 @@ def refine_with_hough(gray, x, y, w, h, pad=20):
         circles = try_hough(18, 0.45, 1.9)
     if circles is None:
         return None
-
-    best, best_score = None, -1.0
-    for c in circles[0]:
-        cx, cy, r = c
-        if r < 0.4 * r_est:  # כנראה מספר על הכדור
+    best_circle, best_score = None, -1.0
+    for circle in circles[0]:
+        center_x, center_y, radius = circle
+        if radius < 0.4 * estimated_radius:
             continue
-        cov = edge_support_ratio(edges, cx, cy, r)
-        score = cov * r
+        coverage_score = edge_support_ratio(edges, center_x, center_y, radius)
+        score = coverage_score * radius
         if score > best_score:
             best_score = score
-            best = (cx, cy, r)
-
-    if best is None:
+            best_circle = (center_x, center_y, radius)
+    if best_circle is None:
         return None
-
-    cx, cy, r = best
-    return int(x1 + cx), int(y1 + cy), int(r)
-
-
-def touches_border(bbox, w, h, pad=3):
-    x, y, bw, bh = bbox
-    return x <= pad or y <= pad or (x + bw) >= (w - 1 - pad) or (y + bh) >= (h - 1 - pad)
+    center_x, center_y, radius = best_circle
+    return int(roi_x1 + center_x), int(roi_y1 + center_y), int(radius)
 
 
-def balls_from_cc(mask_bin, gray):
-    """מאתר בלובים לבנים במסכה, מריץ Hough refining ומחזיר [(cx, cy, r), ...]"""
-    h, w = mask_bin.shape[:2]
-    num, labels, stats, centroids = cv2.connectedComponentsWithStats(mask_bin, connectivity=8)
+def touches_border(bbox, image_width, image_height, padding=3):
+    """Checks if a bounding box touches the image border."""
+    bbox_x, bbox_y, bbox_width, bbox_height = bbox
+    return (
+        bbox_x <= padding
+        or bbox_y <= padding
+        or (bbox_x + bbox_width) >= (image_width - 1 - padding)
+        or (bbox_y + bbox_height) >= (image_height - 1 - padding)
+    )
+
+
+def balls_from_connected_components(binary_mask, gray_image):
+    """Finds balls from connected components in a binary mask."""
+    image_height, image_width = binary_mask.shape[:2]
+    num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
+        binary_mask, connectivity=8
+    )
     balls = []
-    img_area = h * w
-    min_area_cc = int(0.00015 * img_area)
-    max_area_cc = int(0.0055 * img_area)
-
-    MAX_R = 100  # <-- סף עליון לרדיוס (כייל לפי התמונות שלך: 40–50)
- 
-    for label in range(1, num):
-        x, y, bw, bh, area = stats[label]
-        if area < min_area_cc or area > max_area_cc:
+    image_area = image_height * image_width
+    min_component_area = int(0.00015 * image_area)
+    max_component_area = int(0.0055 * image_area)
+    MAX_RADIUS = 100
+    for label_id in range(1, num_labels):
+        stat_x, stat_y, stat_width, stat_height, stat_area = stats[label_id]
+        if not min_component_area <= stat_area <= max_component_area:
             continue
-        if touches_border((x, y, bw, bh), w, h):
+        if touches_border(
+            (stat_x, stat_y, stat_width, stat_height), image_width, image_height
+        ):
             continue
-
-        ref = refine_with_hough(gray, x, y, bw, bh)
-        if ref:
-            cx, cy, r = ref
+        refined_circle = refine_with_hough(
+            gray_image, stat_x, stat_y, stat_width, stat_height
+        )
+        if refined_circle:
+            center_x, center_y, radius = refined_circle
         else:
-            cx, cy = centroids[label]
-            rr = int(0.5 * (bw + bh) / 2)
-            r = max(6, rr)
-
-        # ✅ סינון אחד קטן: מתעלמים מעיגולים ענקיים (כגון קושן/השתקפות)
-        if r > MAX_R:
-            # print(f"🔴 Ignored circle r={r} (too large)")  # אופציונלי: לוג
+            center_x, center_y = centroids[label_id]
+            estimated_radius = int(0.5 * (stat_width + stat_height) / 2)
+            radius = max(6, estimated_radius)
+        if radius > MAX_RADIUS:
             continue
-
-        balls.append((int(cx), int(cy), int(r)))
-
+        balls.append((int(center_x), int(center_y), int(radius)))
     return sorted(balls, key=lambda item: item[2], reverse=True)
 
 
-def detect_balls_as_dataclasses(mask_bin, gray) -> List[Ball]:
-    """ממיר את רשימת ה-(cx,cy,r) למחלקות Ball, מדפיס רק כדורים ברדיוס תקין"""
-    raw_balls = balls_from_cc(mask_bin, gray)
+def detect_balls_as_dataclasses(binary_mask, gray_image) -> List[Ball]:
+    """Converts raw ball detections to Ball dataclasses and filters by radius."""
+    raw_balls = balls_from_connected_components(binary_mask, gray_image)
     balls: List[Ball] = []
-
-    for (cx, cy, r) in raw_balls:
-        # סינון לפי רדיוס
-        if get_ball_radius()-get_ball_radius_determinate() <= r <= get_ball_radius()+get_ball_radius_determinate():
-
-        # if 50 <= r <= 70:
-            ball = Ball(center=(int(cx), int(cy)), radius=int(r))
+    for center_x, center_y, radius in raw_balls:
+        if (
+            get_ball_radius() - get_ball_radius_determinate()
+            <= radius
+            <= get_ball_radius() + get_ball_radius_determinate()
+        ):
+            ball = Ball(center=(int(center_x), int(center_y)), radius=int(radius))
             balls.append(ball)
-            print(f"✅ Ball detected: x={int(cx)}, y={int(cy)}, r={int(r)}")
+            print(
+                f"✅ Ball detected: x={int(center_x)}, y={int(center_y)}, r={int(radius)}"
+            )
         else:
-            print(f"⚠️ Ignored ball with invalid radius r={int(r)}")
-            print (f"   (valid range: [{get_ball_radius()-get_ball_radius_determinate()}, {get_ball_radius()+get_ball_radius_determinate()}])")
-
+            print(f"⚠️ Ignored ball with invalid radius r={int(radius)}")
+            print(
+                f"   (valid range: [{get_ball_radius()-get_ball_radius_determinate()}, {get_ball_radius()+get_ball_radius_determinate()}])"
+            )
     return balls
 
 
-# ================= Main Pipeline ================= #
-
 def detect_balls_full_pipeline(input_path: str):
-    """
-    ⚙️ Detects all balls from a single image.
-    Returns: List[Ball]
-    Saves:
-      - /debug/01_felt_mask.jpg
-      - /output/output_marked_balls.jpg
-    """
-    BASE = Path(__file__).resolve().parent
-    DEBUG_DIR = BASE / "debug"
-    OUTPUT_DIR = BASE / "output"
-    MASK_OUTPUT_PATH = DEBUG_DIR / "01_felt_mask.jpg"
-    OUTPUT_PATH = OUTPUT_DIR / "output_marked_balls.jpg"
-
-    DEBUG_DIR.mkdir(exist_ok=True)
-    OUTPUT_DIR.mkdir(exist_ok=True)
-
-    orig = cv2.imread(input_path)
-    if orig is None:
+    """Full pipeline for detecting balls in an image."""
+    MASK_OUTPUT_PATH = get_output_path(FELT_MASK_PATH, sub_dir="black_white_detect")
+    OUTPUT_PATH = get_output_path(
+        "output_marked_balls.jpg", sub_dir="black_white_detect"
+    )
+    original_image = cv2.imread(input_path)
+    if original_image is None:
         raise FileNotFoundError(f"❌ Could not read input image: {input_path}")
+    hsv_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2HSV)
+    lower_blue = np.array([80, 40, 30], dtype=np.uint8)
+    upper_blue = np.array([125, 255, 255], dtype=np.uint8)
+    lower_green = np.array([35, 30, 30], dtype=np.uint8)
+    upper_green = np.array([85, 255, 255], dtype=np.uint8)
 
-    # === Create felt mask (blue OR green) ===
-    hsv = cv2.cvtColor(orig, cv2.COLOR_BGR2HSV)
+    colorful_mask = cv2.inRange(
+        hsv_image, np.array([0, 40, 40], np.uint8), np.array([179, 255, 255], np.uint8)
+    )
+    blue_mask = cv2.inRange(hsv_image, lower_blue, upper_blue)
+    green_mask = cv2.inRange(hsv_image, lower_green, upper_green)
+    felt_mask = cv2.bitwise_or(blue_mask, green_mask)
+    felt_mask = cv2.bitwise_and(felt_mask, colorful_mask)
 
-    lower_blue  = np.array([80,  40, 30], dtype=np.uint8)
-    upper_blue  = np.array([125, 255,255], dtype=np.uint8)
-    lower_green = np.array([35,  30, 30], dtype=np.uint8)
-    upper_green = np.array([85, 255,255], dtype=np.uint8)
-
-    # כניסה רק לפיקסלים "צבעוניים" מספיק (פחות רגיש להשתקפויות/צללים)
-    S = hsv[:, :, 1]; V = hsv[:, :, 2]
-    colorful = cv2.inRange(hsv, np.array([0,40,40], np.uint8), np.array([179,255,255], np.uint8))
-
-    mask_blue  = cv2.inRange(hsv, lower_blue,  upper_blue)
-    mask_green = cv2.inRange(hsv, lower_green, upper_green)
-    mask_felt  = cv2.bitwise_or(mask_blue, mask_green)
-    mask_felt  = cv2.bitwise_and(mask_felt, colorful)
-
-    # מורפולוגיה לניקוי
     kernel = np.ones((5, 5), np.uint8)
-    mask_felt = cv2.morphologyEx(mask_felt, cv2.MORPH_OPEN, kernel, iterations=1)
-    mask_felt = cv2.morphologyEx(mask_felt, cv2.MORPH_CLOSE, kernel, iterations=1)
+    felt_mask = cv2.morphologyEx(felt_mask, cv2.MORPH_OPEN, kernel, iterations=1)
+    felt_mask = cv2.morphologyEx(felt_mask, cv2.MORPH_CLOSE, kernel, iterations=1)
 
-    # שמירת רק רכיבי felt גדולים (מונע בליעה של כדור ירוק/כחול קטן)
-    num, labels, stats, _ = cv2.connectedComponentsWithStats(mask_felt, connectivity=8)
-    H, W = mask_felt.shape[:2]
-    img_area = H * W
-    min_felt_area = int(0.005 * img_area)  # כייל: 0.003–0.01 בהתאם לתמונה
+    num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(
+        felt_mask, connectivity=8
+    )
+    image_height, image_width = felt_mask.shape[:2]
+    image_area = image_height * image_width
+    min_felt_area = int(0.005 * image_area)
+    cleaned_felt_mask = np.zeros_like(felt_mask)
+    for label_id in range(1, num_labels):
+        stat_x, stat_y, stat_width, stat_height, stat_area = stats[label_id]
+        if stat_area >= min_felt_area:
+            cleaned_felt_mask[labels == label_id] = 255
 
-    mask_felt_clean = np.zeros_like(mask_felt)
-    for lab in range(1, num):
-        x, y, w, h, area = stats[lab]
-        if area >= min_felt_area:
-            mask_felt_clean[labels == lab] = 255
-
-    # הופכים – עכשיו לבן = לא felt (כדורים, מקל, כיסים)
-    mask_inv = cv2.bitwise_not(mask_felt_clean)
-
-    # כאן כבר יש 0/255, ה-threshold מיותר. אפשר ישר מורפולוגיה קלה אם צריך:
-    mask_bin = cv2.morphologyEx(mask_inv, cv2.MORPH_CLOSE, kernel, iterations=1)
-
-    cv2.imwrite(str(MASK_OUTPUT_PATH), mask_bin)
+    inverted_mask = cv2.bitwise_not(cleaned_felt_mask)
+    binary_mask = cv2.morphologyEx(inverted_mask, cv2.MORPH_CLOSE, kernel, iterations=1)
+    cv2.imwrite(MASK_OUTPUT_PATH, binary_mask)
     print(f"🖤 Mask saved to: {MASK_OUTPUT_PATH}")
 
-
-    # === Detect balls ===
-    gray = cv2.cvtColor(orig, cv2.COLOR_BGR2GRAY)
-    ball_objects = detect_balls_as_dataclasses(mask_bin, gray)
+    gray_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)
+    ball_objects = detect_balls_as_dataclasses(binary_mask, gray_image)
     print(f"🎱 Found {len(ball_objects)} balls.")
 
-    # === Draw results ===
-    out = orig.copy()
-    for b in ball_objects:
-        cx, cy = b.center
-        r = b.radius
-        draw_r = max(8, int(r))
-        thick = max(2, draw_r // 5)
-        cv2.circle(out, (cx, cy), draw_r, (0, 255, 0), thick)
-        cv2.circle(out, (cx, cy), max(3, draw_r // 6), (0, 0, 255), -1)
-        label = f"({cx},{cy})"
-        cv2.putText(out, label, (cx + draw_r + 6, cy - draw_r - 6),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+    output_image = original_image.copy()
+    for ball in ball_objects:
+        center_x, center_y = ball.center
+        radius = ball.radius
+        draw_radius = max(8, int(radius))
+        thickness = max(2, draw_radius // 5)
+        cv2.circle(
+            output_image, (center_x, center_y), draw_radius, (0, 255, 0), thickness
+        )
+        cv2.circle(
+            output_image,
+            (center_x, center_y),
+            max(3, draw_radius // 6),
+            (0, 0, 255),
+            -1,
+        )
+        label_text = f"({center_x},{center_y})"
+        cv2.putText(
+            output_image,
+            label_text,
+            (center_x + draw_radius + 6, center_y - draw_radius - 6),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            (255, 255, 255),
+            1,
+        )
 
-    cv2.imwrite(str(OUTPUT_PATH), out)
+    cv2.imwrite(OUTPUT_PATH, output_image)
     print(f"✅ Final image saved to: {OUTPUT_PATH}")
-
     return ball_objects
 
 
-# ================= Run Example ================= #
 if __name__ == "__main__":
-    BASE = Path(__file__).resolve().parent
-    example_image = BASE.parent / "test_image9.jpeg"
-    balls = detect_balls_full_pipeline(str(example_image))
-    print("[OK] Example finished, first 3 balls:", [b.center for b in balls[:3]])
+    example_image_path = "photos/img_start.jpeg"
+    detected_balls = detect_balls_full_pipeline(example_image_path)
+    print(
+        "[OK] Example finished, first 3 balls:", [b.center for b in detected_balls[:3]]
+    )
