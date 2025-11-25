@@ -141,25 +141,21 @@ async def confirm_rectangle(data: dict):
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
-@app.post("/api/set_ball_and_get_pocket")
-async def set_ball_and_get_pocket(request: Request):
+@app.post("/api/get_pocket")
+async def get_pocket(request: Request):
     try:
         data = await request.json()
         image_url = data.get("image_url")
-        ball_type = data.get("ball_type")
 
         if not image_url:
             return JSONResponse({"error": "Missing 'image_url'"}, status_code=400)
-        if not ball_type:
-            return JSONResponse({"error": "Missing 'ball_type'"}, status_code=400)
 
-        print(f"[DEBUG] Received request: image_url={image_url}, ball_type={ball_type}")
+        print(f"[DEBUG] Received request: image_url={image_url}")
 
         # Fetch the image
         response = requests.get(image_url, stream=True)
         response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
-
-        set_ball_type(ball_type)
+        # set_ball_type(ball_type)
 
         # Read image content
         image_content = response.content

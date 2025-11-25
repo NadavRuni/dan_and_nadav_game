@@ -512,7 +512,7 @@ def find_corner_pockets_from_mask(
         draw_center_y = pocket.center[1] + padding
         cv2.circle(output_display, (draw_center_x, draw_center_y), int(pocket.radius), (0, 255, 0), 2)
         cv2.putText(output_display, str(pocket.id), (draw_center_x + int(pocket.radius), draw_center_y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 255), 2)
-        cv2.circle(original_image_with_pockets, (pocket.center[0], pocket.center[1]), int(pocket.radius), (0, 0, 255), 3)
+        cv2.circle(original_image_with_pockets, (pocket.center[0], pocket.center[1]), int(pocket.radius), (0, 0, 255), 10)
 
     debug_output_path = get_output_path("pocket_mask.jpg", sub_dir="black_white_detect")
     cv2.imwrite(debug_output_path, output_display)
