@@ -164,7 +164,7 @@ async def set_ball_and_get_pocket(request: Request):
         # Read image content
         image_content = response.content
 
-        pocket_detection_api(image_url)
+        image_content= pocket_detection_api(image_url)
         return Response(content=image_content)
 
     except requests.exceptions.RequestException as e:
