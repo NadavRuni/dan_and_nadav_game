@@ -106,7 +106,7 @@ def get_pocket_up_radius() -> int | float:
 
 
 def get_pocket_down_radius() -> int | float:
-    return get_pocket_radius() * 0.2
+    return get_pocket_radius() * 0.5
 
 
 def get_pocket_radius_determinate() -> int | float:

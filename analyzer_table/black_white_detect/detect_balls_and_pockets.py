@@ -245,9 +245,13 @@ def is_close_to_rectangle_borders(
 
     # 3. Check if the point is close enough to the *closest* interest point
     if min_dist <= pocket_margin:
+        print ("DEBUG: Point is close enough to interest point. (", point_x, " , ", point_y, " )")
+        print ("DEBUG: Closest location: ", closest_location, " with distance: ", min_dist)
+        print ("DEBUG: Margin allowed: ", pocket_margin)
         return True, closest_location, min_dist
 
     print("DEBUG: Point not close enough to any interest point. (", point_x, " , ", point_y, " )")
+    print("DEBUG: Closest location: ", closest_location, " with distance: ", min_dist)
     return False, "UNKNOWN", min_dist
 
 
@@ -456,7 +460,7 @@ def find_corner_pockets_from_mask(
         real_center_y = int(y) - padding
 
         is_valid, location, distance = is_close_to_rectangle_borders(
-            rect, real_center_x, real_center_y, margin=get_pocket_radius() * 5
+            rect, real_center_x, real_center_y, margin=get_pocket_radius() * 3
         )
 
         if is_valid:

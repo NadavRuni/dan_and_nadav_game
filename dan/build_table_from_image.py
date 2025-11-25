@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import shutil
 
 # ===== Make local imports work no matter where you run from =====
 CUR_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -132,27 +133,36 @@ def start_build_table_from_img():
 
     game = GameAnalayzer(table)
     best_shot = game.find_best_overall_shot(get_ball_type())
-    if len(best_shot) > 0:
-        print("best shot is:", best_shot[0])
-    if len(best_shot) > 1:
-        print("second best shot is:", best_shot[1])
-    if len(best_shot) > 2:
-        print("third best shot is:", best_shot[2])
 
     # ציור
-    p, lines = draw_table(table, best_shot=best_shot[0])
-    line_drawer = LineDrawer(OUTPUT_JSON_PATH, best_shot[0], OUTPUT_IMAGE_PATH)
-    line_drawer.show_contact_hit()  # need to be first before draw_lines
-    if isinstance(best_shot[0], BestWallShot):
-        print("Drawing wall-based shot lines...")
-        line_drawer.draw_lines_with_wall(
-            (best_shot[0].point_with_the_wall[0], best_shot[0].point_with_the_wall[1])
-        )
-    elif isinstance(best_shot[0], BestShotBallToBall):
-        print("Drawing ball-to-ball shot lines...")
-        line_drawer.draw_combo_lines()
+    if best_shot:
+        if len(best_shot) > 0:
+            print("best shot is:", best_shot[0])
+        if len(best_shot) > 1:
+            print("second best shot is:", best_shot[1])
+        if len(best_shot) > 2:
+            print("third best shot is:", best_shot[2])
+            
+        p, lines = draw_table(table, best_shot=best_shot[0])
+        line_drawer = LineDrawer(OUTPUT_JSON_PATH, best_shot[0], OUTPUT_IMAGE_PATH)
+        line_drawer.show_contact_hit()  # need to be first before draw_lines
+        if isinstance(best_shot[0], BestWallShot):
+            print("Drawing wall-based shot lines...")
+            line_drawer.draw_lines_with_wall(
+                (best_shot[0].point_with_the_wall[0], best_shot[0].point_with_the_wall[1])
+            )
+        elif isinstance(best_shot[0], BestShotBallToBall):
+            print("Drawing ball-to-ball shot lines...")
+            line_drawer.draw_combo_lines()
+        else:
+            line_drawer.draw_lines()
     else:
-        line_drawer.draw_lines()
+        print("No best shot found. Saving original image as output.")
+        # Optional: Save the image without any lines
+        analysis = load_analysis(OUTPUT_JSON_PATH)
+        if analysis.get("image_path"):
+            from shutil import copyfile
+            copyfile(analysis["image_path"], OUTPUT_IMAGE_PATH)
 
 
 if __name__ == "__main__":
