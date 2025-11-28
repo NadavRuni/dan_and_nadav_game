@@ -24,7 +24,7 @@ class BestWallShot(BestShot):
         beta_dict = calc.angle_to_pockets_use_wall()
         print("self.pocket ", self.pocket)
         print("this is beta dict: ", beta_dict)
-        self.angle, (dir_x, dir_y) = beta_dict.get(pocket, (0.0, (0.0, 0.0)))
+        self.angle, (dir_x, dir_y) = beta_dict.get(pocket.id, (0.0, (0.0, 0.0)))
 
         self.point_with_the_wall = (dir_x, dir_y)
         self.valid = not self.has_obstacle_on_lines()

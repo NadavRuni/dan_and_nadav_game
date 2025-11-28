@@ -7,18 +7,18 @@
     "rectangle": {
         "top_left": [
             0,
-            822
+            183
         ],
         "top_right": [
-            1096,
-            822
+            245,
+            183
         ],
         "bottom_left": [
             0,
             0
         ],
         "bottom_right": [
-            1096,
+            245,
             0
         ]
     },
