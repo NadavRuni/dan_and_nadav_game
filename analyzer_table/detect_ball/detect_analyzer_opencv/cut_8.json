@@ -1,66 +1,26 @@
 {
     "cut_name": "cut_8.png",
     "origin": {
-        "x": 658,
-        "y": 494
+        "x": 147,
+        "y": 111
     },
     "rectangle": {
         "top_left": [
-            658,
-            1480
+            147,
+            330
         ],
         "top_right": [
-            1973,
-            1480
+            441,
+            330
         ],
         "bottom_left": [
-            658,
-            494
+            147,
+            111
         ],
         "bottom_right": [
-            1973,
-            494
+            441,
+            111
         ]
     },
-    "balls": [
-        {
-            "center": [
-                1632,
-                554
-            ],
-            "radius": 60,
-            "color_score": {
-                "white_score": {
-                    "white_score_test_1": 0.0,
-                    "white_score_test_2": 0.0,
-                    "white_score_test_3": 0.0,
-                    "white_score_test_4": 0.0,
-                    "white_score_test_5": 0.0
-                },
-                "black_score": {
-                    "black_score_test_1": 0.0,
-                    "black_score_test_2": 0.0,
-                    "black_score_test_3": 0.0,
-                    "black_score_test_4": 0.0,
-                    "black_score_test_5": 0.0
-                },
-                "solid_score": {
-                    "solid_score_test_1": 0.0,
-                    "solid_score_test_2": 0.0,
-                    "solid_score_test_3": 0.0,
-                    "solid_score_test_4": 0.0,
-                    "solid_score_test_5": 0.0
-                },
-                "striped_score": {
-                    "striped_score_test_1": 0.0,
-                    "striped_score_test_2": 0.0,
-                    "striped_score_test_3": 0.0,
-                    "striped_score_test_4": 0.0,
-                    "striped_score_test_5": 0.0
-                }
-            },
-            "final_color": "undefined",
-            "single_ball_path": ""
-        }
-    ]
+    "balls": []
 }

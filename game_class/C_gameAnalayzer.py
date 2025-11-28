@@ -38,7 +38,7 @@ class GameAnalayzer:
             if ball.type == "black" and len(table.get_balls()) > 2:
                 # אפשר להכניס לוגיקה מתקדמת לפסים/מלאים
                 continue
-            if not self.has_clear_path(white, ball, balls):
+            if not self.has_clear_path(white, ball, table.get_balls()):
                 print(
                     "between the white and ball number",
                     ball.id,
@@ -83,6 +83,9 @@ class GameAnalayzer:
         בודקת אם יש מסלול פנוי בין שני כדורים (מהיקף ל-היקף).
         אם כדור אחר נמצא במרחק קטן מ-(radius + SAFE_DISTANCE) מהקו → חסום.
         """
+
+        print ("===============================")
+        print ("enter to has_clear_path for ball1 id:", ball1.id, "and ball2 id:", ball2.id)
         EPS = 1e-6
         ax, ay = ball1.x_cord, ball1.y_cord
         bx, by = ball2.x_cord, ball2.y_cord
@@ -106,17 +109,26 @@ class GameAnalayzer:
         for other in all_balls:
             if other is ball1 or other is ball2:
                 continue
+            flag=False
+            print("checking other ball id:", other.id)
+            if other.id==8 and ball2.id==2:
+                print ("-------------------------------")
+                flag=True
 
             # הקרנה של הכדור השלישי על הקו
             vx, vy = other.x_cord - axp, other.y_cord - ayp
             line_dx, line_dy = bxp - axp, byp - ayp
             line_len_sq = line_dx**2 + line_dy**2
             if line_len_sq < EPS:
+                if flag:
+                    print("line_len_sq < EPS")
                 continue
 
             # t הוא מיקום הכדור ביחס לקו (0 בתחילת הקטע, 1 בסוף)
             t = (vx * line_dx + vy * line_dy) / line_len_sq
             if t < 0 or t > 1:
+                if flag:
+                    print("t < 0 or t > 1")
                 # מחוץ לקטע, לא רלוונטי
                 continue
 
@@ -127,6 +139,10 @@ class GameAnalayzer:
             # מרחק מהכדור לקו
             dist = math.hypot(other.x_cord - closest_x, other.y_cord - closest_y)
 
+            if flag:
+                    print("dist", dist)
+                # מחוץ לקטע, לא רלוונטי
+                
             # אם קרוב מדי → חסום
             if dist <= other.radius + get_safe_distance():
                 return False
@@ -199,7 +215,7 @@ class GameAnalayzer:
         """
         מחפש מכות עם קיר (Wall shots) ומחזיר את שלושת הטובות ביותר.
         """
-        print("enter to find_best_wall_shots")
+        print("enter to find_best_B2B_shots")
         table = self.table
         white = next(b for b in table.get_balls() if b.type == "white")
         wall_shots: list[BestWallShot] = []
@@ -223,7 +239,7 @@ class GameAnalayzer:
                     continue
                 if target_ball.type == "black" or helper_ball.type == "black":
                     continue
-                if not self.has_clear_path(white, helper_ball, all_balls=balls):
+                if not self.has_clear_path(white, helper_ball, all_balls=table.get_balls()):
                     print(
                         "[B2B] between the white and ball number",
                         helper_ball.id,

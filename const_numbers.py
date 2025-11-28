@@ -253,7 +253,7 @@ FRONTEND_DIR = BASE_DIR / "frontend"
 
 OUTPUT_IMAGE_PATH = OUTPUT_DIR / "img.png"
 OUTPUT_CONTACT_VIEW_PATH = BASE_DIR / "img_contact.png"
-FORSE_WALL_SHOT = False
+FORSE_WALL_SHOT = True
 
 
 RECTANGLE_JSON_PATH = "rectangles_cache.json"
