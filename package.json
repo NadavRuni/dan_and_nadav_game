@@ -7,7 +7,7 @@
     "kill": "lsof -ti:8000 | xargs kill -9 2>/dev/null || true",
     "app": "uvicorn api_server:app --host 0.0.0.0 --port 8000",
 
-    "all": "rm -rf photos output | .venv/bin/uvicorn api_server:app --port 8000"
+    "all": "rm -rf photos output uploads && mkdir -p uploads && .venv/bin/uvicorn api_server:app --port 8000"
   },
   "repository": {
     "type": "git",
