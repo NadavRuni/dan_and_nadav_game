@@ -92,6 +92,30 @@ def _ball_exists(merged_balls: list[Ball], new_ball: Ball) -> bool:
 
 
 def is_inside_inner_rectangle(ball: Ball, rect: Rectangle, margin: float) -> bool:
+    if get_use_predicted_pockets():
+        pockets = get_detected_pockets()
+        if pockets:
+            ball_x, ball_y = ball.center
+            for pocket in pockets:
+                pocket_x, pocket_y = pocket.center
+                pocket_radius = pocket.radius
+                
+                distance = math.sqrt((ball_x - pocket_x)**2 + (ball_y - pocket_y)**2)
+                
+                # If the distance is less than sum of radii, they are likely the same object
+                if distance < (ball.radius + pocket_radius)*0.85:
+                    Debugger.log(
+                        f"⚠️ Ball at ({ball.center[0]:.1f}, {ball.center[1]:.1f}) is identified as a pocket ({pocket.location}) and will be excluded."
+                    )
+                    return False  # It's a pocket, so not "inside" the playable area
+            
+            # If the ball is not identified as any of the pockets
+            Debugger.log(
+                f"✅ Ball at ({ball.center[0]:.1f}, {ball.center[1]:.1f}) is not a predicted pocket."
+            )
+            return True # It is not a pocket, so it's a valid ball in this context.
+
+    # Original logic for when get_use_predicted_pockets() is False or no pockets are found
     tlx, tly = rect.top_left
     trx, try_ = rect.top_right
     blx, bly = rect.bottom_left
@@ -152,9 +176,10 @@ def is_inside_table(ball: Ball, rect: Rectangle) -> bool:
         Debugger.log(
             f"🟢 INSIDE ball center=({x},{y}) r={ball.radius}+safe={get_safe_from_wall()} within polygon {polygon}"
         )
-        return True and is_inside_inner_rectangle(ball, rect, get_pocket_margin())
+        return is_inside_inner_rectangle(ball, rect, get_pocket_margin())
     else:
         Debugger.log(
             f"🔴 TOO CLOSE TO EDGE ball center=({x},{y}) r={ball.radius}+safe={get_safe_from_wall()}"
         )
+        #nadav!
         return False

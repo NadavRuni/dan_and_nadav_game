@@ -52,7 +52,7 @@ class CalculationsWithWall(Calculations):
         # 1. שיקוף הכיס ביחס לקיר העליון
         mirrored_pocket_y = 2 * get_table_width() - pocket_y
 
-        match pocket_id:
+        match pocket.id:
             case 0:
                 Q = mirrored_pocket_y - self.distance_from_wall_dict["down"]
                 direction_from_side_wall = "left"
@@ -70,7 +70,7 @@ class CalculationsWithWall(Calculations):
         theta_rad = math.atan(Q / P)  # זווית ברדיאנים
         theta_deg = abs(math.degrees(theta_rad))  # זווית במעלות, תמיד 0–90
 
-        match pocket_id:
+        match pocket.id:
             # דמיון משולשים
             # sorry fot this :)
 

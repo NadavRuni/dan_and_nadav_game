@@ -37,6 +37,13 @@ def build_table_from_analysis(analysis: dict):
     # מידות התמונה בפיקסלים (ל־fallback)
     width_px = float(analysis.get("table_size_px", {}).get("width_px", 1.0))
     height_px = float(analysis.get("table_size_px", {}).get("height_px", 1.0))
+    set_height_px(height_px)
+    set_width_px(width_px)
+
+    # upside-down pockets conversion
+    # because the detected pockets are in image coordinates (0,0 top-left)
+    # set_set_detected_pockets_to_upside_downside()
+
 
     # סקלת פיקסלים → יחידות משחק (ל־fallback)
     sx = get_table_length() / max(1.0, width_px)
@@ -47,8 +54,6 @@ def build_table_from_analysis(analysis: dict):
     has_uv = False
 
     balls = []
-    next_id = 1
-    used_ids = set([0, 8])
     print("[build] building table from analysis...")
     print(analysis.get("balls", []))
 
@@ -64,31 +69,16 @@ def build_table_from_analysis(analysis: dict):
             cx = float(b["center_px"]["x"])
             cy = float(b["center_px"]["y"])
 
-            # --- נחשב סקלות המרה אם לא חושבו קודם ---
-            # נשתמש תחילה בגבולות מהכיסים אם קיימים (מדויק יותר)
+            #if we are using pre defined pockets, we dont need to convert nothing
             pockets = analysis.get("pockets", {})
             if pockets and "BL" in pockets and "TR" in pockets:
-                x_min = pockets["BL"]["x"]
-                y_min = pockets["TR"]["y"]
-                x_max = pockets["TR"]["x"]
-                y_max = pockets["BL"]["y"]
 
-                table_width_px = x_max - x_min
-                table_height_px = y_max - y_min
+                x_game = cx
 
-                sx = get_table_length() / max(1.0, table_width_px)
-                sy = get_table_width() / max(1.0, table_height_px)
-
-                # נחשב מיקום יחסי לפי גבולות השולחן
-                x_game = clamp_to_table((cx - x_min) * sx, get_table_length())
-                # ציר Y בפיקסלים הפוך, לכן נשתמש ב־(y_max - cy)
-                y_game = clamp_to_table((y_max - cy) * sy, get_table_width())
+                y_game = cy
 
                 print(f"[build] using pocket-based mapping for ball id={bid}")
             else:
-                # fallback — אם אין מידע על כיסים
-                sx = get_table_length() / max(1.0, width_px)
-                sy = get_table_width() / max(1.0, height_px)
 
                 # נשתמש בהיפוך פשוט של הציר האנכי
                 x_game = clamp_to_table(cx * sx, get_table_length())
@@ -111,7 +101,7 @@ def build_table_from_analysis(analysis: dict):
             )
         )
         print(
-            f"[build] added ball id={bid}, type={btype}, pos=({x_game:.1f}, {y_game:.1f}"
+            f"[build] added ball id={bid}, type={btype}, pos=({x_game}, {y_game}"
         )
 
     # אפשרי: לוג קטן כדי להבין באיזה נתיב השתמשנו
@@ -130,9 +120,12 @@ def start_build_table_from_img():
 
     table = build_table_from_analysis(analysis)
     print(f"Built table with {len(table.balls)} balls from {OUTPUT_JSON_PATH}")
+    
     # draw_table(table)
 
     game = GameAnalayzer(table)
+    print ("Analyzing best shot...")
+    print(table.pockets)
     best_shot = game.find_best_overall_shot(get_ball_type())
 
     # ציור

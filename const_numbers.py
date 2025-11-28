@@ -13,6 +13,9 @@ POCKET_PATH = ""
 RECTANGLE_CROPED = None
 USE_PREDICTED_POCKETS = False
 DETECTED_POCKETS: List[Pocket] | None = None
+WIDTH_PX = 0
+HEIGHT_PX = 0
+
 
 
 # -------------------------------
@@ -191,8 +194,50 @@ def get_detected_pockets() -> List[Pocket] | None:
 
 
 def set_detected_pockets(value: List[Pocket]) -> None:
+    print ("✅ Setting detected pockets:")
+    print (value)
     global DETECTED_POCKETS
     DETECTED_POCKETS = value
+
+def clamp_to_table_pocket(x: float, length: float) -> float:
+    """גזירה לגבולות השולחן תוך שמירה על רדיוס הכדור."""
+    return max(get_ball_radius(), min(length - get_ball_radius(), x))
+
+def set_set_detected_pockets_to_upside_downside() -> None:
+    global DETECTED_POCKETS
+    pockets_after_conversion: List[Pocket] = []
+    sx = get_table_length() / max(1.0, get_width_px())
+    sy = get_table_width() / max(1.0, get_height_px())
+
+    for pocket in DETECTED_POCKETS:
+        game_x_pocket = clamp_to_table_pocket(pocket.center[0] * sx, get_table_length())
+        game_y_pocket = clamp_to_table_pocket((get_height_px() - pocket.center[1]) * sy, get_table_width())
+        pockets_after_conversion.append(
+            Pocket(
+                id=pocket.id,
+                center=(game_x_pocket, game_y_pocket),
+                radius=pocket.radius,
+                location=pocket.location if pocket.location is not None else "",
+                pocket_img_cordinates_on_table=pocket.pocket_img_cordinates_on_table,
+                pocket_img_path=pocket.pocket_img_path if pocket.pocket_img_path is not None else ""
+            )
+        )
+    DETECTED_POCKETS = pockets_after_conversion
+
+
+def get_width_px() -> float:
+    return WIDTH_PX
+
+def set_width_px(value: float) -> None:
+    global WIDTH_PX
+    WIDTH_PX = value
+
+def get_height_px() -> float:
+    return HEIGHT_PX
+
+def set_height_px(value: float) -> None:
+    global HEIGHT_PX
+    HEIGHT_PX = value
 
 
 MERGE_MAX_Y_DIFF = 65  # מרחק מותר בציר Y

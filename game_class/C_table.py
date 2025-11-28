@@ -19,7 +19,7 @@ class Table:
         self.balls = balls
 
         # initialize 6 pockets (corners + middles of long sides)
-        if get_use_predicted_pockets():
+        if not get_use_predicted_pockets():
             self.pockets: List[Pocket] = [
                 Pocket(
                     id=0,
@@ -77,36 +77,8 @@ class Table:
             Pocket(id=5, center=(length / 2, 0), radius=get_side_pocket_radius(), pocket_img_cordinates_on_table=(length / 2, 0), location="TM"),  # middle-top
             ]
         else:
-            self.pockets: List[Pocket] = []
-            predifned_pockets = get_detected_pockets()
-            for pocket in predifned_pockets:
-                p_id = -1
-                match pocket.location:
-                    case "BL":
-                        p_id = 0
-                    case "BR":
-                        p_id = 1
-                    case "TR":
-                        p_id = 2
-                    case "TL":
-                        p_id = 3
-                    case "BM":
-                        p_id = 4
-                    case "TM":
-                        p_id = 5
-                    case _:
-                        p_id = -1
-
-                self.pockets.append(
-                    Pocket(
-                        id=p_id,
-                        center=pocket.center,
-                        radius=pocket.radius,
-                        pocket_img_cordinates_on_table=pocket.center,
-                        location=pocket.location,
-                    )
-                )
-
+            print ("Using predicted pockets")
+            self.pockets: List[Pocket] = get_detected_pockets()    
     def show_balls(self):
         for ball in self.balls:
             print(ball)

@@ -65,6 +65,56 @@ class LineDrawer:
                 return (self.pockets[name]["x"], self.pockets[name]["y"])
         return None
 
+    def draw_all_pockets_with_labels(self, draw_obj, dot_radius=15, font_size=30):
+        """
+        Draws all pockets with labels (e.g., TL, BR) on the image.
+        """
+        from PIL import ImageFont # Import ImageFont outside the try-except
+
+        try:
+            font = ImageFont.truetype("arial.ttf", font_size)
+        except (ImportError, IOError): # Catch both ImportError (if freetype is missing) and IOError (if font file not found)
+            font = ImageFont.load_default() # Fallback to default bitmap font
+            print("WARNING: Could not load 'arial.ttf' or PIL.ImageFont.truetype failed. Using default font.")
+
+        for name, pocket_data in self.pockets.items():
+            x, y = pocket_data["x"], pocket_data["y"]
+            
+            # Draw a small red dot
+            draw_obj.ellipse([x - dot_radius, y - dot_radius, x + dot_radius, y + dot_radius],
+                            fill=(255, 0, 0, 128), outline=(255, 0, 0, 255), width=2) # Red, semi-transparent
+            
+            # Draw the label next to the dot
+            draw_obj.text((x + dot_radius + 5, y - font_size // 2), name, fill=(255, 255, 255), font=font)
+
+    def draw_all_balls_with_coordinates(self, draw_obj, font_size=30):
+        """
+        Draws a circle around each ball and labels it with its coordinates.
+        """
+        from PIL import ImageFont # Import ImageFont outside the try-except
+
+        try:
+            font = ImageFont.truetype("arial.ttf", font_size)
+        except (ImportError, IOError): # Catch both ImportError (if freetype is missing) and IOError (if font file not found)
+            font = ImageFont.load_default() # Fallback to default bitmap font
+            print("WARNING: Could not load 'arial.ttf' or PIL.ImageFont.truetype failed. Using default font.")
+
+        for ball_data in self.balls:
+            if "center_px" in ball_data and "radius_px" in ball_data:
+                x, y = ball_data["center_px"]["x"], ball_data["center_px"]["y"]
+                r = ball_data["radius_px"]
+                ball_id = ball_data["index"]
+
+                # Draw a circle around the ball
+                draw_obj.ellipse([x - r, y - r, x + r, y + r],
+                                 outline=(0, 255, 0, 255), width=4) # Green outline
+                
+                # Draw coordinates text
+                label_text = f"B{ball_id}({int(x)},{int(y)})"
+                draw_obj.text((x + r + 5, y - font_size // 2), label_text, fill=(0, 255, 0), font=font)
+
+
+
     def draw_lines(
         self, color_target=(255, 0, 0), color_white=(0, 0, 255), width=3
     ) -> str:
@@ -150,8 +200,8 @@ class LineDrawer:
         draw_dashed_line(
             draw, start_target, pocket_before, fill=color_target, width=width
         )
-        print("Drew dashed line from target to pocket.")
-
+        self.draw_all_pockets_with_labels(draw) # Add pocket labels and dots
+        self.draw_all_balls_with_coordinates(draw) # Add ball circles and coordinates
         self.img.save(self.output_path, quality=95)
         return self.output_path
 
@@ -327,6 +377,8 @@ class LineDrawer:
         draw_dashed_line(draw, start_1, contact_on_mid, fill=color_white, width=width)
 
         print("=== Finished Combo Drawing ===")
+        self.draw_all_pockets_with_labels(draw) # Add pocket labels and dots
+        self.draw_all_balls_with_coordinates(draw) # Add ball circles and coordinates
         self.img.save(self.output_path, quality=95)
         return self.output_path
 
@@ -507,6 +559,9 @@ class LineDrawer:
         draw_dashed_line(draw, wall_px, pocket_before, fill=color_wall, width=width)
 
         print("=== Finished Drawing ===")
+
+        self.draw_all_pockets_with_labels(draw) # Add pocket labels and dots
+        self.draw_all_balls_with_coordinates(draw) # Add ball circles and coordinates
 
         self.img.save(self.output_path, quality=95)
         return self.output_path

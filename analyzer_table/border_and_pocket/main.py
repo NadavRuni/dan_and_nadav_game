@@ -45,6 +45,7 @@ def process_image_for_border(
 
     cropped_original_photo = original_image.copy()
     rectangle_obj = None
+    output_debug_original_cropped_path = ""
 
     # 2. Try to remove the white border
     print("Step 2: Checking for and removing white border...")

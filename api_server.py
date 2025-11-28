@@ -18,9 +18,7 @@ from dan.build_table_from_image import start_build_table_from_img
 from const_numbers import *
 from analyzer_table.launcher_helper.data_to_rectangle import create_rectangle_from_data
 from dan.detect_table_rectangle import update_table_size_from_rectangle
-from analyzer_table.black_white_detect.detect_balls_and_pockets import (
-    detect_only_pockets_and_draw,
-)
+from fetch_pockets import fetch_pockets_from_data
 
 # ✅ יצירת אפליקציה עם Response כברירת מחדל
 app = FastAPI(default_response_class=Response)
@@ -146,9 +144,12 @@ async def confirm_rectangle(data: dict):
 async def best_shot_use_pocket(request: Request):
     try:
         data = await request.json()
+        print("[DEBUG] Received best_shot_use_pocket data:", data)
         ball_type = data.get("ball_type")
         print("[DEBUG] Starting best_shot_use_pocket with ball_type:", ball_type)
         set_ball_type(ball_type)
+        fetch_pockets_from_data(data)
+        set_use_predicted_pockets(True)
 
         rect_path = Path(BASE_DIR / RECTANGLE_JSON_PATH)
         rect_path.write_text(

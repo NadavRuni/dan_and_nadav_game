@@ -46,7 +46,7 @@ def draw_table(
             final_lines.append(((x1, y1), (x2, y2)))
     if best_shot:
         print(isinstance(best_shot, BestWallShot))
-        if isinstance(best_shot, BestWallShot) or best_shot.angle > 90:
+        if isinstance(best_shot, BestWallShot) or (not isinstance(best_shot, BestShotBallToBall) and best_shot.angle > 90):
             print("Best shot is BestWallShot draw the line later")
         elif isinstance(best_shot, BestShotBallToBall):
             ax.plot(
@@ -222,8 +222,14 @@ def draw_white_center_black_to_corner():
 
 def draw_contact_line(ax, white, black, pocket, color="orange"):
     print("Drawing contact line...")
-    vx = pocket.center[0] - black.x_cord
-    vy = pocket.center[1] - black.y_cord
+
+    #for B2B pocket can be a Ball
+    if isinstance(pocket, Ball):
+        vx = pocket.x_cord - black.x_cord
+        vy = pocket.y_cord - black.y_cord
+    else:
+        vx = pocket.center[0] - black.x_cord
+        vy = pocket.center[1] - black.y_cord
     norm = math.hypot(vx, vy)
     vx /= norm
     vy /= norm

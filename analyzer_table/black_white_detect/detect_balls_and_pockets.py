@@ -437,7 +437,7 @@ def _estimate_missing_pockets(pockets: List[Pocket], rect: Rectangle) -> List[Po
                 radius=int(get_pocket_radius()),
                 id=p_id,
                 location=loc,
-            )
+                pocket_img_cordinates_on_table=(int(center_x), int(center_y)))
             estimated_pockets.append(placeholder)
             print(f"  - Estimated placeholder for {loc} at {placeholder.center}")
 
@@ -498,7 +498,7 @@ def find_corner_pockets_from_mask(
                 radius=int(radius),
                 id=i,
                 location=location,
-            )
+                pocket_img_cordinates_on_table=(real_center_x, real_center_y))
             all_valid_pockets.append(pocket)
 
     # --- Deduplication ---
