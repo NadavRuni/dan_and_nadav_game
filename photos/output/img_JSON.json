@@ -1,72 +1,162 @@
 {
   "image_path": "output/debug/border_and_pocket/debug_original_cropped.jpg",
   "image_size_px": {
-    "width": 1894.0,
-    "height": 951.0
+    "width": 5264.0,
+    "height": 2634.0
   },
   "balls": [
     {
       "index": 0,
-      "type": "black",
+      "type": "solid",
       "center_px": {
-        "x": 364.0,
-        "y": 903.0
+        "x": 987.0,
+        "y": 1103.0
       },
-      "radius_px": 21.0
+      "radius_px": 57.0
     },
     {
       "index": 1,
-      "type": "solid",
+      "type": "striped",
       "center_px": {
-        "x": 468.0,
-        "y": 320.0
+        "x": 1333.0,
+        "y": 1121.0
       },
-      "radius_px": 21.0
+      "radius_px": 56.0
     },
     {
       "index": 2,
-      "type": "striped",
+      "type": "solid",
       "center_px": {
-        "x": 469.0,
-        "y": 909.0
+        "x": 1628.0,
+        "y": 553.0
       },
-      "radius_px": 23.0
+      "radius_px": 56.0
     },
     {
       "index": 3,
-      "type": "white",
+      "type": "solid",
       "center_px": {
-        "x": 742.0,
-        "y": 514.0
+        "x": 1670.0,
+        "y": 1666.0
       },
-      "radius_px": 21.0
+      "radius_px": 55.0
     },
     {
       "index": 4,
+      "type": "solid",
+      "center_px": {
+        "x": 1710.0,
+        "y": 2202.0
+      },
+      "radius_px": 57.0
+    },
+    {
+      "index": 5,
       "type": "striped",
       "center_px": {
-        "x": 1831.0,
-        "y": 882.0
+        "x": 1984.0,
+        "y": 752.0
       },
-      "radius_px": 20.0
+      "radius_px": 59.0
+    },
+    {
+      "index": 6,
+      "type": "striped",
+      "center_px": {
+        "x": 2140.0,
+        "y": 1530.0
+      },
+      "radius_px": 57.0
+    },
+    {
+      "index": 7,
+      "type": "striped",
+      "center_px": {
+        "x": 2174.0,
+        "y": 1907.0
+      },
+      "radius_px": 56.0
+    },
+    {
+      "index": 8,
+      "type": "striped",
+      "center_px": {
+        "x": 2553.0,
+        "y": 930.0
+      },
+      "radius_px": 56.0
+    },
+    {
+      "index": 9,
+      "type": "striped",
+      "center_px": {
+        "x": 2755.0,
+        "y": 2306.0
+      },
+      "radius_px": 58.0
+    },
+    {
+      "index": 10,
+      "type": "white",
+      "center_px": {
+        "x": 3231.0,
+        "y": 1209.0
+      },
+      "radius_px": 55.0
+    },
+    {
+      "index": 11,
+      "type": "solid",
+      "center_px": {
+        "x": 3633.0,
+        "y": 725.0
+      },
+      "radius_px": 56.0
+    },
+    {
+      "index": 12,
+      "type": "solid",
+      "center_px": {
+        "x": 3636.0,
+        "y": 1744.0
+      },
+      "radius_px": 42.0
+    },
+    {
+      "index": 13,
+      "type": "striped",
+      "center_px": {
+        "x": 4072.0,
+        "y": 526.0
+      },
+      "radius_px": 37.0
+    },
+    {
+      "index": 14,
+      "type": "black",
+      "center_px": {
+        "x": 4838.0,
+        "y": 2293.0
+      },
+      "radius_px": 44.0
     }
   ],
   "white_ball": {
     "center": [
-      742,
-      514
+      3231,
+      1209
     ],
-    "radius": 21,
+    "radius": 55,
     "color_score": {
       "white_score": {
-        "white_score_test_1": 81.5678196327359,
+        "white_score_test_1": 77.58198457605698,
         "white_score_test_2": 0.0,
         "white_score_test_3": 0.0,
-        "white_score_test_4": 51.85511589050294,
-        "white_score_test_5": 50.56031641397496
+        "white_score_test_4": 78.83669137954712,
+        "white_score_test_5": 85.47258393126052
       },
       "black_score": {
-        "black_score_test_1": 18.432180367264095,
+        "black_score_test_1": 22.418015423943018,
         "black_score_test_2": 0.0,
         "black_score_test_3": 0.0,
         "black_score_test_4": 0.0,
@@ -88,28 +178,28 @@
       }
     },
     "final_color": "white",
-    "single_ball_path": "output/debug/balls/ball_4_742_514.png"
+    "single_ball_path": "output/debug/balls/ball_11_3231_1209.png"
   },
   "black_ball": {
     "center": [
-      364,
-      903
+      4838,
+      2293
     ],
-    "radius": 21,
+    "radius": 44,
     "color_score": {
       "white_score": {
-        "white_score_test_1": 69.27808574601715,
-        "white_score_test_2": 0.0,
-        "white_score_test_3": 1.6174010039040714,
-        "white_score_test_4": 25.84133625030518,
-        "white_score_test_5": 25.84047462096243
+        "white_score_test_1": 43.278174306832106,
+        "white_score_test_2": 6.1412811279296875,
+        "white_score_test_3": 17.64199655765921,
+        "white_score_test_4": 40.31048774719238,
+        "white_score_test_5": 49.11964508526272
       },
       "black_score": {
-        "black_score_test_1": 30.721914253982842,
+        "black_score_test_1": 56.721825693167894,
         "black_score_test_2": 0.0,
-        "black_score_test_3": 7.784449173834955,
-        "black_score_test_4": 0.0,
-        "black_score_test_5": 0.0
+        "black_score_test_3": 92.55320548339719,
+        "black_score_test_4": 37.699793035333805,
+        "black_score_test_5": 47.000207957853874
       },
       "solid_score": {
         "solid_score_test_1": 0.0,
@@ -127,38 +217,38 @@
       }
     },
     "final_color": "black",
-    "single_ball_path": "output/debug/balls/ball_1_364_903.png"
+    "single_ball_path": "output/debug/balls/ball_15_4838_2293.png"
   },
   "pockets": {
-    "BL": {
-      "x": 43.0,
-      "y": 943.0,
-      "radius": 44.0
+    "TL": {
+      "x": 77.7481372974537,
+      "y": 110.9919996968084,
+      "radius": 90.0
     },
     "BM": {
-      "x": 969.0,
-      "y": 917.0,
-      "radius": 44.0
+      "x": 2662.0,
+      "y": 2607.0,
+      "radius": 103.0
+    },
+    "BL": {
+      "x": 119.0,
+      "y": 2626.0,
+      "radius": 119.0
     },
     "BR": {
-      "x": 1857.0,
-      "y": 910.0,
-      "radius": 53.0
+      "x": 5183.0,
+      "y": 2533.0,
+      "radius": 127.0
     },
     "TR": {
-      "x": 1855.0,
-      "y": 8.0,
-      "radius": 38.0
+      "x": 5130.0,
+      "y": 12.0,
+      "radius": 132.0
     },
     "TM": {
-      "x": 951.0,
-      "y": 25.0,
-      "radius": 39.0
-    },
-    "TL": {
-      "x": 27.0,
-      "y": 29.0,
-      "radius": 40.0
+      "x": 2604.0,
+      "y": 35.0,
+      "radius": 99.0
     }
   }
 }

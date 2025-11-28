@@ -1,5 +1,5 @@
 from pathlib import Path
-from dan_and_nadav_game.crop_table import crop_image_by_rectangle
+from crop_table import crop_image_by_rectangle
 from fastapi import FastAPI, UploadFile, File, Request
 from fastapi.responses import Response, FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
