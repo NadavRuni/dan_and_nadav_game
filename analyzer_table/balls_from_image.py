@@ -34,6 +34,8 @@ from analyzer_table.table.table import confirm_or_correct_rectangle
 from const_numbers import BASE_DIR, RECTANGLE_JSON_PATH
 from analyzer_table.launcher_helper.json_models import Rectangle
 from analyzer_table.table.rectangle import parse_rectangle_from_data
+from analyzer_table.launcher_helper.score_helper.white_tests import test_is_white_model
+
 
 
 def insert_black_and_white_balls(balls: List[Ball], black_ball: Ball, white_ball: Ball):
@@ -168,7 +170,64 @@ def full_analyzer_pipeline(image_path: str) -> AnalyzerResult:
     black_suite = build_black_suite()
     score_balls(sorted_balls, white_suite, black_suite)
     assert_scored(sorted_balls)
-    whitest_ball = max(sorted_balls, key=_white_avg, default=None)
+##################################################################################################
+    # whitest_ball = max(sorted_balls, key=_white_avg, default=None)
+    candidates = []
+    for ball in sorted_balls:
+        legacy_score = _white_avg(ball)
+        candidates.append((ball, legacy_score))
+    
+    # מיון מהגבוה לנמוך לפי הציון הישן
+    candidates.sort(key=lambda x: x[1], reverse=True)
+
+    whitest_ball = None
+    
+    if candidates:
+        # המקום הראשון כרגע (לפי הלוגיקה הישנה)
+        top_ball, top_score = candidates[0]
+        
+        # 2. איסוף כל ה"מתמודדים" שנמצאים בהפרש קטן מ-10 מהפסגה
+        contenders = []
+        for ball, score in candidates:
+            diff = top_score - score
+            if diff < 10:
+                contenders.append(ball)
+            else:
+                # בגלל שהרשימה ממויינת, ברגע שעברנו את ה-10 אין טעם להמשיך
+                break
+        
+        # 3. ההכרעה
+        if len(contenders) == 1:
+            # אין שוויון - המנצח הישן לוקח
+            whitest_ball = top_ball
+            Debugger.log(f"✅ Clear winner (Legacy): Score {top_score:.1f}")
+            
+        else:
+            # יש שוויון בין כמה כדורים! המודל נכנס לפעולה
+            Debugger.log(f"⚔️ Multi-Tie detected! {len(contenders)} candidates within 10 points range.")
+            
+            best_ml_ball = None
+            best_ml_score = -1.0
+            
+            for ball in contenders:
+                path = ball.single_ball_path
+                current_ml_score = 0.0
+                
+                if path and os.path.exists(path):
+                    # בדיקת המודל
+                    current_ml_score = test_is_white_model.get_white_score(cv2.imread(path))
+                
+                Debugger.log(f"   - Candidate at {ball.center}: Legacy={_white_avg(ball):.1f} | ML Conf={current_ml_score:.4f}")
+                
+                if current_ml_score > best_ml_score:
+                    best_ml_score = current_ml_score
+                    best_ml_ball = ball
+            
+            Debugger.log(f"   🏆 ML Chose ball at {best_ml_ball.center} with conf {best_ml_score:.4f}")
+            whitest_ball = best_ml_ball
+##################################################################################################
+
+    #whitest_ball = max(sorted_balls, key=_white_avg, default=None)
     print("Whitest ball analysis:")
     for ball in sorted_balls:
         score = _white_avg(ball)

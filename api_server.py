@@ -1,4 +1,5 @@
 from pathlib import Path
+from crop_table import crop_image_by_rectangle
 from fastapi import FastAPI, UploadFile, File, Request
 from fastapi.responses import Response, FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -180,8 +181,10 @@ async def best_shot_use_pocket(request: Request):
 
 @app.post("/api/get_pocket")
 async def get_pocket(request: Request):
+    print ("[DEBUG] /api/get_pocket called")
     try:
         data = await request.json()
+        print ("[DEBUG] Request data:", data)
         image_url = data.get("image_url")
 
         if not image_url:
