@@ -20,7 +20,7 @@ def mergeData(
     Debugger.log("🔄 Starting mergeData process with table filtering")
     main_balls = [Ball(center=b.center, radius=b.radius) for b in main_photo.balls]
     merged_balls = []
-    for b in main_balls:
+    for b in black_and_white_list:
         if not is_inside_table(b, table_rectangle):
             continue
         if _ball_exists(merged_balls, b):
@@ -44,7 +44,7 @@ def mergeData(
             )
             merged_balls.append(Ball(center=b.center, radius=b.radius))
             added += 1
-    for b in black_and_white_list:
+    for b in main_balls:
         if not is_inside_table(b, table_rectangle):
             skipped += 1
             continue
@@ -103,7 +103,7 @@ def is_inside_inner_rectangle(ball: Ball, rect: Rectangle, margin: float) -> boo
                 distance = math.sqrt((ball_x - pocket_x)**2 + (ball_y - pocket_y)**2)
                 
                 # If the distance is less than sum of radii, they are likely the same object
-                if distance < (ball.radius + pocket_radius)*0.85:
+                if distance < (ball.radius + pocket_radius)*0.5:
                     Debugger.log(
                         f"⚠️ Ball at ({ball.center[0]:.1f}, {ball.center[1]:.1f}) is identified as a pocket ({pocket.location}) and will be excluded."
                     )

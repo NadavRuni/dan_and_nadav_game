@@ -1,34 +1,34 @@
 {
     "cut_name": "cut_24.png",
     "origin": {
-        "x": 4199,
-        "y": 1826
+        "x": 1497,
+        "y": 652
     },
     "rectangle": {
         "top_left": [
-            4199,
-            2656
+            1497,
+            951
         ],
         "top_right": [
-            5304,
-            2656
+            1894,
+            951
         ],
         "bottom_left": [
-            4199,
-            1826
+            1497,
+            652
         ],
         "bottom_right": [
-            5304,
-            1826
+            1894,
+            652
         ]
     },
     "balls": [
         {
             "center": [
-                5115,
-                2468
+                1831,
+                882
             ],
-            "radius": 59,
+            "radius": 20,
             "color_score": {
                 "white_score": {
                     "white_score_test_1": 0.0,

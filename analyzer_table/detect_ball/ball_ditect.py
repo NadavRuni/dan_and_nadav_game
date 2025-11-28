@@ -36,7 +36,7 @@ def detect_balls_opencv(
             Debugger.log("Main image flag is set to True")
             param2_value = 25
         else:
-            param2_value = 35
+            param2_value = 50
         path = os.path.join(input_dir, file)
         Debugger.log(f"[OpenCV] Processing {path}")
         img = cv2.imread(path)

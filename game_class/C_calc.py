@@ -44,18 +44,6 @@ class Calculations:
             # המרה למעלות
             angle_deg = math.degrees(angle_rad)
             dist_target_to_pocket = math.hypot(pocket.center[0] - self.target.x_cord, pocket.center[1] - self.target.y_cord)
-            print('----------------------------- starting calc for THE ball -----------------------------')
-            print ("for pocket id:", pocket.location, ", (", pocket.center[0], ",", pocket.center[1], ")")
-            print("for ball id:", self.target.id, ", (", self.target.x_cord, ",", self.target.y_cord, ")")
-            print ("for white id:", self.white.id, ", (", self.white.x_cord, ",", self.white.y_cord, ")")
-            print("vector white to target: (", v1x, ",", v1y, ")")
-            print ("vector target to pocket: (", pocket.center[0] - self.target.x_cord, ",", pocket.center[1] - self.target.y_cord, ")")
-            print("dot :", dot)
-            print("cross :", cross)
-            print("angle_rad : ", angle_rad)
-            print("angle_deg : ", angle_deg)
-            print('-------------------------------------------------------------------------------------')
-
             if not flag_to_wall:
                 if self.have_free_shot(pocket):
                     angles[pocket.id] = [angle_deg, dist_target_to_pocket]
@@ -141,13 +129,6 @@ class Calculations:
 
                 # אם הכדור נוגע בקו (כולל רדיוס שלו ושל המטרה) → חסימה
                 if dist < ball.radius + target.radius + get_safe_distance():
-                    print ('------------------------------  BLOCKED SHOT  -------------------------------------')
-                    print ("for pocket:", pocket.location, ", (", pocket.center[0], ",", pocket.center[1], ")")
-                    print ('for target id:', target.id, ', (', target.x_cord, ',', target.y_cord,')')
-                    print ("the ball that block :", ball.id, ", (", ball.x_cord, ",", ball.y_cord, ")")
-                    print ("distance to line:", dist, "<", ball.radius + target.radius + get_safe_distance())
-                    print ('------------------------------  BLOCKED SHOT  -------------------------------------')
-
                     return False
 
         return True

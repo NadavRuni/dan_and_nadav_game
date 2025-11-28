@@ -7,28 +7,28 @@
     "rectangle": {
         "top_left": [
             0,
-            2656
+            951
         ],
         "top_right": [
-            5304,
-            2656
+            1894,
+            951
         ],
         "bottom_left": [
             0,
             0
         ],
         "bottom_right": [
-            5304,
+            1894,
             0
         ]
     },
     "balls": [
         {
             "center": [
-                1158,
-                1318
+                742,
+                514
             ],
-            "radius": 64,
+            "radius": 20,
             "color_score": {
                 "white_score": {
                     "white_score_test_1": 0.0,
@@ -64,10 +64,10 @@
         },
         {
             "center": [
-                2654,
-                2510
+                1868,
+                908
             ],
-            "radius": 60,
+            "radius": 24,
             "color_score": {
                 "white_score": {
                     "white_score_test_1": 0.0,
@@ -103,10 +103,10 @@
         },
         {
             "center": [
-                70,
-                118
+                966,
+                890
             ],
-            "radius": 57,
+            "radius": 20,
             "color_score": {
                 "white_score": {
                     "white_score_test_1": 0.0,
@@ -142,10 +142,10 @@
         },
         {
             "center": [
-                5222,
-                86
+                958,
+                48
             ],
-            "radius": 67,
+            "radius": 20,
             "color_score": {
                 "white_score": {
                     "white_score_test_1": 0.0,
@@ -181,10 +181,10 @@
         },
         {
             "center": [
-                5116,
-                2450
+                470,
+                910
             ],
-            "radius": 54,
+            "radius": 24,
             "color_score": {
                 "white_score": {
                     "white_score_test_1": 0.0,
@@ -220,10 +220,10 @@
         },
         {
             "center": [
-                2744,
-                2596
+                364,
+                906
             ],
-            "radius": 48,
+            "radius": 22,
             "color_score": {
                 "white_score": {
                     "white_score_test_1": 0.0,
@@ -259,10 +259,10 @@
         },
         {
             "center": [
-                5224,
-                2406
+                46,
+                920
             ],
-            "radius": 62,
+            "radius": 18,
             "color_score": {
                 "white_score": {
                     "white_score_test_1": 0.0,
@@ -298,10 +298,10 @@
         },
         {
             "center": [
-                2300,
-                2202
+                470,
+                322
             ],
-            "radius": 65,
+            "radius": 18,
             "color_score": {
                 "white_score": {
                     "white_score_test_1": 0.0,
@@ -337,10 +337,10 @@
         },
         {
             "center": [
-                2274,
-                594
+                32,
+                38
             ],
-            "radius": 53,
+            "radius": 16,
             "color_score": {
                 "white_score": {
                     "white_score_test_1": 0.0,
@@ -376,10 +376,10 @@
         },
         {
             "center": [
-                5150,
-                2626
+                980,
+                932
             ],
-            "radius": 43,
+            "radius": 15,
             "color_score": {
                 "white_score": {
                     "white_score_test_1": 0.0,

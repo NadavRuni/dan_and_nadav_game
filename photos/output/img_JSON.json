@@ -1,72 +1,72 @@
 {
   "image_path": "output/debug/border_and_pocket/debug_original_cropped.jpg",
   "image_size_px": {
-    "width": 5304.0,
-    "height": 2656.0
+    "width": 1894.0,
+    "height": 951.0
   },
   "balls": [
     {
       "index": 0,
-      "type": "white",
+      "type": "black",
       "center_px": {
-        "x": 1158.0,
-        "y": 1318.0
+        "x": 364.0,
+        "y": 903.0
       },
-      "radius_px": 64.0
+      "radius_px": 21.0
     },
     {
       "index": 1,
       "type": "solid",
       "center_px": {
-        "x": 2274.0,
-        "y": 594.0
+        "x": 468.0,
+        "y": 320.0
       },
-      "radius_px": 53.0
+      "radius_px": 21.0
     },
     {
       "index": 2,
-      "type": "black",
+      "type": "striped",
       "center_px": {
-        "x": 2300.0,
-        "y": 2202.0
+        "x": 469.0,
+        "y": 909.0
       },
-      "radius_px": 65.0
+      "radius_px": 23.0
     },
     {
       "index": 3,
-      "type": "striped",
+      "type": "white",
       "center_px": {
-        "x": 2654.0,
-        "y": 2510.0
+        "x": 742.0,
+        "y": 514.0
       },
-      "radius_px": 60.0
+      "radius_px": 21.0
     },
     {
       "index": 4,
-      "type": "solid",
+      "type": "striped",
       "center_px": {
-        "x": 3088.0,
-        "y": 1195.0
+        "x": 1831.0,
+        "y": 882.0
       },
-      "radius_px": 58.0
+      "radius_px": 20.0
     }
   ],
   "white_ball": {
     "center": [
-      1158,
-      1318
+      742,
+      514
     ],
-    "radius": 64,
+    "radius": 21,
     "color_score": {
       "white_score": {
-        "white_score_test_1": 84.5063751819087,
+        "white_score_test_1": 81.5678196327359,
         "white_score_test_2": 0.0,
-        "white_score_test_3": 0.5118362124120281,
-        "white_score_test_4": 24.866833686828617,
-        "white_score_test_5": 82.37169062642296
+        "white_score_test_3": 0.0,
+        "white_score_test_4": 51.85511589050294,
+        "white_score_test_5": 50.56031641397496
       },
       "black_score": {
-        "black_score_test_1": 15.4936248180913,
+        "black_score_test_1": 18.432180367264095,
         "black_score_test_2": 0.0,
         "black_score_test_3": 0.0,
         "black_score_test_4": 0.0,
@@ -88,27 +88,27 @@
       }
     },
     "final_color": "white",
-    "single_ball_path": "output/debug/balls/ball_1_1158_1318.png"
+    "single_ball_path": "output/debug/balls/ball_4_742_514.png"
   },
   "black_ball": {
     "center": [
-      2300,
-      2202
+      364,
+      903
     ],
-    "radius": 65,
+    "radius": 21,
     "color_score": {
       "white_score": {
-        "white_score_test_1": 39.33519251206342,
+        "white_score_test_1": 69.27808574601715,
         "white_score_test_2": 0.0,
-        "white_score_test_3": 2.6235927557513463,
-        "white_score_test_4": 1.1365413665771484,
-        "white_score_test_5": 81.43932207677227
+        "white_score_test_3": 1.6174010039040714,
+        "white_score_test_4": 25.84133625030518,
+        "white_score_test_5": 25.84047462096243
       },
       "black_score": {
-        "black_score_test_1": 60.66480748793658,
+        "black_score_test_1": 30.721914253982842,
         "black_score_test_2": 0.0,
-        "black_score_test_3": 100.0,
-        "black_score_test_4": 100.0,
+        "black_score_test_3": 7.784449173834955,
+        "black_score_test_4": 0.0,
         "black_score_test_5": 0.0
       },
       "solid_score": {
@@ -127,38 +127,38 @@
       }
     },
     "final_color": "black",
-    "single_ball_path": "output/debug/balls/ball_3_2300_2202.png"
+    "single_ball_path": "output/debug/balls/ball_1_364_903.png"
   },
   "pockets": {
-    "TR": {
-      "x": 5244.451042701093,
-      "y": 58.03970024598135,
-      "radius": 106.0
-    },
-    "BR": {
-      "x": 5213.33445878848,
-      "y": 2542.1793871441373,
-      "radius": 106.0
-    },
     "BL": {
-      "x": 187.0,
-      "y": 2653.0,
-      "radius": 115.0
+      "x": 43.0,
+      "y": 943.0,
+      "radius": 44.0
     },
     "BM": {
-      "x": 2731.0,
-      "y": 2630.0,
-      "radius": 95.0
+      "x": 969.0,
+      "y": 917.0,
+      "radius": 44.0
+    },
+    "BR": {
+      "x": 1857.0,
+      "y": 910.0,
+      "radius": 53.0
+    },
+    "TR": {
+      "x": 1855.0,
+      "y": 8.0,
+      "radius": 38.0
     },
     "TM": {
-      "x": 2696.0,
-      "y": 32.0,
-      "radius": 107.0
+      "x": 951.0,
+      "y": 25.0,
+      "radius": 39.0
     },
     "TL": {
-      "x": 37.0,
-      "y": 94.0,
-      "radius": 101.0
+      "x": 27.0,
+      "y": 29.0,
+      "radius": 40.0
     }
   }
 }

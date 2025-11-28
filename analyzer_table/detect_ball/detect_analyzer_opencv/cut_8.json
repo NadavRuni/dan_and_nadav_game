@@ -1,34 +1,34 @@
 {
     "cut_name": "cut_8.png",
     "origin": {
-        "x": 663,
-        "y": 498
+        "x": 237,
+        "y": 178
     },
     "rectangle": {
         "top_left": [
-            663,
-            1494
+            237,
+            533
         ],
         "top_right": [
-            1989,
-            1494
+            708,
+            533
         ],
         "bottom_left": [
-            663,
-            498
+            237,
+            178
         ],
         "bottom_right": [
-            1989,
-            498
+            708,
+            178
         ]
     },
     "balls": [
         {
             "center": [
-                1159,
-                1318
+                469,
+                320
             ],
-            "radius": 63,
+            "radius": 19,
             "color_score": {
                 "white_score": {
                     "white_score_test_1": 0.0,
