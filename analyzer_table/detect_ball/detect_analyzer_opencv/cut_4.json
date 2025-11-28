@@ -1,0 +1,26 @@
+{
+    "cut_name": "cut_4.png",
+    "origin": {
+        "x": 2412,
+        "y": 0
+    },
+    "rectangle": {
+        "top_left": [
+            2412,
+            822
+        ],
+        "top_right": [
+            3727,
+            822
+        ],
+        "bottom_left": [
+            2412,
+            0
+        ],
+        "bottom_right": [
+            3727,
+            0
+        ]
+    },
+    "balls": []
+}
