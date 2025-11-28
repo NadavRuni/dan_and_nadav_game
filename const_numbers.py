@@ -137,7 +137,7 @@ def get_crop_half_size() -> int:
 
 def get_safe_from_wall() -> int | float:
     """מחזיר את המרחק הבטוח מהקירות."""
-    return get_ball_radius() * 0.5
+    return get_ball_radius() * 1.2
 
 
 def get_merge_max_diff() -> int:
