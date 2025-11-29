@@ -160,7 +160,7 @@ def start_build_table_from_img():
         if analysis.get("image_path"):
             from shutil import copyfile
             copyfile(analysis["image_path"], OUTPUT_IMAGE_PATH)
-        return False
+        return 'false'
 
 
 if __name__ == "__main__":

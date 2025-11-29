@@ -2,24 +2,24 @@
     "cut_name": "cut_12.png",
     "origin": {
         "x": 4166,
-        "y": 494
+        "y": 495
     },
     "rectangle": {
         "top_left": [
             4166,
-            1480
+            1482
         ],
         "top_right": [
-            5264,
-            1480
+            5267,
+            1482
         ],
         "bottom_left": [
             4166,
-            494
+            495
         ],
         "bottom_right": [
-            5264,
-            494
+            5267,
+            495
         ]
     },
     "balls": []

@@ -2,33 +2,33 @@
     "cut_name": "cut_22.png",
     "origin": {
         "x": 2412,
-        "y": 1810
+        "y": 1813
     },
     "rectangle": {
         "top_left": [
             2412,
-            2634
+            2637
         ],
         "top_right": [
             3727,
-            2634
+            2637
         ],
         "bottom_left": [
             2412,
-            1810
+            1813
         ],
         "bottom_right": [
             3727,
-            1810
+            1813
         ]
     },
     "balls": [
         {
             "center": [
-                2756,
-                2306
+                2786,
+                2309
             ],
-            "radius": 58,
+            "radius": 57,
             "color_score": {
                 "white_score": {
                     "white_score_test_1": 0.0,

@@ -2,33 +2,33 @@
     "cut_name": "cut_8.png",
     "origin": {
         "x": 658,
-        "y": 494
+        "y": 495
     },
     "rectangle": {
         "top_left": [
             658,
-            1480
+            1482
         ],
         "top_right": [
             1973,
-            1480
+            1482
         ],
         "bottom_left": [
             658,
-            494
+            495
         ],
         "bottom_right": [
             1973,
-            494
+            495
         ]
     },
     "balls": [
         {
             "center": [
-                1632,
-                554
+                1660,
+                555
             ],
-            "radius": 60,
+            "radius": 57,
             "color_score": {
                 "white_score": {
                     "white_score_test_1": 0.0,

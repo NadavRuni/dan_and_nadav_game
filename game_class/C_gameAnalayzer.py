@@ -272,7 +272,7 @@ class GameAnalayzer:
 
             print("wall_shot")
             print(wall_shot)
-
+            sorted_wall_shots=[]
             if wall_shots:
                 sorted_wall_shots = sorted(
                     [s for s in wall_shots if s.score is not None],
@@ -288,10 +288,11 @@ class GameAnalayzer:
                         ]
                     ),
                 )
-            print("✅The best wall shot is ", sorted_wall_shots[0])
-            print("wall point is -", sorted_wall_shots[0].point_with_the_wall)
+            if len(sorted_wall_shots)>0:
+                print("✅The best wall shot is ", sorted_wall_shots[0])
+                print("wall point is -", sorted_wall_shots[0].point_with_the_wall)
 
-            return sorted_wall_shots[:3]
+                return sorted_wall_shots[:3]
 
             print("❌ No wall shots found either.")
             return []
