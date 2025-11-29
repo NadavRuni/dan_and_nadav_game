@@ -1,24 +1,24 @@
 {
     "cut_name": "cut_6.png",
     "origin": {
-        "x": 931,
+        "x": 4166,
         "y": 0
     },
     "rectangle": {
         "top_left": [
-            931,
-            183
+            4166,
+            822
         ],
         "top_right": [
-            1181,
-            183
+            5264,
+            822
         ],
         "bottom_left": [
-            931,
+            4166,
             0
         ],
         "bottom_right": [
-            1181,
+            5264,
             0
         ]
     },

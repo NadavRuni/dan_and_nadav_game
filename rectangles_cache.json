@@ -4,27 +4,15 @@
     0
   ],
   "top_right": [
-<<<<<<< HEAD
-    1894,
-=======
-    1181,
->>>>>>> 54b8bf7 (fix all expect wall shot decide)
+    5264,
     0
   ],
   "bottom_left": [
     0,
-<<<<<<< HEAD
-    951
+    2634
   ],
   "bottom_right": [
-    1894,
-    951
-=======
-    591
-  ],
-  "bottom_right": [
-    1181,
-    591
->>>>>>> 54b8bf7 (fix all expect wall shot decide)
+    5264,
+    2634
   ]
 }

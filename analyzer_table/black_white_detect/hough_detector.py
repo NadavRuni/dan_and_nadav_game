@@ -184,7 +184,24 @@ def detect_balls_full_pipeline(input_path: str):
     blue_mask = cv2.inRange(hsv_image, lower_blue, upper_blue)
     green_mask = cv2.inRange(hsv_image, lower_green, upper_green)
     felt_mask = cv2.bitwise_or(blue_mask, green_mask)
+    
     felt_mask = cv2.bitwise_and(felt_mask, colorful_mask)
+    # --- START FIX: Reflection Based Detection ---
+    # 1. מוצאים את ההשתקפויות הלבנות (הברק) על הכדורים.
+    # השולחן הוא מט (לא מחזיר אור), הכדורים מבריקים. הברק הוא תמיד לבן בוהק.
+    gray_scale = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)
+    _, glare_mask = cv2.threshold(gray_scale, 200, 255, cv2.THRESH_BINARY)
+
+    # 2. מרחיבים את נקודות הברק לגודל של כדור
+    # אנחנו יוצרים "בועות" סביב כל ברק שמכריחות את המערכת להבין שיש שם אובייקט
+    radius_approx = int(get_ball_radius() * 0.8) # לוקחים רדיוס קצת יותר קטן כדי לא לחרוג
+    dilate_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (radius_approx, radius_approx))
+    ball_locations_by_glare = cv2.dilate(glare_mask, dilate_kernel, iterations=1)
+
+    # 3. חותכים את הבועות האלו ממסיכת השולחן
+    # עכשיו, גם אם הכדור ירוק כמו השולחן - הברק שלו יצר "חור" במסיכה והוא יזוהה ככדור.
+    felt_mask = cv2.bitwise_and(felt_mask, cv2.bitwise_not(ball_locations_by_glare))
+    # --- END FIX ---
 
     kernel = np.ones((5, 5), np.uint8)
     felt_mask = cv2.morphologyEx(felt_mask, cv2.MORPH_OPEN, kernel, iterations=1)
