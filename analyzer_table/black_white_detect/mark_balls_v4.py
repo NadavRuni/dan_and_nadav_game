@@ -186,6 +186,7 @@ def detect_balls_full_pipeline(input_path: str):
     felt_mask = cv2.bitwise_or(blue_mask, green_mask)
     felt_mask = cv2.bitwise_and(felt_mask, colorful_mask)
 
+
     kernel = np.ones((5, 5), np.uint8)
     felt_mask = cv2.morphologyEx(felt_mask, cv2.MORPH_OPEN, kernel, iterations=1)
     felt_mask = cv2.morphologyEx(felt_mask, cv2.MORPH_CLOSE, kernel, iterations=1)
