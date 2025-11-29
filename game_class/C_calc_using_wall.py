@@ -17,7 +17,6 @@ class CalculationsWithWall(Calculations):
         מחזיר מילון של מרחקים מהמרכז של הכדור לכל קיר:
         {"left": d1, "right": d2, "down": d3, "up": d4}
         """
-        print("for ")
         return {
             "left": self.target.x_cord,  # ממרכז הכדור לקיר שמאלי (x=0)
             "right": self.table.length - self.target.x_cord,  # מהמרכז לקיר ימני

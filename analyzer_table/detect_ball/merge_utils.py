@@ -146,14 +146,6 @@ def is_inside_inner_rectangle(ball: Ball, rect: Rectangle, margin: float) -> boo
     inside = (min_x + ball.radius <= x <= max_x - ball.radius) and (
         min_y + ball.radius <= y <= max_y - ball.radius
     )
-    if inside:
-        Debugger.log(
-            f"✅ Ball ({x:.1f},{y:.1f}) safely inside inner rectangle (margin={margin})"
-        )
-    else:
-        Debugger.log(
-            f"⚠️ Ball ({x:.1f},{y:.1f}) too close to pocket area (margin={margin})"
-        )
     return inside
 
 
@@ -185,13 +177,6 @@ def is_inside_table(ball: Ball, rect: Rectangle) -> bool:
         (x - r / 1.414, y + r / 1.414),
     ]
     if all(point_in_polygon(px, py, polygon) for (px, py) in edge_points):
-        Debugger.log(
-            f"🟢 INSIDE ball center=({x},{y}) r={ball.radius}+safe={get_safe_from_wall()} within polygon {polygon}"
-        )
         return is_inside_inner_rectangle(ball, rect, get_pocket_margin())
     else:
-        Debugger.log(
-            f"🔴 TOO CLOSE TO EDGE ball center=({x},{y}) r={ball.radius}+safe={get_safe_from_wall()}"
-        )
-        #nadav!
         return False

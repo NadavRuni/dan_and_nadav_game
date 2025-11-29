@@ -15,10 +15,10 @@ def analyze_table_pockets(
     output_dir: str = "out/pockets",
     half_size: int = get_crop_half_size(),
 ) -> List[Pocket]:
-    if (get_detected_pockets()):
+    if (get_use_predicted_pockets()):
         print("✅ Using previously detected pockets.")
         return get_detected_pockets()
-    img = cv2.imreadå(img_path)
+    img = cv2.imread(img_path)
     if img is None:
         raise ValueError(f"❌ Failed to load image from {img_path}")
     os.makedirs(output_dir, exist_ok=True)

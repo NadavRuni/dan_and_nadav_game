@@ -24,14 +24,10 @@ class BestShot:
 
             self.no_valid_shot()
         else:
-            print("BestShot: Found a free shot!", " FORSE_WALL_SHOT: ", FORSE_WALL_SHOT)
-            print(f"Best pocket: {best_pocket_id}, Best angle: {best_angle}")
-
             # שמירת הכיס שנבחר
             self.pocket: Pocket = next(
                 p for p in table.pockets if p.id == best_pocket_id
             )
-            print(f"Selected pocket: {self.pocket}")
             self.angle: float = best_angle
 
             if abs(self.angle) > 75:

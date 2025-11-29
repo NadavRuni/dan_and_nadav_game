@@ -1,105 +1,26 @@
 {
     "cut_name": "cut_5.png",
     "origin": {
-        "x": 3289,
+        "x": 3368,
         "y": 0
     },
     "rectangle": {
         "top_left": [
-            3289,
-            822
+            3368,
+            845
         ],
         "top_right": [
-            4604,
-            822
+            4714,
+            845
         ],
         "bottom_left": [
-            3289,
+            3368,
             0
         ],
         "bottom_right": [
-            4604,
+            4714,
             0
         ]
     },
-    "balls": [
-        {
-            "center": [
-                3639,
-                722
-            ],
-            "radius": 56,
-            "color_score": {
-                "white_score": {
-                    "white_score_test_1": 0.0,
-                    "white_score_test_2": 0.0,
-                    "white_score_test_3": 0.0,
-                    "white_score_test_4": 0.0,
-                    "white_score_test_5": 0.0
-                },
-                "black_score": {
-                    "black_score_test_1": 0.0,
-                    "black_score_test_2": 0.0,
-                    "black_score_test_3": 0.0,
-                    "black_score_test_4": 0.0,
-                    "black_score_test_5": 0.0
-                },
-                "solid_score": {
-                    "solid_score_test_1": 0.0,
-                    "solid_score_test_2": 0.0,
-                    "solid_score_test_3": 0.0,
-                    "solid_score_test_4": 0.0,
-                    "solid_score_test_5": 0.0
-                },
-                "striped_score": {
-                    "striped_score_test_1": 0.0,
-                    "striped_score_test_2": 0.0,
-                    "striped_score_test_3": 0.0,
-                    "striped_score_test_4": 0.0,
-                    "striped_score_test_5": 0.0
-                }
-            },
-            "final_color": "undefined",
-            "single_ball_path": ""
-        },
-        {
-            "center": [
-                4073,
-                526
-            ],
-            "radius": 37,
-            "color_score": {
-                "white_score": {
-                    "white_score_test_1": 0.0,
-                    "white_score_test_2": 0.0,
-                    "white_score_test_3": 0.0,
-                    "white_score_test_4": 0.0,
-                    "white_score_test_5": 0.0
-                },
-                "black_score": {
-                    "black_score_test_1": 0.0,
-                    "black_score_test_2": 0.0,
-                    "black_score_test_3": 0.0,
-                    "black_score_test_4": 0.0,
-                    "black_score_test_5": 0.0
-                },
-                "solid_score": {
-                    "solid_score_test_1": 0.0,
-                    "solid_score_test_2": 0.0,
-                    "solid_score_test_3": 0.0,
-                    "solid_score_test_4": 0.0,
-                    "solid_score_test_5": 0.0
-                },
-                "striped_score": {
-                    "striped_score_test_1": 0.0,
-                    "striped_score_test_2": 0.0,
-                    "striped_score_test_3": 0.0,
-                    "striped_score_test_4": 0.0,
-                    "striped_score_test_5": 0.0
-                }
-            },
-            "final_color": "undefined",
-            "single_ball_path": ""
-        }
-    ]
+    "balls": []
 }

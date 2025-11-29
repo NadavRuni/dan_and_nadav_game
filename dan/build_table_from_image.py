@@ -54,7 +54,6 @@ def build_table_from_analysis(analysis: dict):
     has_uv = False
 
     balls = []
-    print("[build] building table from analysis...")
     print(analysis.get("balls", []))
 
     for b in analysis.get("balls", []):
@@ -77,18 +76,15 @@ def build_table_from_analysis(analysis: dict):
 
                 y_game = cy
 
-                print(f"[build] using pocket-based mapping for ball id={bid}")
             else:
 
                 # נשתמש בהיפוך פשוט של הציר האנכי
                 x_game = clamp_to_table(cx * sx, get_table_length())
                 y_game = clamp_to_table((height_px - cy) * sy, get_table_width())
 
-                print(f"[build] using fallback image-size mapping for ball id={bid}")
 
         # אם עדיין אין ערכים — דלג על הכדור
         if x_game is None or y_game is None:
-            print(f"[build] warning: skipping ball id={bid} due to missing position")
             continue
 
         balls.append(
@@ -99,9 +95,6 @@ def build_table_from_analysis(analysis: dict):
                 ball_type=btype,
                 radius=get_ball_radius(),
             )
-        )
-        print(
-            f"[build] added ball id={bid}, type={btype}, pos=({x_game}, {y_game}"
         )
 
     # אפשרי: לוג קטן כדי להבין באיזה נתיב השתמשנו

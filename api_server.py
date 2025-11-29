@@ -105,6 +105,7 @@ async def run_pipeline(request: Request, file: UploadFile = None):
 @app.post("/api/confirm_rectangle")
 async def confirm_rectangle(data: dict):
     try:
+        set_use_predicted_pockets(False)
         print("[DEBUG] Received rectangle confirmation data:", data)
         rec = create_rectangle_from_data(data)
 

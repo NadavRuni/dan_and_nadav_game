@@ -1,73 +1,34 @@
 {
     "cut_name": "cut_3.png",
     "origin": {
-        "x": 1535,
+        "x": 1572,
         "y": 0
     },
     "rectangle": {
         "top_left": [
-            1535,
-            822
+            1572,
+            845
         ],
         "top_right": [
-            2850,
-            822
+            2918,
+            845
         ],
         "bottom_left": [
-            1535,
+            1572,
             0
         ],
         "bottom_right": [
-            2850,
+            2918,
             0
         ]
     },
     "balls": [
         {
             "center": [
-                1985,
-                750
+                2698,
+                64
             ],
-            "radius": 58,
-            "color_score": {
-                "white_score": {
-                    "white_score_test_1": 0.0,
-                    "white_score_test_2": 0.0,
-                    "white_score_test_3": 0.0,
-                    "white_score_test_4": 0.0,
-                    "white_score_test_5": 0.0
-                },
-                "black_score": {
-                    "black_score_test_1": 0.0,
-                    "black_score_test_2": 0.0,
-                    "black_score_test_3": 0.0,
-                    "black_score_test_4": 0.0,
-                    "black_score_test_5": 0.0
-                },
-                "solid_score": {
-                    "solid_score_test_1": 0.0,
-                    "solid_score_test_2": 0.0,
-                    "solid_score_test_3": 0.0,
-                    "solid_score_test_4": 0.0,
-                    "solid_score_test_5": 0.0
-                },
-                "striped_score": {
-                    "striped_score_test_1": 0.0,
-                    "striped_score_test_2": 0.0,
-                    "striped_score_test_3": 0.0,
-                    "striped_score_test_4": 0.0,
-                    "striped_score_test_5": 0.0
-                }
-            },
-            "final_color": "undefined",
-            "single_ball_path": ""
-        },
-        {
-            "center": [
-                1633,
-                556
-            ],
-            "radius": 58,
+            "radius": 61,
             "color_score": {
                 "white_score": {
                     "white_score_test_1": 0.0,

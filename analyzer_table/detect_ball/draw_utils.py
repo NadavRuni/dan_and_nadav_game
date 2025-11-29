@@ -49,6 +49,9 @@ def draw_balls_on_image(
             rectangle.bottom_right,
             rectangle.bottom_left,
         ]
+        Debugger.log(pts)
+
+
         cv2.polylines(
             img,
             [np.array(pts, np.int32)],
@@ -93,7 +96,7 @@ def draw_balls_on_image(
                 (255, 255, 255),
                 2,
             )
-            Debugger.log(f"🕳️ Pocket {pocket.id}: Center={cx, cy}, Radius={r}")
+            Debugger.log(f"🕳️ Pocket {pocket.location}: Center={cx, cy}, Radius={r}")
     output_path = get_output_path(output_path)
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     cv2.imwrite(output_path, img)

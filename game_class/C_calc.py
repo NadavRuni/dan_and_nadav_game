@@ -52,9 +52,6 @@ class Calculations:
             else:
                 angles[pocket.id] = [angle_deg, dist_target_to_pocket]
 
-        print("[DEBUG] angles for target ball id: (", self.target.x_cord,',', self.target.y_cord,')')
-
-        print(angles)
         return angles
 
     def ball_to_pocket_info(self, ball: Ball, pocket: Pocket) -> dict:

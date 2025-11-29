@@ -236,18 +236,8 @@ class GameAnalayzer:
                 if target_ball.type == "black" or helper_ball.type == "black":
                     continue
                 if not self.has_clear_path(white, helper_ball, all_balls=table.get_balls()):
-                    print(
-                        "[B2B] between the white and ball number",
-                        helper_ball.id,
-                        "don't have a free shot",
-                    )
                     continue
-                print(
-                    "[B2B] found a valid shot between the white and ball number",
-                    helper_ball.id,
-                    "try to B2B with",
-                    target_ball.id,
-                )
+
                 shot = BestShotBallToBall(white, target_ball, helper_ball, table)
                 if not shot.valid:
                     continue
