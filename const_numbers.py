@@ -137,7 +137,7 @@ def get_crop_half_size() -> int:
 
 def get_safe_from_wall() -> int | float:
     """מחזיר את המרחק הבטוח מהקירות."""
-    return get_ball_radius() * 1.2
+    return get_ball_radius() * 1.4
 
 
 def get_merge_max_diff() -> int:
@@ -169,6 +169,7 @@ def get_pocket_path() -> str:
 
 
 def set_pocket_path(value: str) -> None:
+    print ("✅ Setting pocket path to:", value)
     global POCKET_PATH
     POCKET_PATH = value
 

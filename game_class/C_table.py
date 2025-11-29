@@ -22,7 +22,7 @@ class Table:
         if not get_use_predicted_pockets():
             self.pockets: List[Pocket] = [
                 Pocket(
-                    id=0,
+                    id=3,
                     center=(
                         0 + get_min_distance_from_pocket(),
                         0 + get_min_distance_from_pocket(),
@@ -32,25 +32,25 @@ class Table:
                         0 + get_min_distance_from_pocket(),
                         0 + get_min_distance_from_pocket(),
                     ),
-                    location="BL",
-                ),  # bottom-left
-                Pocket(
-                    id=1,
-                    center=(
-                        length - get_min_distance_from_pocket(),
-                        0 + get_min_distance_from_pocket(),
-                    ),
-                    radius=get_corner_pocket_radius(),
-                    pocket_img_cordinates_on_table=(
-                        length - get_min_distance_from_pocket(),
-                        0 + get_min_distance_from_pocket(),
-                    ),
-                    location="BR",
-                ),  # bottom-right
+                    location="  TL",
+                ),  # TOP-left
                 Pocket(
                     id=2,
                     center=(
                         length - get_min_distance_from_pocket(),
+                        0 + get_min_distance_from_pocket(),
+                    ),
+                    radius=get_corner_pocket_radius(),
+                    pocket_img_cordinates_on_table=(
+                        length - get_min_distance_from_pocket(),
+                        0 + get_min_distance_from_pocket(),
+                    ),
+                    location="TR",
+                ),  # bottom-right
+                Pocket(
+                    id=1,
+                    center=(
+                        length - get_min_distance_from_pocket(),
                         width - get_min_distance_from_pocket(),
                     ),
                     radius=get_corner_pocket_radius(),
@@ -58,10 +58,10 @@ class Table:
                         length - get_min_distance_from_pocket(),
                         width - get_min_distance_from_pocket(),
                     ),
-                    location="TR",
-                ),  # top-right
+                    location="BR",
+                ),  # buttom-right
                 Pocket(
-                    id=3,
+                    id=0,
                     center=(
                         0 + get_min_distance_from_pocket(),
                         width - get_min_distance_from_pocket(),
@@ -71,7 +71,7 @@ class Table:
                         0 + get_min_distance_from_pocket(),
                         width - get_min_distance_from_pocket(),
                     ),
-                    location="TL",
+                    location="BL",
                 ),  # top-left
             Pocket(id=4, center=(length / 2, width), radius=get_side_pocket_radius(), pocket_img_cordinates_on_table=(length / 2, width), location="BM"),  # middle-bottom
             Pocket(id=5, center=(length / 2, 0), radius=get_side_pocket_radius(), pocket_img_cordinates_on_table=(length / 2, 0), location="TM"),  # middle-top

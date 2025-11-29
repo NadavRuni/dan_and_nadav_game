@@ -37,4 +37,5 @@ def pocket_detection_api(original_image_path: str) -> tuple[str, str, Rectangle]
     set_detected_pockets(detected_pockets)
     print("Debug Mask Path:", debug_mask_path)
     print("Original with Pockets Path:", original_with_pockets_path)
+    print("Cropped Photo Path:", crop_photo_path)
     return original_with_pockets_path, crop_photo_path, rect
