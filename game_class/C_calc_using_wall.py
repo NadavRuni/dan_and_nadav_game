@@ -47,6 +47,7 @@ class CalculationsWithWall(Calculations):
             angle_deg (float): הזווית במעלות (ביחס לציר ה־X)
             (impact_x, impact_y): נקודת הפגיעה בקיר
         """
+
         pocket_y = pocket.center[1]
 
         # 1. שיקוף הכיס ביחס לקיר העליון
@@ -76,18 +77,23 @@ class CalculationsWithWall(Calculations):
 
             case 0:
                 impact_x = (get_table_width() * P) / Q
-                impact_y = get_table_width()
+                impact_y = 0
                 theta_deg = 180 - theta_deg
             case 1:
                 impact_x = get_table_length() - ((get_table_width() * P) / Q)
-                impact_y = get_table_width()
+                impact_y = 0
             case 2:
                 impact_x = get_table_length() - ((get_table_width() * P) / Q)
-                impact_y = 0
+                impact_y = get_table_width()
             case 3:
                 impact_x = (get_table_width() * P) / Q
-                impact_y = 0
+                impact_y = get_table_width()
                 theta_deg = 180 - theta_deg
+        print ('wall_shot_angle_to_pocket')
+        print ("for ball id:", self.target.id, ", (", self.target.x_cord, ",", self.target.y_cord, ")")
+        print ("for pocket id:", pocket.id, ", (", pocket.center[0], ",", pocket.center[1], ")")
+        print ("wall impact point: (", impact_x,",", impact_y,")")
+        print ("angle_deg : ", theta_deg)
 
         return theta_deg, (impact_x, impact_y)
 

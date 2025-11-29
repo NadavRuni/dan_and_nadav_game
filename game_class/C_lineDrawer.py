@@ -409,7 +409,7 @@ class LineDrawer:
         v = y / table_width
 
         px = u * width_px
-        py = height_px - (v * height_px)  # היפוך ציר Y
+        py = height_px 
 
         # -------------------------------------------
         # 3. לוגיקה חכמה: הוספת Margin בפיקסלים
@@ -437,12 +437,12 @@ class LineDrawer:
             # הערה: בתמונה Y עולה ככל שיושבים למטה, לכן כדי לעלות למעלה צריך להחסיר
             if abs(y - 0) < epsilon:
                 print(f"🛡️ Wall (Bottom): Pushing py {py:.1f} -> {py - margin:.1f}")
-                py -= margin
+                py += margin
 
             # דופן עליונה (y=Width) -> בתמונה זה 0 (למעלה) -> דחיפה למטה (+)
             elif abs(y - table_width) < epsilon:
                 print(f"🛡️ Wall (Top): Pushing py {py:.1f} -> {py + margin:.1f}")
-                py += margin
+                py -= margin
 
         print(
             f"Converting: Table({x:.1f}, {y:.1f}) -> Px({px:.1f}, {py:.1f}) [SmartMargin={smart_wall_margin}]"
@@ -541,6 +541,7 @@ class LineDrawer:
         )
 
         # --- 2) מטרה → קיר ---
+
         tw_dir = v_unit(v_sub(wall_px, target_c))
         # FIXED: added () to get_ball_radius_photo
         start_target_wall = v_add(target_c, v_scale(tw_dir, get_ball_radius_photo()))

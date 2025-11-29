@@ -74,7 +74,7 @@ class GameAnalayzer:
             return sorted_shots[:3]  # שלושת המכות הכי טובות
         else:
             print("❌ No valid normal shots found.")
-            all_wall_shots = self.find_best_wall_shots(my_ball_type)
+            all_wall_shots = self.find_non_trivial_shots(my_ball_type)
 
             return all_wall_shots  # need to add mor logic here
 
@@ -84,8 +84,6 @@ class GameAnalayzer:
         אם כדור אחר נמצא במרחק קטן מ-(radius + SAFE_DISTANCE) מהקו → חסום.
         """
 
-        print ("===============================")
-        print ("enter to has_clear_path for ball1 id:", ball1.id, "and ball2 id:", ball2.id)
         EPS = 1e-6
         ax, ay = ball1.x_cord, ball1.y_cord
         bx, by = ball2.x_cord, ball2.y_cord
@@ -110,9 +108,7 @@ class GameAnalayzer:
             if other is ball1 or other is ball2:
                 continue
             flag=False
-            print("checking other ball id:", other.id)
             if other.id==8 and ball2.id==2:
-                print ("-------------------------------")
                 flag=True
 
             # הקרנה של הכדור השלישי על הקו
@@ -211,11 +207,11 @@ class GameAnalayzer:
         white = next(b for b in table.get_balls() if b.type == "white")
         all_shots: list[BestShot] = []
 
-    def find_best_wall_shots(self, my_ball_type: str = "all") -> list[BestWallShot]:
+    def find_non_trivial_shots(self, my_ball_type: str = "all") -> list[BestWallShot]:
         """
-        מחפש מכות עם קיר (Wall shots) ומחזיר את שלושת הטובות ביותר.
-        """
-        print("enter to find_best_B2B_shots")
+        look for the best wall shots and B2B
+                """
+        print("enter to find_best_wall_shots")
         table = self.table
         white = next(b for b in table.get_balls() if b.type == "white")
         wall_shots: list[BestWallShot] = []
@@ -272,9 +268,15 @@ class GameAnalayzer:
                     continue
 
                 calc = CalculationsWithWall(white, ball, table)
+                print("#########pockets#############")
+                print (table.get_pockets())
                 for pocket in table.get_pockets():
                     wall_shot = BestWallShot(calc, pocket)
                     if wall_shot.valid:
+                        print ('================================')
+                        print ("found a valid wall shot for ball id:", ball.id, "to pocket location:", pocket.location, "with score:", wall_shot.score)
+                        print ("wall shot details:", wall_shot)
+                        print( '================================')
                         wall_shots.append(wall_shot)
 
             print("wall_shot")
