@@ -22,14 +22,10 @@ class BestWallShot(BestShot):
 
         # β = from wall calculation
         beta_dict = calc.angle_to_pockets_use_wall()
-        print('for target ball id: ', self.target.id ,' and pocket id: ', pocket.id)
-        print("self.pocket ", self.pocket)
-        print("this is beta dict: ", beta_dict)
         _ , (dir_x, dir_y) = beta_dict.get(pocket.id, (0.0, (0.0, 0.0)))
 
         self.point_with_the_wall = (dir_x, dir_y)
         self.angle = self.angle_white_ball_wall(self.white,self.target,self.point_with_the_wall)
-        print('the angle is : ', self.angle)
         self.valid = not self.has_obstacle_on_lines() and self.angle < 75
         if self.valid:
             self.score = self.score_shot()
@@ -73,11 +69,6 @@ class BestWallShot(BestShot):
 
             # המרה למעלות
         angle_deg = math.degrees(angle_rad)
-        print("[DEBUG] angles for target ball id: ", target.id ,"  (", self.target.x_cord,',', self.target.y_cord,')')
-        print ('white ball pos: (', white.x_cord,',', white.y_cord,')')
-        print ('wall impact point: (', center_wall[0],',', center_wall[1],')')
-        print ('angle')
-        print(angle_deg)
         return angle_deg
     
     def has_obstacle_on_lines(self) -> bool:

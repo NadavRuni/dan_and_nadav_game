@@ -142,6 +142,8 @@ def get_safe_from_wall() -> int | float:
 
 def get_merge_max_diff() -> int:
     return int(get_table_length() / 20)  # מרחק מותר בציר X
+def get_merge_overlap_margin() -> int:
+    return get_ball_radius()*0.2
 
 
 def get_ball_type() -> str:
