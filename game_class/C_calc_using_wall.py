@@ -89,11 +89,7 @@ class CalculationsWithWall(Calculations):
                 impact_x = (get_table_width() * P) / Q
                 impact_y = get_table_width()
                 theta_deg = 180 - theta_deg
-        print ('wall_shot_angle_to_pocket')
-        print ("for ball id:", self.target.id, ", (", self.target.x_cord, ",", self.target.y_cord, ")")
-        print ("for pocket id:", pocket.id, ", (", pocket.center[0], ",", pocket.center[1], ")")
-        print ("wall impact point: (", impact_x,",", impact_y,")")
-        print ("angle_deg : ", theta_deg)
+   
 
         return theta_deg, (impact_x, impact_y)
 

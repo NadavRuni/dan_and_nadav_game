@@ -163,7 +163,7 @@ def detect_balls_as_dataclasses(binary_mask, gray_image) -> List[Ball]:
     return balls
 
 
-def detect_balls_full_pipeline(input_path: str):
+def detect_balls_full_pipeline(input_path: str, green_flag: bool = False) -> List[Ball]:
     """Full pipeline for detecting balls in an image."""
     MASK_OUTPUT_PATH = get_output_path(FELT_MASK_PATH, sub_dir="black_white_detect")
     OUTPUT_PATH = get_output_path(
@@ -185,7 +185,28 @@ def detect_balls_full_pipeline(input_path: str):
     green_mask = cv2.inRange(hsv_image, lower_green, upper_green)
     felt_mask = cv2.bitwise_or(blue_mask, green_mask)
     felt_mask = cv2.bitwise_and(felt_mask, colorful_mask)
+    #########
+    if green_flag:
 
+        # --- START FIX: Reflection Based Detection ---
+        # 1. מוצאים את ההשתקפויות הלבנות (הברק) על הכדורים.
+        # השולחן הוא מט (לא מחזיר אור), הכדורים מבריקים. הברק הוא תמיד לבן בוהק.
+        gray_scale = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)
+        _, glare_mask = cv2.threshold(gray_scale, 200, 255, cv2.THRESH_BINARY)
+
+        # 2. מרחיבים את נקודות הברק לגודל של כדור
+        # אנחנו יוצרים "בועות" סביב כל ברק שמכריחות את המערכת להבין שיש שם אובייקט
+        radius_approx = int(get_ball_radius() * 0.8) # לוקחים רדיוס קצת יותר קטן כדי לא לחרוג
+        dilate_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (radius_approx, radius_approx))
+        ball_locations_by_glare = cv2.dilate(glare_mask, dilate_kernel, iterations=1)
+
+        # 3. חותכים את הבועות האלו ממסיכת השולחן
+        # עכשיו, גם אם הכדור ירוק כמו השולחן - הברק שלו יצר "חור" במסיכה והוא יזוהה ככדור.
+        felt_mask = cv2.bitwise_and(felt_mask, cv2.bitwise_not(ball_locations_by_glare))
+        # --- END FIX ---
+
+
+    #########
     kernel = np.ones((5, 5), np.uint8)
     felt_mask = cv2.morphologyEx(felt_mask, cv2.MORPH_OPEN, kernel, iterations=1)
     felt_mask = cv2.morphologyEx(felt_mask, cv2.MORPH_CLOSE, kernel, iterations=1)
@@ -198,9 +219,10 @@ def detect_balls_full_pipeline(input_path: str):
     min_felt_area = int(0.005 * image_area)
     cleaned_felt_mask = np.zeros_like(felt_mask)
     for label_id in range(1, num_labels):
-        stat_x, stat_y, stat_width, stat_height, stat_area = stats[label_id]
-        if stat_area >= min_felt_area:
+        area = stats[label_id, cv2.CC_STAT_AREA]
+        if area >= min_felt_area:
             cleaned_felt_mask[labels == label_id] = 255
+
 
     inverted_mask = cv2.bitwise_not(cleaned_felt_mask)
     binary_mask = cv2.morphologyEx(inverted_mask, cv2.MORPH_CLOSE, kernel, iterations=1)

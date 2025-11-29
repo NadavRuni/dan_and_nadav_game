@@ -268,15 +268,10 @@ class GameAnalayzer:
                     continue
 
                 calc = CalculationsWithWall(white, ball, table)
-                print("#########pockets#############")
                 print (table.get_pockets())
                 for pocket in table.get_pockets():
                     wall_shot = BestWallShot(calc, pocket)
                     if wall_shot.valid:
-                        print ('================================')
-                        print ("found a valid wall shot for ball id:", ball.id, "to pocket location:", pocket.location, "with score:", wall_shot.score)
-                        print ("wall shot details:", wall_shot)
-                        print( '================================')
                         wall_shots.append(wall_shot)
 
             print("wall_shot")

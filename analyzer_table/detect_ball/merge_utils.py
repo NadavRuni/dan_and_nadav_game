@@ -24,6 +24,7 @@ def mergeData(
         if not is_inside_table(b, table_rectangle):
             continue
         if _ball_exists(merged_balls, b):
+
             continue
         Debugger.log(
             f"Adding ball at {b.center} with radius {b.radius} from main image"
@@ -82,13 +83,27 @@ def mergeData(
     return merged_photo
 
 
+# def _ball_exists(merged_balls: list[Ball], new_ball: Ball) -> bool:
+#     for existing in merged_balls:
+#         dx = abs(existing.center[0] - new_ball.center[0])
+#         dy = abs(existing.center[1] - new_ball.center[1])
+#         if dx <= get_merge_max_diff() and dy <= get_merge_max_diff():
+#             print (f"❌ Duplicate ball found at {new_ball.center} (existing at {existing.center})")
+#             return True
+#     return False
 def _ball_exists(merged_balls: list[Ball], new_ball: Ball) -> bool:
     for existing in merged_balls:
-        dx = abs(existing.center[0] - new_ball.center[0])
-        dy = abs(existing.center[1] - new_ball.center[1])
-        if dx <= get_merge_max_diff() and dy <= get_merge_max_diff():
+        dx = existing.center[0] - new_ball.center[0]
+        dy = existing.center[1] - new_ball.center[1]
+        distance = (dx*dx + dy*dy) ** 0.5
+
+        # If centers overlap enough → same ball
+        if distance < (existing.radius + new_ball.radius+ get_merge_overlap_margin()):
+            print(f"❌ Duplicate ball (overlapping): new={new_ball.center}, existing={existing.center}, dist={distance:.2f} < threshold={(existing.radius + new_ball.radius+ get_merge_overlap_margin()):.2f}")
             return True
+
     return False
+
 
 
 def is_inside_inner_rectangle(ball: Ball, rect: Rectangle, margin: float) -> bool:
@@ -110,9 +125,6 @@ def is_inside_inner_rectangle(ball: Ball, rect: Rectangle, margin: float) -> boo
                     return False  # It's a pocket, so not "inside" the playable area
             
             # If the ball is not identified as any of the pockets
-            Debugger.log(
-                f"✅ Ball at ({ball.center[0]:.1f}, {ball.center[1]:.1f}) is not a predicted pocket."
-            )
             return True # It is not a pocket, so it's a valid ball in this context.
 
     # Original logic for when get_use_predicted_pockets() is False or no pockets are found

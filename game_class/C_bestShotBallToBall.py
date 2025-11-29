@@ -21,7 +21,7 @@ class BestShotBallToBall:
             calc_helper_to_target_to_pocket.min_abs_angle()
         )
 
-        if (best_pocket_id, best_angle_from_helper_to_target) == NOT_FREE_SHOT:
+        if (best_pocket_id, best_angle_from_helper_to_target) == NOT_FREE_SHOT or self.angle_white_helper_target_pocket(best_angle_from_helper_to_target) > 45:
             # לא קיים שוט חוקי
             self.no_valid_shot()
         else:
@@ -31,7 +31,8 @@ class BestShotBallToBall:
             )
             self.angle_from_helper_to_target: float = best_angle_from_helper_to_target
 
-            if abs(self.angle_from_helper_to_target) > 85:
+
+            if abs(self.angle_from_helper_to_target) > 50:
                 self.no_valid_shot()
                 return
 
@@ -82,7 +83,7 @@ class BestShotBallToBall:
         norm_target = dist_target_to_pocket / get_max_white_to_target_distance()
         score = 1 - (norm_white + norm_target) / 2  # ממוצע נורמליזציות
         return max(0.0, min(1.0, score))
-
+    
     def get_pocket(self) -> int | None:
         """מחזירה את ה־ID של הכיס שנבחר, או None אם אין שוט חוקי"""
         return self.pocket.id if self.valid else None
@@ -114,3 +115,40 @@ class BestShotBallToBall:
             f"score_distance={self.score_distance:.3f}, "
             f"final_score={self.score:.2f})"
         )
+
+    def angle_white_helper_target_pocket(self , best_angle_from_helper_to_target:float) -> Optional[float]:
+        """
+        Calculates the sum of the absolute angle changes along the path
+        from white ball -> helper ball -> target ball -> pocket.
+        This represents the total "turn" required for the shot path.
+        A straight line path will have a value of 0.
+        """
+
+
+        # --- Calculate angle at helper ball ---
+        w_x, w_y = self.white.x_cord, self.white.y_cord
+        h_x, h_y = self.target_helper.x_cord, self.target_helper.y_cord
+        t_x, t_y = self.target.x_cord, self.target.y_cord
+
+        # Vectors for the turn at the helper ball
+        v_wh = (h_x - w_x, h_y - w_y)
+        v_ht = (t_x - h_x, t_y - h_y)
+
+        # Helper to calculate signed angle in degrees
+        def _calculate_angle_degrees(v1, v2):
+            # Check for zero vectors
+            if (v1[0] == 0 and v1[1] == 0) or (v2[0] == 0 and v2[1] == 0):
+                return 0.0
+            dot = v1[0] * v2[0] + v1[1] * v2[1]
+            det = v1[0] * v2[1] - v1[1] * v2[0]
+            angle_rad = math.atan2(det, dot)
+            return math.degrees(angle_rad)
+
+        angle_at_helper = _calculate_angle_degrees(v_wh, v_ht)
+
+        # --- Angle at target ball ---
+        # This is already calculated in the constructor.
+        angle_at_target = best_angle_from_helper_to_target
+
+        # Sum of absolute angle changes to represent total "turn"
+        return abs(angle_at_helper) + abs(angle_at_target)
