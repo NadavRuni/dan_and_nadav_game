@@ -15,7 +15,7 @@ def analyze_table_pockets(
     output_dir: str = "out/pockets",
     half_size: int = get_crop_half_size(),
 ) -> List[Pocket]:
-    if (get_use_predicted_pockets()):
+    if get_use_predicted_pockets():
         print("✅ Using previously detected pockets.")
         return get_detected_pockets()
     img = cv2.imread(img_path)

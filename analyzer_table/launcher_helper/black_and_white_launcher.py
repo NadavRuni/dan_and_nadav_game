@@ -35,13 +35,13 @@ def run_ball_detection(image_path: str):
 
     # מפעיל את פונקציית הזיהוי מהמודול שלך
     balls: list[Ball] = detect_balls_full_pipeline(image_path)
-    balls_whith_green : list[Ball] = detect_balls_full_pipeline(image_path,True)
+    balls_whith_green: list[Ball] = detect_balls_full_pipeline(image_path, True)
     # הדפסה קצרה
     print(f"✅ Detected {len(balls)} balls:")
-    for i, b in enumerate(balls+balls_whith_green , start=1):
+    for i, b in enumerate(balls + balls_whith_green, start=1):
         print(f"{i:02d}. Center={b.center}, Radius={b.radius}")
 
-    return balls+balls_whith_green
+    return balls + balls_whith_green
 
 
 if __name__ == "__main__":

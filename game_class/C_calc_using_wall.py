@@ -28,7 +28,9 @@ class CalculationsWithWall(Calculations):
         angle_using_wall_dict = {}
         for pocket in self.pockets:
             if pocket.id == 0 or pocket.id == 1 or pocket.id == 2 or pocket.id == 3:
-                angle_using_wall_dict[pocket.id] = self.wall_shot_angle_to_pocket(pocket)
+                angle_using_wall_dict[pocket.id] = self.wall_shot_angle_to_pocket(
+                    pocket
+                )
         return angle_using_wall_dict
 
     import math
@@ -88,7 +90,6 @@ class CalculationsWithWall(Calculations):
                 impact_x = (get_table_width() * P) / Q
                 impact_y = get_table_width()
                 theta_deg = 180 - theta_deg
-   
 
         return theta_deg, (impact_x, impact_y)
 

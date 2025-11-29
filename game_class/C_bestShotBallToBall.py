@@ -21,7 +21,12 @@ class BestShotBallToBall:
             calc_helper_to_target_to_pocket.min_abs_angle()
         )
 
-        if (best_pocket_id, best_angle_from_helper_to_target) == NOT_FREE_SHOT or self.angle_white_helper_target_pocket(best_angle_from_helper_to_target) > 45:
+        if (
+            best_pocket_id,
+            best_angle_from_helper_to_target,
+        ) == NOT_FREE_SHOT or self.angle_white_helper_target_pocket(
+            best_angle_from_helper_to_target
+        ) > 45:
             # לא קיים שוט חוקי
             self.no_valid_shot()
         else:
@@ -30,7 +35,6 @@ class BestShotBallToBall:
                 p for p in table.pockets if p.id == best_pocket_id
             )
             self.angle_from_helper_to_target: float = best_angle_from_helper_to_target
-
 
             if abs(self.angle_from_helper_to_target) > 50:
                 self.no_valid_shot()
@@ -83,7 +87,7 @@ class BestShotBallToBall:
         norm_target = dist_target_to_pocket / get_max_white_to_target_distance()
         score = 1 - (norm_white + norm_target) / 2  # ממוצע נורמליזציות
         return max(0.0, min(1.0, score))
-    
+
     def get_pocket(self) -> int | None:
         """מחזירה את ה־ID של הכיס שנבחר, או None אם אין שוט חוקי"""
         return self.pocket.id if self.valid else None
@@ -116,14 +120,15 @@ class BestShotBallToBall:
             f"final_score={self.score:.2f})"
         )
 
-    def angle_white_helper_target_pocket(self , best_angle_from_helper_to_target:float) -> Optional[float]:
+    def angle_white_helper_target_pocket(
+        self, best_angle_from_helper_to_target: float
+    ) -> Optional[float]:
         """
         Calculates the sum of the absolute angle changes along the path
         from white ball -> helper ball -> target ball -> pocket.
         This represents the total "turn" required for the shot path.
         A straight line path will have a value of 0.
         """
-
 
         # --- Calculate angle at helper ball ---
         w_x, w_y = self.white.x_cord, self.white.y_cord

@@ -51,7 +51,6 @@ def draw_balls_on_image(
         ]
         Debugger.log(pts)
 
-
         cv2.polylines(
             img,
             [np.array(pts, np.int32)],

@@ -29,7 +29,6 @@ class Calculations:
         v1x = self.target.x_cord - self.white.x_cord
         v1y = self.target.y_cord - self.white.y_cord
 
-
         for pocket in self.pockets:
             v2x = pocket.center[0] - self.target.x_cord
             v2y = pocket.center[1] - self.target.y_cord
@@ -43,12 +42,19 @@ class Calculations:
 
             # המרה למעלות
             angle_deg = math.degrees(angle_rad)
-            dist_target_to_pocket = math.hypot(pocket.center[0] - self.target.x_cord, pocket.center[1] - self.target.y_cord)
+            dist_target_to_pocket = math.hypot(
+                pocket.center[0] - self.target.x_cord,
+                pocket.center[1] - self.target.y_cord,
+            )
             if not flag_to_wall:
                 if self.have_free_shot(pocket):
                     angles[pocket.id] = [angle_deg, dist_target_to_pocket]
                 else:
-                    angles[pocket.id] = [NOT_FREE_SHOT, angle_deg, dist_target_to_pocket]
+                    angles[pocket.id] = [
+                        NOT_FREE_SHOT,
+                        angle_deg,
+                        dist_target_to_pocket,
+                    ]
             else:
                 angles[pocket.id] = [angle_deg, dist_target_to_pocket]
 
@@ -140,31 +146,37 @@ class Calculations:
         """
         angles = self.angle_to_pockets()
 
-        
-
         valid_angles = {}
         for pid, values in angles.items():
-            if len(values) == 2 and isinstance(values[0], (int, float)): # Now expects [angle, distance]
+            if len(values) == 2 and isinstance(
+                values[0], (int, float)
+            ):  # Now expects [angle, distance]
                 angle_deg = values[0]
                 dist_target_to_pocket = values[1]
 
                 # Reuse BestShot's scoring logic for preliminary score
                 # Import BestShot.calculate_score_angle and BestShot.calculate_score_distance here
                 # Or re-implement similar logic
-                from game_class.C_bestShot import BestShot # Import within function for locality
+                from game_class.C_bestShot import (
+                    BestShot,
+                )  # Import within function for locality
 
                 # Placeholder for score_white_to_target (not available here, so set to a default)
                 # We only have target_to_pocket distance readily available.
                 # Let's assume white_to_target is roughly a fixed maximum for this preliminary score
-                dist_white_to_target_placeholder = get_max_white_to_target_distance() / 2 
+                dist_white_to_target_placeholder = (
+                    get_max_white_to_target_distance() / 2
+                )
 
                 score_angle = BestShot.calculate_score_angle(angle_deg)
                 score_distance = BestShot.calculate_score_distance(
-                    dist_white_to_target_placeholder,
-                    dist_target_to_pocket
+                    dist_white_to_target_placeholder, dist_target_to_pocket
                 )
                 temp_score = score_angle * score_distance
-                valid_angles[pid] = (temp_score, angle_deg) # Store score and original angle
+                valid_angles[pid] = (
+                    temp_score,
+                    angle_deg,
+                )  # Store score and original angle
 
         if not valid_angles:
             return NOT_FREE_SHOT, NOT_FREE_SHOT
@@ -179,8 +191,10 @@ class Calculations:
                 max_score = score
                 best_pid = pid
                 best_angle_for_pid = angle
-            elif score == max_score and abs(angle) < abs(best_angle_for_pid): # Tie-breaker: prefer smaller angle
+            elif score == max_score and abs(angle) < abs(
+                best_angle_for_pid
+            ):  # Tie-breaker: prefer smaller angle
                 best_pid = pid
                 best_angle_for_pid = angle
-        
+
         return best_pid, best_angle_for_pid

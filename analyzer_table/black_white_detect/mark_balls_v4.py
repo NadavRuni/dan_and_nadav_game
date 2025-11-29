@@ -196,15 +196,18 @@ def detect_balls_full_pipeline(input_path: str, green_flag: bool = False) -> Lis
 
         # 2. מרחיבים את נקודות הברק לגודל של כדור
         # אנחנו יוצרים "בועות" סביב כל ברק שמכריחות את המערכת להבין שיש שם אובייקט
-        radius_approx = int(get_ball_radius() * 0.8) # לוקחים רדיוס קצת יותר קטן כדי לא לחרוג
-        dilate_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (radius_approx, radius_approx))
+        radius_approx = int(
+            get_ball_radius() * 0.8
+        )  # לוקחים רדיוס קצת יותר קטן כדי לא לחרוג
+        dilate_kernel = cv2.getStructuringElement(
+            cv2.MORPH_ELLIPSE, (radius_approx, radius_approx)
+        )
         ball_locations_by_glare = cv2.dilate(glare_mask, dilate_kernel, iterations=1)
 
         # 3. חותכים את הבועות האלו ממסיכת השולחן
         # עכשיו, גם אם הכדור ירוק כמו השולחן - הברק שלו יצר "חור" במסיכה והוא יזוהה ככדור.
         felt_mask = cv2.bitwise_and(felt_mask, cv2.bitwise_not(ball_locations_by_glare))
         # --- END FIX ---
-
 
     #########
     kernel = np.ones((5, 5), np.uint8)
@@ -222,7 +225,6 @@ def detect_balls_full_pipeline(input_path: str, green_flag: bool = False) -> Lis
         area = stats[label_id, cv2.CC_STAT_AREA]
         if area >= min_felt_area:
             cleaned_felt_mask[labels == label_id] = 255
-
 
     inverted_mask = cv2.bitwise_not(cleaned_felt_mask)
     binary_mask = cv2.morphologyEx(inverted_mask, cv2.MORPH_CLOSE, kernel, iterations=1)

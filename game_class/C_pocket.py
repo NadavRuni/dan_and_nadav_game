@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Tuple, Optional
 
+
 @dataclass
 class Pocket:
     id: int

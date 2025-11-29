@@ -73,12 +73,25 @@ class Table:
                     ),
                     location="BL",
                 ),  # top-left
-            Pocket(id=4, center=(length / 2, width), radius=get_side_pocket_radius(), pocket_img_cordinates_on_table=(length / 2, width), location="BM"),  # middle-bottom
-            Pocket(id=5, center=(length / 2, 0), radius=get_side_pocket_radius(), pocket_img_cordinates_on_table=(length / 2, 0), location="TM"),  # middle-top
+                Pocket(
+                    id=4,
+                    center=(length / 2, width),
+                    radius=get_side_pocket_radius(),
+                    pocket_img_cordinates_on_table=(length / 2, width),
+                    location="BM",
+                ),  # middle-bottom
+                Pocket(
+                    id=5,
+                    center=(length / 2, 0),
+                    radius=get_side_pocket_radius(),
+                    pocket_img_cordinates_on_table=(length / 2, 0),
+                    location="TM",
+                ),  # middle-top
             ]
         else:
-            print ("Using predicted pockets")
-            self.pockets: List[Pocket] = get_detected_pockets()    
+            print("Using predicted pockets")
+            self.pockets: List[Pocket] = get_detected_pockets()
+
     def show_balls(self):
         for ball in self.balls:
             print(ball)

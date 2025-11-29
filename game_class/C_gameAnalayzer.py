@@ -31,10 +31,10 @@ class GameAnalayzer:
             balls = table.get_striped()
         else:
             balls = table.get_black()
-        go_for_black=False
-        if len(balls)==0:
-            balls=table.get_black()
-            go_for_black=True
+        go_for_black = False
+        if len(balls) == 0:
+            balls = table.get_black()
+            go_for_black = True
 
         for ball in balls:
             if ball.type == "white":
@@ -113,9 +113,9 @@ class GameAnalayzer:
         for other in all_balls:
             if other is ball1 or other is ball2:
                 continue
-            flag=False
-            if other.id==8 and ball2.id==2:
-                flag=True
+            flag = False
+            if other.id == 8 and ball2.id == 2:
+                flag = True
 
             # הקרנה של הכדור השלישי על הקו
             vx, vy = other.x_cord - axp, other.y_cord - ayp
@@ -142,9 +142,9 @@ class GameAnalayzer:
             dist = math.hypot(other.x_cord - closest_x, other.y_cord - closest_y)
 
             if flag:
-                    print("dist", dist)
-                # מחוץ לקטע, לא רלוונטי
-                
+                print("dist", dist)
+            # מחוץ לקטע, לא רלוונטי
+
             # אם קרוב מדי → חסום
             if dist <= other.radius + get_safe_distance():
                 return False
@@ -216,7 +216,7 @@ class GameAnalayzer:
     def find_non_trivial_shots(self, my_ball_type: str = "all") -> list[BestWallShot]:
         """
         look for the best wall shots and B2B
-                """
+        """
         print("enter to find_best_wall_shots")
         table = self.table
         white = next(b for b in table.get_balls() if b.type == "white")
@@ -241,7 +241,9 @@ class GameAnalayzer:
                     continue
                 if target_ball.type == "black" or helper_ball.type == "black":
                     continue
-                if not self.has_clear_path(white, helper_ball, all_balls=table.get_balls()):
+                if not self.has_clear_path(
+                    white, helper_ball, all_balls=table.get_balls()
+                ):
                     continue
 
                 shot = BestShotBallToBall(white, target_ball, helper_ball, table)
@@ -264,7 +266,7 @@ class GameAnalayzer:
                     continue
 
                 calc = CalculationsWithWall(white, ball, table)
-                print (table.get_pockets())
+                print(table.get_pockets())
                 for pocket in table.get_pockets():
                     wall_shot = BestWallShot(calc, pocket)
                     if wall_shot.valid:
@@ -272,7 +274,7 @@ class GameAnalayzer:
 
             print("wall_shot")
             print(wall_shot)
-            sorted_wall_shots=[]
+            sorted_wall_shots = []
             if wall_shots:
                 sorted_wall_shots = sorted(
                     [s for s in wall_shots if s.score is not None],
@@ -288,7 +290,7 @@ class GameAnalayzer:
                         ]
                     ),
                 )
-            if len(sorted_wall_shots)>0:
+            if len(sorted_wall_shots) > 0:
                 print("✅The best wall shot is ", sorted_wall_shots[0])
                 print("wall point is -", sorted_wall_shots[0].point_with_the_wall)
 

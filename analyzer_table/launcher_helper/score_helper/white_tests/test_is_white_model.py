@@ -13,9 +13,9 @@ import numpy as np
 # analyzer_table/launcher_helper/score_helper/white_tests/test_is_white_model.py
 
 current_dir = os.path.dirname(os.path.abspath(__file__))  # white_tests
-score_helper_dir = os.path.dirname(current_dir)           # score_helper
-launcher_helper_dir = os.path.dirname(score_helper_dir)   # launcher_helper
-analyzer_table_dir = os.path.dirname(launcher_helper_dir) # analyzer_table
+score_helper_dir = os.path.dirname(current_dir)  # score_helper
+launcher_helper_dir = os.path.dirname(score_helper_dir)  # launcher_helper
+analyzer_table_dir = os.path.dirname(launcher_helper_dir)  # analyzer_table
 
 # נתיב המודל: analyzer_table/predict/models/is_white_model.pth
 MODEL_PATH = os.path.join(analyzer_table_dir, "predict", "models", "is_white_model.pth")
@@ -27,20 +27,19 @@ print(f"[DEBUG] White-Model Path: {MODEL_PATH}")
 # ==========================================================
 DEVICE = torch.device("cpu")
 
-val_transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize(
-        mean=[0.485, 0.456, 0.406],
-        std=[0.229, 0.224, 0.225]
-    ),
-])
+val_transform = transforms.Compose(
+    [
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ]
+)
 
 _model_cache = None
 
 
 def load_model():
-    """ טוען את המודל לזיהוי הכדור הלבן """
+    """טוען את המודל לזיהוי הכדור הלבן"""
     global _model_cache
     if _model_cache is not None:
         return _model_cache

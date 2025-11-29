@@ -416,20 +416,20 @@ def _estimate_missing_pockets(pockets: List[Pocket], rect: Rectangle) -> List[Po
             center_x = (bl[0] + br[0]) // 2
             center_y = (bl[1] + br[1]) // 2
         match loc:
-                    case "BL":
-                        p_id = 0
-                    case "BR":
-                        p_id = 1
-                    case "TR":
-                        p_id = 2
-                    case "TL":
-                        p_id = 3
-                    case "BM":
-                        p_id = 4
-                    case "TM":
-                        p_id = 5
-                    case _:
-                        p_id = -1
+            case "BL":
+                p_id = 0
+            case "BR":
+                p_id = 1
+            case "TR":
+                p_id = 2
+            case "TL":
+                p_id = 3
+            case "BM":
+                p_id = 4
+            case "TM":
+                p_id = 5
+            case _:
+                p_id = -1
 
         if center_x != 0 or center_y != 0:
             placeholder = Pocket(
@@ -437,7 +437,8 @@ def _estimate_missing_pockets(pockets: List[Pocket], rect: Rectangle) -> List[Po
                 radius=int(get_pocket_radius()),
                 id=p_id,
                 location=loc,
-                pocket_img_cordinates_on_table=(int(center_x), int(center_y)))
+                pocket_img_cordinates_on_table=(int(center_x), int(center_y)),
+            )
             estimated_pockets.append(placeholder)
             print(f"  - Estimated placeholder for {loc} at {placeholder.center}")
 
@@ -491,14 +492,14 @@ def find_corner_pockets_from_mask(
             rect, real_center_x, real_center_y, margin=get_pocket_radius() * 3
         )
 
-
         if is_valid:
             pocket = Pocket(
                 center=(real_center_x, real_center_y),
                 radius=int(radius),
                 id=i,
                 location=location,
-                pocket_img_cordinates_on_table=(real_center_x, real_center_y))
+                pocket_img_cordinates_on_table=(real_center_x, real_center_y),
+            )
             all_valid_pockets.append(pocket)
 
     # --- Deduplication ---
@@ -524,26 +525,27 @@ def find_corner_pockets_from_mask(
 
     # --- Final ID assignment and sorting ---
 
-    
     for i, pocket in enumerate(final_pockets, 1):
         match pocket.location:
-                case "BL":
-                        p_id = 0
-                case "BR":
-                        p_id = 1
-                case "TR":
-                        p_id = 2
-                case "TL":
-                        p_id = 3
-                case "BM":
-                        p_id = 4
-                case "TM":
-                        p_id = 5
-                case _:
-                        p_id = -1
+            case "BL":
+                p_id = 0
+            case "BR":
+                p_id = 1
+            case "TR":
+                p_id = 2
+            case "TL":
+                p_id = 3
+            case "BM":
+                p_id = 4
+            case "TM":
+                p_id = 5
+            case _:
+                p_id = -1
         pocket.id = p_id
-                
-        print (f"  - Final pocket ID {pocket.id} at location {pocket.location} center {pocket.center}")
+
+        print(
+            f"  - Final pocket ID {pocket.id} at location {pocket.location} center {pocket.center}"
+        )
 
     detected_pockets = final_pockets
 

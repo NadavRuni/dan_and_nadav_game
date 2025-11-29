@@ -95,15 +95,16 @@ def _ball_exists(merged_balls: list[Ball], new_ball: Ball) -> bool:
     for existing in merged_balls:
         dx = existing.center[0] - new_ball.center[0]
         dy = existing.center[1] - new_ball.center[1]
-        distance = (dx*dx + dy*dy) ** 0.5
+        distance = (dx * dx + dy * dy) ** 0.5
 
         # If centers overlap enough → same ball
-        if distance < (existing.radius + new_ball.radius+ get_merge_overlap_margin()):
-            print(f"❌ Duplicate ball (overlapping): new={new_ball.center}, existing={existing.center}, dist={distance:.2f} < threshold={(existing.radius + new_ball.radius+ get_merge_overlap_margin()):.2f}")
+        if distance < (existing.radius + new_ball.radius + get_merge_overlap_margin()):
+            print(
+                f"❌ Duplicate ball (overlapping): new={new_ball.center}, existing={existing.center}, dist={distance:.2f} < threshold={(existing.radius + new_ball.radius+ get_merge_overlap_margin()):.2f}"
+            )
             return True
 
     return False
-
 
 
 def is_inside_inner_rectangle(ball: Ball, rect: Rectangle, margin: float) -> bool:
@@ -114,18 +115,20 @@ def is_inside_inner_rectangle(ball: Ball, rect: Rectangle, margin: float) -> boo
             for pocket in pockets:
                 pocket_x, pocket_y = pocket.center
                 pocket_radius = pocket.radius
-                
-                distance = math.sqrt((ball_x - pocket_x)**2 + (ball_y - pocket_y)**2)
-                
+
+                distance = math.sqrt(
+                    (ball_x - pocket_x) ** 2 + (ball_y - pocket_y) ** 2
+                )
+
                 # If the distance is less than sum of radii, they are likely the same object
-                if distance < (ball.radius + pocket_radius)*0.5:
+                if distance < (ball.radius + pocket_radius) * 0.5:
                     Debugger.log(
                         f"⚠️ Ball at ({ball.center[0]:.1f}, {ball.center[1]:.1f}) is identified as a pocket ({pocket.location}) and will be excluded."
                     )
                     return False  # It's a pocket, so not "inside" the playable area
-            
+
             # If the ball is not identified as any of the pockets
-            return True # It is not a pocket, so it's a valid ball in this context.
+            return True  # It is not a pocket, so it's a valid ball in this context.
 
     # Original logic for when get_use_predicted_pockets() is False or no pockets are found
     tlx, tly = rect.top_left

@@ -44,7 +44,6 @@ def build_table_from_analysis(analysis: dict):
     # because the detected pockets are in image coordinates (0,0 top-left)
     # set_set_detected_pockets_to_upside_downside()
 
-
     # סקלת פיקסלים → יחידות משחק (ל־fallback)
     sx = get_table_length() / max(1.0, width_px)
     sy = get_table_width() / max(1.0, height_px)
@@ -68,7 +67,7 @@ def build_table_from_analysis(analysis: dict):
             cx = float(b["center_px"]["x"])
             cy = float(b["center_px"]["y"])
 
-            #if we are using pre defined pockets, we dont need to convert nothing
+            # if we are using pre defined pockets, we dont need to convert nothing
             pockets = analysis.get("pockets", {})
             if pockets and "BL" in pockets and "TR" in pockets:
 
@@ -81,7 +80,6 @@ def build_table_from_analysis(analysis: dict):
                 # נשתמש בהיפוך פשוט של הציר האנכי
                 x_game = clamp_to_table(cx * sx, get_table_length())
                 y_game = clamp_to_table((height_px - cy) * sy, get_table_width())
-
 
         # אם עדיין אין ערכים — דלג על הכדור
         if x_game is None or y_game is None:
@@ -113,11 +111,11 @@ def start_build_table_from_img():
 
     table = build_table_from_analysis(analysis)
     print(f"Built table with {len(table.balls)} balls from {OUTPUT_JSON_PATH}")
-    
+
     # draw_table(table)
 
     game = GameAnalayzer(table)
-    print ("Analyzing best shot...")
+    print("Analyzing best shot...")
     print(table.pockets)
     best_shot = game.find_best_overall_shot(get_ball_type())
 
@@ -136,7 +134,7 @@ def start_build_table_from_img():
         plot_output_dir.mkdir(parents=True, exist_ok=True)
         plot_file_path = plot_output_dir / "table_simulation.png"
         plt.savefig(plot_file_path)
-        plt.close(p) # Close the figure to free up memory
+        plt.close(p)  # Close the figure to free up memory
 
         line_drawer = LineDrawer(OUTPUT_JSON_PATH, best_shot[0], OUTPUT_IMAGE_PATH)
         line_drawer.show_contact_hit()  # need to be first before draw_lines
@@ -159,8 +157,9 @@ def start_build_table_from_img():
         analysis = load_analysis(OUTPUT_JSON_PATH)
         if analysis.get("image_path"):
             from shutil import copyfile
+
             copyfile(analysis["image_path"], OUTPUT_IMAGE_PATH)
-        return 'false'
+        return "false"
 
 
 if __name__ == "__main__":
