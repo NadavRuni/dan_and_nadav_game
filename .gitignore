@@ -228,4 +228,4 @@ analyzer_table/out/
 Billiard-Balls--1/
 out/
 analyzer_table/predict/models/*.pth
-analyzer_table/detect_ball/detect_analyzer_opencv/*.json
+analyzer_table/detect_ball/detect_analyzer_opencv/**.json
