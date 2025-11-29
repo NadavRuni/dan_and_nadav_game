@@ -110,6 +110,10 @@ async def confirm_rectangle(data: dict):
         rec = create_rectangle_from_data(data)
 
         image_path = data.get("image_path")
+        ball_type = data.get("ball_type")
+        print("[DEBUG] Starting confirm_rectangle ball_type:", ball_type)
+        set_ball_type(ball_type)
+
         if not image_path:
             return JSONResponse({"error": "Missing image_path"}, status_code=400)
 

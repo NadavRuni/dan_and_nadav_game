@@ -177,6 +177,6 @@ def is_inside_table(ball: Ball, rect: Rectangle) -> bool:
         (x - r / 1.414, y + r / 1.414),
     ]
     if all(point_in_polygon(px, py, polygon) for (px, py) in edge_points):
-        return is_inside_inner_rectangle(ball, rect, get_pocket_margin())
+        return is_inside_inner_rectangle(ball, rect, get_pocket_margin_merge())
     else:
         return False

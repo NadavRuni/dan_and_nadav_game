@@ -1,26 +1,66 @@
 {
     "cut_name": "cut_22.png",
     "origin": {
-        "x": 949,
-        "y": 743
+        "x": 2412,
+        "y": 1810
     },
     "rectangle": {
         "top_left": [
-            949,
-            1083
+            2412,
+            2634
         ],
         "top_right": [
-            1466,
-            1083
+            3727,
+            2634
         ],
         "bottom_left": [
-            949,
-            743
+            2412,
+            1810
         ],
         "bottom_right": [
-            1466,
-            743
+            3727,
+            1810
         ]
     },
-    "balls": []
+    "balls": [
+        {
+            "center": [
+                2756,
+                2306
+            ],
+            "radius": 58,
+            "color_score": {
+                "white_score": {
+                    "white_score_test_1": 0.0,
+                    "white_score_test_2": 0.0,
+                    "white_score_test_3": 0.0,
+                    "white_score_test_4": 0.0,
+                    "white_score_test_5": 0.0
+                },
+                "black_score": {
+                    "black_score_test_1": 0.0,
+                    "black_score_test_2": 0.0,
+                    "black_score_test_3": 0.0,
+                    "black_score_test_4": 0.0,
+                    "black_score_test_5": 0.0
+                },
+                "solid_score": {
+                    "solid_score_test_1": 0.0,
+                    "solid_score_test_2": 0.0,
+                    "solid_score_test_3": 0.0,
+                    "solid_score_test_4": 0.0,
+                    "solid_score_test_5": 0.0
+                },
+                "striped_score": {
+                    "striped_score_test_1": 0.0,
+                    "striped_score_test_2": 0.0,
+                    "striped_score_test_3": 0.0,
+                    "striped_score_test_4": 0.0,
+                    "striped_score_test_5": 0.0
+                }
+            },
+            "final_color": "undefined",
+            "single_ball_path": ""
+        }
+    ]
 }

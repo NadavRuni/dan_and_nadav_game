@@ -1,34 +1,34 @@
 {
     "cut_name": "cut_10.png",
     "origin": {
-        "x": 949,
-        "y": 203
+        "x": 2412,
+        "y": 494
     },
     "rectangle": {
         "top_left": [
-            949,
-            607
+            2412,
+            1480
         ],
         "top_right": [
-            1466,
-            607
+            3727,
+            1480
         ],
         "bottom_left": [
-            949,
-            203
+            2412,
+            494
         ],
         "bottom_right": [
-            1466,
-            203
+            3727,
+            494
         ]
     },
     "balls": [
         {
             "center": [
-                1281,
-                419
+                3234,
+                1206
             ],
-            "radius": 21,
+            "radius": 59,
             "color_score": {
                 "white_score": {
                     "white_score_test_1": 0.0,
@@ -64,10 +64,10 @@
         },
         {
             "center": [
-                1293,
-                581
+                2552,
+                928
             ],
-            "radius": 21,
+            "radius": 54,
             "color_score": {
                 "white_score": {
                     "white_score_test_1": 0.0,

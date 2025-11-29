@@ -66,8 +66,11 @@ def get_ball_radius_photo() -> int | float:
 
 def get_pocket_margin() -> int | float:
     """מחזיר את מרווח הכיסים הנוכחי."""
-    return get_table_length() / 30
+    return get_table_length() / 45
 
+def get_pocket_margin_merge() -> int | float:
+    """מחזיר את מרווח הכיסים הנוכחי."""
+    return get_table_length() / 30
 
 def get_wall_margin() -> int | float:
     """מחזיר את מרווח הקירות הנוכחי."""

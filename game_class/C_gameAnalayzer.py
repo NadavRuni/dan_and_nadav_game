@@ -31,13 +31,19 @@ class GameAnalayzer:
             balls = table.get_striped()
         else:
             balls = table.get_black()
+        go_for_black=False
+        if len(balls)==0:
+            balls=table.get_black()
+            go_for_black=True
 
         for ball in balls:
             if ball.type == "white":
                 continue
-            if ball.type == "black" and len(table.get_balls()) > 2:
-                # אפשר להכניס לוגיקה מתקדמת לפסים/מלאים
-                continue
+            if ball.type == "black" and go_for_black:
+                shot = BestShot(white, ball, table)
+
+                if not shot.valid or shot.score <= 1:
+                    all_shots.append(shot)
             if not self.has_clear_path(white, ball, table.get_balls()):
                 print(
                     "between the white and ball number",

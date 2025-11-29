@@ -162,7 +162,7 @@ class LineDrawer:
         print("Start point on white ball:", start_white)
 
         def draw_dashed_line(
-            draw, start, end, fill, width=3, dash_length=15, gap_length=10
+            draw, start, end, fill, width=17, dash_length=15, gap_length=10
         ):
             x1, y1 = start
             x2, y2 = end
@@ -322,7 +322,7 @@ class LineDrawer:
             return (0, 0) if dist == 0 else (dx / dist, dy / dist)
 
         def draw_dashed_line(
-            draw, start, end, fill, width=3, dash_length=15, gap_length=10
+            draw, start, end, fill, width=17, dash_length=15, gap_length=10
         ):
             x1, y1 = start
             x2, y2 = end
@@ -483,7 +483,7 @@ class LineDrawer:
             return (v[0] * s, v[1] * s)
 
         def draw_dashed_line(
-            draw, start, end, fill, width=6, dash_length=15, gap_length=10
+            draw, start, end, fill, width=17, dash_length=15, gap_length=10
         ):
             x1, y1 = start
             x2, y2 = end
