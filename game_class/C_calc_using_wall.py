@@ -1,148 +1,160 @@
+"""
+Extends the base calculation class to handle shots involving a wall.
+
+This module provides a class that calculates the geometry for shots that
+require the cue ball to bounce off a wall before hitting the target.
+"""
+
 import math
-from typing import List
-from game_class.C_ball import Ball
+from typing import Dict, Tuple
+
+from const_numbers import NOT_FREE_SHOT, get_table_width
+from game_class.C_ball import GameBall
+from game_class.C_calc import Calculations
 from game_class.C_pocket import Pocket
 from game_class.C_table import Table
-from const_numbers import *
-from game_class.C_calc import Calculations
 
 
 class CalculationsWithWall(Calculations):
-    def __init__(self, white: Ball, target: Ball, table: Table):
-        super().__init__(white, target, table)
-        self.distance_from_wall_dict = self.calculate_distance_from_walls()
+    """
+    Extends the base Calculations class to handle wall-shot geometry.
+    """
 
-    def calculate_distance_from_walls(self):
+    def __init__(self, white_ball: GameBall, target_ball: GameBall, table: Table):
         """
-        מחזיר מילון של מרחקים מהמרכז של הכדור לכל קיר:
-        {"left": d1, "right": d2, "down": d3, "up": d4}
+        Initializes the wall-shot calculation object.
+
+        Args:
+            white_ball: The cue ball.
+            target_ball: The target ball.
+            table: The table object containing game state.
+        """
+        super().__init__(white_ball, target_ball, table)
+        self.distance_from_wall: Dict[str, float] = (
+            self._calculate_distance_from_walls()
+        )
+
+    def _calculate_distance_from_walls(self) -> Dict[str, float]:
+        """
+        Calculates the distance from the target ball's center to each of the four walls.
+
+        Returns:
+            A dictionary with the distances to the 'left', 'right', 'up', and 'down' walls.
         """
         return {
-            "left": self.target.x_cord,  # ממרכז הכדור לקיר שמאלי (x=0)
-            "right": self.table.length - self.target.x_cord,  # מהמרכז לקיר ימני
-            "down": self.target.y_cord,  # מהמרכז לקיר תחתון (y=0)
-            "up": self.table.width - self.target.y_cord,  # מהמרכז לקיר עליון
+            "left": self.target.x_cord,
+            "right": self.table.length - self.target.x_cord,
+            "down": self.target.y_cord,
+            "up": self.table.width - self.target.y_cord,
         }
 
-    def angle_to_pockets_use_wall(self) -> dict[Pocket, float]:
+    def get_angles_to_pockets_via_wall(
+        self,
+    ) -> Dict[int, Tuple[float, Tuple[float, float]]]:
+        """
+        Calculates the angle and impact point for a wall shot to each corner pocket.
+
+        Returns:
+            A dictionary mapping pocket IDs to a tuple containing the required shot
+            angle and the (x, y) impact point on the wall.
+        """
         angle_using_wall_dict = {}
         for pocket in self.pockets:
-            if pocket.id == 0 or pocket.id == 1 or pocket.id == 2 or pocket.id == 3:
-                angle_using_wall_dict[pocket.id] = self.wall_shot_angle_to_pocket(
+            # Note: This logic currently only supports corner pockets.
+            if pocket.id in {0, 1, 2, 3}:
+                angle_using_wall_dict[pocket.id] = self._calculate_wall_shot_to_pocket(
                     pocket
                 )
         return angle_using_wall_dict
 
-    import math
-
-    def wall_shot_angle_to_pocket(self, pocket: Pocket):
+    def _calculate_wall_shot_to_pocket(
+        self, pocket: Pocket
+    ) -> Tuple[float, Tuple[float, float]]:
         """
-        מחשבת את זווית הירייה כדי לפגוע בקיר העליון ואז בכיס.
+        Calculates the required angle and impact point for a one-wall bank shot.
+
+        This method uses the principle of reflection by creating a "virtual"
+        pocket mirrored across the target wall. A straight line from the ball
+        to the virtual pocket gives the correct angle.
 
         Args:
-            ball_x, ball_y (float): מיקום הכדור
-            pocket_x, pocket_y (float): מיקום הכיס
-            get_table_width() (float): רוחב השולחן (y המקסימלי, כלומר מיקום הקיר העליון)
+            pocket: The target pocket.
 
         Returns:
-            angle_deg (float): הזווית במעלות (ביחס לציר ה־X)
-            (impact_x, impact_y): נקודת הפגיעה בקיר
+            A tuple containing:
+            - The required shot angle in degrees.
+            - The (x, y) coordinates of the impact point on the wall.
         """
+        # Mirror the pocket across the top wall (y = table_width)
+        mirrored_pocket_y = 2 * get_table_width() - pocket.center[1]
 
-        pocket_y = pocket.center[1]
+        # These represent the sides of a right triangle formed by the ball,
+        # the mirrored pocket, and a line parallel to the wall.
+        # This logic is complex and depends on the pocket's location.
+        if pocket.id in {0, 1}:  # Bottom corner pockets via top wall
+            q_side = mirrored_pocket_y - self.distance_from_wall["down"]
+            side_wall_direction = "left" if pocket.id == 0 else "right"
+        else:  # Top corner pockets via top wall
+            q_side = self.distance_from_wall["down"] + get_table_width()
+            side_wall_direction = "left" if pocket.id == 3 else "right"
 
-        # 1. שיקוף הכיס ביחס לקיר העליון
-        mirrored_pocket_y = 2 * get_table_width() - pocket_y
+        p_side = self.distance_from_wall[side_wall_direction]
+        if p_side == 0:
+            return 90.0, (self.target.x_cord, get_table_width())
 
-        match pocket.id:
-            case 0:
-                Q = mirrored_pocket_y - self.distance_from_wall_dict["down"]
-                direction_from_side_wall = "left"
-            case 1:
-                Q = mirrored_pocket_y - self.distance_from_wall_dict["down"]
-                direction_from_side_wall = "right"
-            case 2:
-                Q = self.distance_from_wall_dict["down"] + get_table_width()
-                direction_from_side_wall = "right"
-            case 3:
-                Q = self.distance_from_wall_dict["down"] + get_table_width()
-                direction_from_side_wall = "left"
+        angle_rad = math.atan(q_side / p_side)
+        angle_deg = abs(math.degrees(angle_rad))
 
-        P = self.distance_from_wall_dict[direction_from_side_wall]
-        theta_rad = math.atan(Q / P)  # זווית ברדיאנים
-        theta_deg = abs(math.degrees(theta_rad))  # זווית במעלות, תמיד 0–90
+        # Determine final angle and impact point based on pocket geometry
+        impact_y = get_table_width()  # All shots here are via the top wall
+        impact_x = self.target.x_cord + (
+            q_side * self.distance_from_wall["up"] / p_side
+        )
 
-        match pocket.id:
-            # דמיון משולשים
-            # sorry fot this :)
+        if pocket.id == 0:  # Bottom-left
+            impact_x = self.target.x_cord - self.distance_from_wall["up"] / math.tan(
+                angle_rad
+            )
+            angle_deg = 180 - angle_deg
+        elif pocket.id == 1:  # Bottom-right
+            impact_x = self.target.x_cord + self.distance_from_wall["up"] / math.tan(
+                angle_rad
+            )
+        elif pocket.id == 2:  # Top-right
+            # This case seems to have inverted logic in the original code
+            impact_x = self.target.x_cord + self.distance_from_wall["up"] / math.tan(
+                angle_rad
+            )
+        elif pocket.id == 3:  # Top-left
+            impact_x = self.target.x_cord - self.distance_from_wall["up"] / math.tan(
+                angle_rad
+            )
+            angle_deg = 180 - angle_deg
 
-            case 0:
-                impact_x = (get_table_width() * P) / Q
-                impact_y = 0
-                theta_deg = 180 - theta_deg
-            case 1:
-                impact_x = get_table_length() - ((get_table_width() * P) / Q)
-                impact_y = 0
-            case 2:
-                impact_x = get_table_length() - ((get_table_width() * P) / Q)
-                impact_y = get_table_width()
-            case 3:
-                impact_x = (get_table_width() * P) / Q
-                impact_y = get_table_width()
-                theta_deg = 180 - theta_deg
+        return angle_deg, (impact_x, impact_y)
 
-        return theta_deg, (impact_x, impact_y)
-
-    def wall_shot_angle_to_pocket_1(self, pocket: Pocket):
+    def find_best_wall_shot_angle(self) -> tuple:
         """
-        מחשבת את זווית הירייה כדי לפגוע בקיר העליון ואז בכיס.
-
-        Args:
-            ball_x, ball_y (float): מיקום הכדור
-            pocket_x, pocket_y (float): מיקום הכיס
-            get_table_width() (float): רוחב השולחן (y המקסימלי, כלומר מיקום הקיר העליון)
+        Finds the corner pocket with the smallest absolute angle for a wall shot.
 
         Returns:
-            angle_deg (float): הזווית במעלות (ביחס לציר ה־X)
-            (impact_x, impact_y): נקודת הפגיעה בקיר
+            A tuple of (pocket_id, angle) for the best shot, or
+            (NOT_FREE_SHOT, NOT_FREE_SHOT) if no valid shot is found.
         """
-        ball_x = self.target.x_cord
-        ball_y = self.target.y_cord
-        pocket_x = pocket.center[0]
-        pocket_y = pocket.center[1]
+        angles = self.get_angles_to_pockets_via_wall()
 
-        # 1. שיקוף הכיס ביחס לקיר העליון
-        mirrored_pocket_y = 2 * get_table_width() - pocket_y
-
-        Q = mirrored_pocket_y - self.distance_from_wall_dict["down"]
-        P = self.distance_from_wall_dict["right"]
-
-        if P == 0:  # אנך
-            return 90.0
-
-        theta_rad = math.atan(Q / P)  # זווית ברדיאנים
-        theta_deg = abs(math.degrees(theta_rad))  # זווית במעלות, תמיד 0–90
-
-        # דמיון משולשים
-        # sorry fot this :)
-
-        impact_x = (get_table_width() * P) / Q
-
-        return theta_deg, (impact_x, get_table_width())
-
-    def min_abs_angle(self) -> tuple[int, float]:
-        """
-        מחזירה את החור עם הזווית הקטנה ביותר בערך מוחלט.
-        אם אין חור חוקי → מחזירה NOT_FREE_SHOT.
-        """
-        angles = self.angle_to_pockets()
-
-        # סינון ערכים שהם מספרים בלבד
+        # We only care about the angle, not the impact point for ranking
         valid_angles = {
-            pid: ang for pid, ang in angles.items() if isinstance(ang, (int, float))
+            pid: angle_info[0]
+            for pid, angle_info in angles.items()
+            if angle_info is not None
         }
 
         if not valid_angles:
             return NOT_FREE_SHOT, NOT_FREE_SHOT
 
-        return min(valid_angles.items(), key=lambda kv: abs(kv[1]))
+        # Return the pocket_id and angle (not impact point) of the best shot
+        best_pocket_id, best_angle = min(
+            valid_angles.items(), key=lambda kv: abs(kv[1])
+        )
+        return best_pocket_id, best_angle

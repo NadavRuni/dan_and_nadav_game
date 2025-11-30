@@ -1,9 +1,17 @@
+"""
+Defines the Pocket object used in the game logic.
+"""
+
 from dataclasses import dataclass
 from typing import Tuple, Optional
 
 
 @dataclass
 class Pocket:
+    """
+    Represents a pocket on the pool table.
+    """
+
     id: int
     center: Tuple[float, float]
     radius: float
@@ -11,12 +19,20 @@ class Pocket:
     location: Optional[str] = None
     pocket_img_path: Optional[str] = None
 
-    def position(self) -> Tuple[float, float]:
-        """Return (x, y) position of the pocket."""
+    def get_position(self) -> Tuple[float, float]:
+        """
+        Returns the (x, y) position of the pocket's center.
+
+        Returns:
+            A tuple containing the x and y coordinates.
+        """
         return self.center
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """
+        Returns a string representation of the Pocket object.
+        """
         return (
-            f"Pocket(id={self.id}, pos=({self.center[0]}, {self.center[1]}), "
-            f"radius={self.radius}, location={self.location})"
+            f"Pocket(id={self.id}, pos=({self.center[0]:.2f}, {self.center[1]:.2f}), "
+            f"radius={self.radius:.2f}, location={self.location})"
         )

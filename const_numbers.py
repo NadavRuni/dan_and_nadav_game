@@ -1,278 +1,371 @@
+"""
+Global Configuration and Application State Management.
+
+This module serves a dual purpose:
+1.  It defines file system paths and geometric constants for the pool table
+    analysis.
+2.  It manages the mutable state of the application using global variables and
+    accessor functions.
+
+Warning:
+    The use of global variables for application state is a significant
+    architectural flaw. It makes the system difficult to test, debug, and scale,
+    and it is not safe for concurrent requests. A future refactor should
+    encapsulate this state within a dedicated context or state management class
+    that is passed explicitly through the application.
+
+"""
+
 import math
 from pathlib import Path
+from typing import List, Optional
+
 from analyzer_table.launcher_helper.json_models import Rectangle, Ball_Color
 from game_class.C_pocket import Pocket
-from typing import List
 
-# table_config.py
+# --- Mutable Global State ---
+# These variables store the application's state and are modified during runtime.
+# This is a temporary and unsafe design.
 
-TABLE_LENGTH = 290
-TABLE_WIDTH = 145
-BALL_TYPE = "solid"
-POCKET_PATH = ""
-RECTANGLE_CROPED = None
-USE_PREDICTED_POCKETS = False
-DETECTED_POCKETS: List[Pocket] | None = None
-WIDTH_PX = 0
-HEIGHT_PX = 0
+_TABLE_LENGTH_CM: float = 290.0
+_TABLE_WIDTH_CM: float = 145.0
+_PLAYER_BALL_TYPE: str = Ball_Color.SOLID
+_CROPPED_IMAGE_PATH: str = ""
+_CROPPED_RECTANGLE: Optional[Rectangle] = None
+_USE_PREDICTED_POCKETS: bool = False
+_DETECTED_POCKETS: Optional[List[Pocket]] = None
+_IMAGE_WIDTH_PX: float = 0.0
+_IMAGE_HEIGHT_PX: float = 0.0
+
+# --- File System Paths and Constants ---
+
+BASE_DIR = Path(__file__).resolve().parent
+OUTPUT_DIR = BASE_DIR / "output"
+UPLOAD_DIR = BASE_DIR / "uploads"
+FRONTEND_DIR = BASE_DIR / "frontend"
+
+RECTANGLE_JSON_PATH = "rectangles_cache.json"
+OUTPUT_IMAGE_PATH = OUTPUT_DIR / "img.png"
+OUTPUT_CONTACT_VIEW_PATH = BASE_DIR / "img_contact.png"
+FELT_MASK_PATH = "output/debug/black_white_detect/01_felt_mask.jpg"
+
+MERGE_MAX_Y_DIFF: int = 65  # Allowed pixel distance on Y-axis for merging
+NOT_FREE_SHOT: str = "dont have a free shot"
+FORSE_WALL_SHOT: bool = False  # Debug flag to force wall shot calculations
+
+# --- State Accessor Functions ---
 
 
-# -------------------------------
-# 📏 TABLE LENGTH
-# -------------------------------
-def get_table_length() -> int | float:
-    """מחזיר את אורך השולחן הנוכחי."""
-    global TABLE_LENGTH
-    return TABLE_LENGTH
+def get_table_length() -> float:
+    """Returns the current table length in centimeters."""
+    global _TABLE_LENGTH_CM
+    return _TABLE_LENGTH_CM
 
 
-def set_table_length(value: int | float) -> None:
-    """מעדכן את אורך השולחן, בתנאי שהערך חיובי."""
-    global TABLE_LENGTH
+def set_table_length(value: float) -> None:
+    """
+    Updates the table length.
+
+    Args:
+        value: The new table length in centimeters.
+
+    Raises:
+        ValueError: If the value is not a positive number.
+    """
+    global _TABLE_LENGTH_CM
     if value <= 0:
-        raise ValueError("TABLE_LENGTH must be a positive number.")
-    TABLE_LENGTH = value
-    print(f"✅ Updated TABLE_LENGTH = {TABLE_LENGTH}")
+        raise ValueError("Table length must be a positive number.")
+    _TABLE_LENGTH_CM = value
+    print(f"✅ Updated TABLE_LENGTH = {_TABLE_LENGTH_CM}")
 
 
-# -------------------------------
-# 📐 TABLE WIDTH
-# -------------------------------
-def get_table_width() -> int | float:
-    """מחזיר את רוחב השולחן הנוכחי."""
-    global TABLE_WIDTH
-    return TABLE_WIDTH
+def get_table_width() -> float:
+    """Returns the current table width in centimeters."""
+    global _TABLE_WIDTH_CM
+    return _TABLE_WIDTH_CM
 
 
-def set_table_width(value: int | float) -> None:
-    """מעדכן את רוחב השולחן, בתנאי שהערך חיובי."""
-    global TABLE_WIDTH
+def set_table_width(value: float) -> None:
+    """
+    Updates the table width.
+
+    Args:
+        value: The new table width in centimeters.
+
+    Raises:
+        ValueError: If the value is not a positive number.
+    """
+    global _TABLE_WIDTH_CM
     if value <= 0:
-        raise ValueError("TABLE_WIDTH must be a positive number.")
-    TABLE_WIDTH = value
-    print(f"✅ Updated TABLE_WIDTH = {TABLE_WIDTH}")
-
-
-def get_ball_radius() -> int | float:
-    """מחזיר את רדיוס הכדור הנוכחי."""
-    return get_table_length() / 100
-
-
-def get_ball_radius_photo() -> int | float:
-    """מחזיר את רדיוס הכדור הנוכחי לתמונות."""
-    return get_table_length() / 60
-
-
-def get_pocket_margin() -> int | float:
-    """מחזיר את מרווח הכיסים הנוכחי."""
-    return get_table_length() / 45
-
-
-def get_pocket_margin_merge() -> int | float:
-    """מחזיר את מרווח הכיסים הנוכחי."""
-    return get_table_length() / 30
-
-
-def get_wall_margin() -> int | float:
-    """מחזיר את מרווח הקירות הנוכחי."""
-    return get_table_length() / 37
-
-
-def get_ball_diameter() -> int | float:
-    """מחזיר את קוטר הכדור הנוכחי."""
-    return get_ball_radius() * 2.2
-
-
-def get_corner_pocket_radius() -> int | float:
-    """מחזיר את רדיוס הכיסים הפינתיים הנוכחי."""
-    return get_table_length() / 72.5
-
-
-def get_side_pocket_radius() -> int | float:
-    """מחזיר את רדיוס הכיסים הצדדיים הנוכחי."""
-    return get_table_length() / 64.4
-
-
-def get_min_distance_from_pocket() -> int | float:
-    """מחזיר את המרחק המינימלי מהכיס לפגיעה בטוחה."""
-    return get_ball_radius() * 1.2
-
-
-def get_safe_distance() -> int | float:
-    """מחזיר את המרחק הבטוח בין כדורים."""
-    return get_ball_radius() * 0.5
-
-
-def get_pocket_radius() -> int | float:
-    """מחזיר את רדיוס הכיס הנוכחי."""
-    return get_table_length() / 50
-
-
-def get_pocket_up_radius() -> int | float:
-    return get_pocket_radius() * 1.5
-
-
-def get_pocket_down_radius() -> int | float:
-    return get_pocket_radius() * 0.5
-
-
-def get_pocket_radius_determinate() -> int | float:
-    return get_pocket_radius() * 0.5
-
-
-def get_ball_radius_determinate() -> int | float:
-    return get_ball_radius() * 0.3
-
-
-def get_max_white_to_target_distance() -> int | float:
-    """מחזיר את המרחק המקסימלי בין הכדור הלבן לכדור היעד."""
-    return get_table_length() / 2
-
-
-def get_get_max_white_to_target_distance() -> int | float:
-    """מחזיר את המרחק המקסימלי בין כדור היעד לכיס."""
-    return math.hypot(get_table_length(), get_table_width()) / 2
-
-
-def get_crop_half_size() -> int:
-    """מחזיר את חצי הגודל של החיתוך לתמונות."""
-    return get_table_length() / 9.5
-
-
-def get_safe_from_wall() -> int | float:
-    """מחזיר את המרחק הבטוח מהקירות."""
-    return get_ball_radius() * 1.4
-
-
-def get_merge_max_diff() -> int:
-    return int(get_table_length() / 20)  # מרחק מותר בציר X
-
-
-def get_merge_overlap_margin() -> int:
-    return get_ball_radius() * 0.2
+        raise ValueError("Table width must be a positive number.")
+    _TABLE_WIDTH_CM = value
+    print(f"✅ Updated TABLE_WIDTH = {_TABLE_WIDTH_CM}")
 
 
 def get_ball_type() -> str:
-    return BALL_TYPE
+    """Returns the player's currently selected ball type ('SOLID' or 'STRIPED')."""
+    return _PLAYER_BALL_TYPE
 
 
 def set_ball_type(value: str) -> None:
+    """
+    Sets the player's ball type.
+
+    Args:
+        value: The ball type string, accepts 'solids' or 'stripes' as aliases.
+
+    Raises:
+        ValueError: If the provided ball type is invalid.
+    """
+    global _PLAYER_BALL_TYPE
     if value == "solids":
         value = Ball_Color.SOLID
     elif value == "stripes":
         value = Ball_Color.STRIPED
-    if value not in {
-        Ball_Color.SOLID,
-        Ball_Color.STRIPED,
-    }:
-        raise ValueError("Invalid ball type.")
-    global BALL_TYPE
-    BALL_TYPE = value
+
+    if value not in {Ball_Color.SOLID, Ball_Color.STRIPED}:
+        raise ValueError(f"Invalid ball type: '{value}'")
+    _PLAYER_BALL_TYPE = value
 
 
 def get_pocket_path() -> str:
-    return POCKET_PATH
+    """Returns the file path to the cropped image used for pocket analysis."""
+    return _CROPPED_IMAGE_PATH
 
 
 def set_pocket_path(value: str) -> None:
+    """Sets the file path for the cropped image used for pocket analysis."""
+    global _CROPPED_IMAGE_PATH
     print("✅ Setting pocket path to:", value)
-    global POCKET_PATH
-    POCKET_PATH = value
+    _CROPPED_IMAGE_PATH = value
 
 
-def get_rectangle_croped() -> Rectangle | None:
-    return RECTANGLE_CROPED
+def get_rectangle_croped() -> Optional[Rectangle]:
+    """Returns the Rectangle object used for cropping."""
+    return _CROPPED_RECTANGLE
 
 
 def set_rectangle_croped(value: Rectangle) -> None:
-    global RECTANGLE_CROPED
-    RECTANGLE_CROPED = value
+    """Sets the Rectangle object used for cropping."""
+    global _CROPPED_RECTANGLE
+    _CROPPED_RECTANGLE = value
 
 
 def get_use_predicted_pockets() -> bool:
-    return USE_PREDICTED_POCKETS
+    """Returns True if user-predicted pockets should be used."""
+    return _USE_PREDICTED_POCKETS
 
 
 def set_use_predicted_pockets(value: bool) -> None:
-    global USE_PREDICTED_POCKETS
-    USE_PREDICTED_POCKETS = value
+    """Sets the flag to use user-predicted pockets."""
+    global _USE_PREDICTED_POCKETS
+    _USE_PREDICTED_POCKETS = value
 
 
-def get_detected_pockets() -> List[Pocket] | None:
-    return DETECTED_POCKETS
+def get_detected_pockets() -> Optional[List[Pocket]]:
+    """Returns the list of detected Pocket objects."""
+    return _DETECTED_POCKETS
 
 
 def set_detected_pockets(value: List[Pocket]) -> None:
-    print("✅ Setting detected pockets:")
-    print(value)
-    global DETECTED_POCKETS
-    DETECTED_POCKETS = value
+    """Sets the list of detected Pocket objects."""
+    global _DETECTED_POCKETS
+    print("✅ Setting detected pockets:", value)
+    _DETECTED_POCKETS = value
 
 
-def clamp_to_table_pocket(x: float, length: float) -> float:
-    """גזירה לגבולות השולחן תוך שמירה על רדיוס הכדור."""
-    return max(get_ball_radius(), min(length - get_ball_radius(), x))
+def get_width_px() -> float:
+    """Returns the width of the cropped image in pixels."""
+    return _IMAGE_WIDTH_PX
 
 
-def set_set_detected_pockets_to_upside_downside() -> None:
-    global DETECTED_POCKETS
+def set_width_px(value: float) -> None:
+    """Sets the width of the cropped image in pixels."""
+    global _IMAGE_WIDTH_PX
+    _IMAGE_WIDTH_PX = value
+
+
+def get_height_px() -> float:
+    """Returns the height of the cropped image in pixels."""
+    return _IMAGE_HEIGHT_PX
+
+
+def set_height_px(value: float) -> None:
+    """Sets the height of the cropped image in pixels."""
+    global _IMAGE_HEIGHT_PX
+    _IMAGE_HEIGHT_PX = value
+
+
+# --- Derived Geometric Calculations ---
+# These functions calculate geometric properties based on the current table size.
+
+
+def get_ball_radius() -> float:
+    """Calculates the ball radius based on table length."""
+    return get_table_length() / 100.0
+
+
+def get_ball_radius_photo() -> float:
+    """Calculates a larger ball radius for visualization purposes."""
+    return get_table_length() / 60.0
+
+
+def get_pocket_margin() -> float:
+    """Calculates the margin around pockets for detection."""
+    return get_table_length() / 45.0
+
+
+def get_pocket_margin_merge() -> float:
+    """Calculates a larger pocket margin used for merging pocket detections."""
+    return get_table_length() / 30.0
+
+
+def get_wall_margin() -> float:
+    """Calculates the margin from the table walls."""
+    return get_table_length() / 37.0
+
+
+def get_ball_diameter() -> float:
+    """Calculates the effective ball diameter, including a small buffer."""
+    return get_ball_radius() * 2.2
+
+
+def get_corner_pocket_radius() -> float:
+    """Calculates the radius for corner pockets."""
+    return get_table_length() / 72.5
+
+
+def get_side_pocket_radius() -> float:
+    """Calculates the radius for side pockets."""
+    return get_table_length() / 64.4
+
+
+def get_min_distance_from_pocket() -> float:
+    """
+    Calculates the minimum safe distance from a pocket's edge for a shot to
+    be considered valid.
+    """
+    return get_ball_radius() * 1.2
+
+
+def get_safe_distance() -> float:
+    """Calculates the safe distance buffer between two balls."""
+    return get_ball_radius() * 0.5
+
+
+def get_pocket_radius() -> float:
+    """Calculates a general pocket radius."""
+    return get_table_length() / 50.0
+
+
+def get_pocket_up_radius() -> float:
+    """Calculates a larger pocket radius for upward angle shots."""
+    return get_pocket_radius() * 1.5
+
+
+def get_pocket_down_radius() -> float:
+    """Calculates a smaller pocket radius for downward angle shots."""
+    return get_pocket_radius() * 0.5
+
+
+def get_pocket_radius_determinate() -> float:
+    """Calculates a smaller, more precise radius for pocket determination."""
+    return get_pocket_radius() * 0.5
+
+
+def get_ball_radius_determinate() -> float:
+    """Calculates a smaller, more precise radius for ball determination."""
+    return get_ball_radius() * 0.3
+
+
+def get_max_white_to_target_distance() -> float:
+    """
+    Returns the maximum allowed distance between the cue ball and a target ball.
+    """
+    return get_table_length() / 2.0
+
+
+def get_get_max_white_to_target_distance() -> float:
+    """
+    Returns the maximum allowed distance between a target ball and a pocket.
+    This is roughly half the diagonal of the table.
+    """
+    return math.hypot(get_table_length(), get_table_width()) / 2.0
+
+
+def get_crop_half_size() -> int:
+    """
+    Calculates half the size of the cropped area for creating ball image samples.
+    """
+    return int(get_table_length() / 9.5)
+
+
+def get_safe_from_wall() -> float:
+    """Calculates the safe distance a ball must be from a wall."""
+    return get_ball_radius() * 1.4
+
+
+def get_merge_max_diff() -> int:
+    """
+    Returns the maximum allowed pixel distance on the X-axis for merging
+    overlapping ball detections.
+    """
+    return int(get_table_length() / 20)
+
+
+def get_merge_overlap_margin() -> float:
+    """Returns the pixel margin for considering if two ball detections overlap."""
+    return get_ball_radius() * 0.2
+
+
+# --- Coordinate Conversion and Utility Functions ---
+
+
+def clamp_to_table_pocket(coordinate: float, max_dimension: float) -> float:
+    """
+    Clamps a coordinate to the table boundaries, respecting the ball radius.
+
+    Args:
+        coordinate: The X or Y coordinate to clamp.
+        max_dimension: The maximum dimension (length or width) of the table.
+
+    Returns:
+        The clamped coordinate.
+    """
+    ball_rad = get_ball_radius()
+    return max(ball_rad, min(max_dimension - ball_rad, coordinate))
+
+
+def convert_detected_pockets_to_game_coordinates() -> None:
+    """
+    Converts the coordinates of detected pockets from pixel space to game space.
+
+    This function transforms pocket centers from image pixels (with Y=0 at the top)
+    to game centimeters (with Y=0 at the bottom) and updates the global list of
+    detected pockets. It relies on the global state for pixel dimensions and the
+    list of pockets.
+    """
+    global _DETECTED_POCKETS
+    if not _DETECTED_POCKETS:
+        return
+
     pockets_after_conversion: List[Pocket] = []
-    sx = get_table_length() / max(1.0, get_width_px())
-    sy = get_table_width() / max(1.0, get_height_px())
+    scale_x = get_table_length() / max(1.0, get_width_px())
+    scale_y = get_table_width() / max(1.0, get_height_px())
 
-    for pocket in DETECTED_POCKETS:
-        game_x_pocket = clamp_to_table_pocket(pocket.center[0] * sx, get_table_length())
-        game_y_pocket = clamp_to_table_pocket(
-            (get_height_px() - pocket.center[1]) * sy, get_table_width()
+    for pocket in _DETECTED_POCKETS:
+        game_x = clamp_to_table_pocket(pocket.center[0] * scale_x, get_table_length())
+        game_y = clamp_to_table_pocket(
+            (get_height_px() - pocket.center[1]) * scale_y, get_table_width()
         )
         pockets_after_conversion.append(
             Pocket(
                 id=pocket.id,
-                center=(game_x_pocket, game_y_pocket),
+                center=(game_x, game_y),
                 radius=pocket.radius,
-                location=pocket.location if pocket.location is not None else "",
+                location=pocket.location or "",
                 pocket_img_cordinates_on_table=pocket.pocket_img_cordinates_on_table,
-                pocket_img_path=(
-                    pocket.pocket_img_path if pocket.pocket_img_path is not None else ""
-                ),
+                pocket_img_path=pocket.pocket_img_path or "",
             )
         )
-    DETECTED_POCKETS = pockets_after_conversion
-
-
-def get_width_px() -> float:
-    return WIDTH_PX
-
-
-def set_width_px(value: float) -> None:
-    global WIDTH_PX
-    WIDTH_PX = value
-
-
-def get_height_px() -> float:
-    return HEIGHT_PX
-
-
-def set_height_px(value: float) -> None:
-    global HEIGHT_PX
-    HEIGHT_PX = value
-
-
-MERGE_MAX_Y_DIFF = 65  # מרחק מותר בציר Y
-NOT_FREE_SHOT = "dont have a free shot"
-
-OUTPUT_JSON_PATH = "photos/output/img_JSON.json"
-BASE_DIR = Path(__file__).resolve().parent
-OUTPUT_DIR = BASE_DIR / "output"
-UPLOAD_DIR = BASE_DIR / "uploads"
-
-FRONTEND_DIR = BASE_DIR / "frontend"
-
-
-OUTPUT_IMAGE_PATH = OUTPUT_DIR / "img.png"
-OUTPUT_CONTACT_VIEW_PATH = BASE_DIR / "img_contact.png"
-FORSE_WALL_SHOT = False
-
-
-RECTANGLE_JSON_PATH = "rectangles_cache.json"
-FELT_MASK_PATH = "output/debug/black_white_detect/01_felt_mask.jpg"
+    set_detected_pockets(pockets_after_conversion)

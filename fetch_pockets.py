@@ -1,11 +1,31 @@
+"""
+Utilities for updating pocket locations based on user input.
+
+This module contains functions to process pocket locations provided by a user
+from a frontend interface, scale them to the original image coordinates, and
+update the application's list of detected pockets.
+"""
+
 import math
-from typing import List, Tuple
-from const_numbers import *
+from typing import Dict, List, Optional
+
+from const_numbers import get_detected_pockets, set_detected_pockets
 from game_class.C_pocket import Pocket
 
 
-def find_nearest_pocket(pockets: List[Pocket], center: dict) -> Pocket | None:
-    """Finds the nearest pocket object to a given center point."""
+def find_nearest_pocket(
+    pockets: List[Pocket], center: Dict[str, float]
+) -> Optional[Pocket]:
+    """
+    Finds the nearest pocket object to a given center point.
+
+    Args:
+        pockets: A list of Pocket objects to search through.
+        center: A dictionary with 'x' and 'y' keys for the point.
+
+    Returns:
+        The Pocket object closest to the center point, or None if the list is empty.
+    """
     if not pockets:
         return None
 
@@ -24,47 +44,51 @@ def find_nearest_pocket(pockets: List[Pocket], center: dict) -> Pocket | None:
     return nearest_pocket
 
 
-def fetch_pockets_from_data(data: dict):
+def fetch_pockets_from_data(data: Dict) -> None:
     """
-    Updates pocket locations based on new data, preserving unmatched pockets.
+    Updates global pocket locations based on new data from the frontend.
+
+    This function scales the new pocket points from display coordinates to
+    original image coordinates and matches them to the nearest existing
+    pockets, updating their centers. Unmatched existing pockets are preserved.
+
+    Note:
+        This function relies on global state via `get_detected_pockets` and
+        `set_detected_pockets`, which is not a robust design.
+
+    Args:
+        data: A dictionary containing the new pocket points and coordinate
+              system dimensions.
     """
-    if not all(
-        k in data
-        for k in [
-            "pocket_points",
-            "display_width",
-            "display_height",
-            "original_width",
-            "original_height",
-        ]
-    ):
-        print("user did not change pocket detection.")
-        return None
+    required_keys = [
+        "pocket_points",
+        "display_width",
+        "display_height",
+        "original_width",
+        "original_height",
+    ]
+    if not all(key in data for key in required_keys):
+        print("User did not provide new pocket detection data.")
+        return
 
-    display_w = float(data["display_width"])
-    display_h = float(data["display_height"])
-    original_w = float(data["original_width"])
-    original_h = float(data["original_height"])
+    # Calculate scaling factors
+    scale_x = data["original_width"] / data["display_width"]
+    scale_y = data["original_height"] / data["display_height"]
 
-    scale_x = original_w / display_w
-    scale_y = original_h / display_h
-
-    new_centers = data.get("pocket_points", [])
-    centers_after_scaling = [
-        {"x": c["x"] * scale_x, "y": c["y"] * scale_y} for c in new_centers
+    # Scale the new pocket centers
+    new_centers = [
+        {"x": c["x"] * scale_x, "y": c["y"] * scale_y}
+        for c in data.get("pocket_points", [])
     ]
 
-    old_pockets = get_detected_pockets()
-    if old_pockets is None:
-        old_pockets = []
-
+    old_pockets = get_detected_pockets() or []
     unmatched_pockets = old_pockets.copy()
     updated_pockets = []
 
-    for new_center in centers_after_scaling:
+    for new_center in new_centers:
         nearest_pocket = find_nearest_pocket(unmatched_pockets, new_center)
         if nearest_pocket:
-            # Create a new pocket with the updated center
+            # Create a new pocket with the updated center but same ID/radius
             updated_pocket = Pocket(
                 id=nearest_pocket.id,
                 center=(new_center["x"], new_center["y"]),
@@ -73,34 +97,11 @@ def fetch_pockets_from_data(data: dict):
                 pocket_img_cordinates_on_table=(new_center["x"], new_center["y"]),
             )
             updated_pockets.append(updated_pocket)
-            # Remove from unmatched to prevent matching it again
             unmatched_pockets.remove(nearest_pocket)
 
-    # Combine the newly updated pockets with the remaining old ones
+    # Combine the newly updated pockets with the old ones that weren't matched
     final_pockets = updated_pockets + unmatched_pockets
-
     set_detected_pockets(final_pockets)
 
-    print(
-        f"[fetch_pockets_from_data] Scaling factors: scale_x={scale_x:.4f}, scale_y={scale_y:.4f}"
-    )
-    print(f"[fetch_pockets_from_data] Updated {len(updated_pockets)} pocket(s).")
-    print(f"[fetch_pockets_from_data] Kept {len(unmatched_pockets)} old pocket(s).")
-    print(f"[fetch_pockets_from_data] Total pockets now: {len(final_pockets)}")
-    print("[fetch_pockets_from_data] Final pockets:")
-    print(final_pockets)
-
-
-def find_nearest_pocket_location(old_pockets: List[Pocket], center: dict) -> str | None:
-    """
-    Finds the location of the nearest pocket to a given center point.
-
-    Args:
-        old_pockets: A list of Pocket objects.
-        center: A dictionary with 'x' and 'y' keys representing the center point.
-
-    Returns:
-        The location (string) of the nearest pocket, or None if old_pockets is empty.
-    """
-    nearest = find_nearest_pocket(old_pockets, center)
-    return nearest.location if nearest else None
+    print(f"[fetch_pockets] Updated {len(updated_pockets)} pocket(s).")
+    print(f"[fetch_pockets] Total pockets now: {len(final_pockets)}")

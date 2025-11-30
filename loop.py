@@ -1,16 +1,34 @@
-import random
+"""
+Runs a simulation of the game analysis on randomly generated table layouts.
+
+This script creates a series of random table setups and, for each one, runs
+the full game analysis pipeline to find the best shot. The resulting table
+state, with the suggested shot, is saved as an image.
+"""
+
 import os
+import random
+
 import matplotlib.pyplot as plt
-from game_class.C_table import Table
+
+from const_numbers import get_ball_radius, get_table_length, get_table_width
+from game_class.C_ball import GameBall
 from game_class.C_draw import draw_table
-from const_numbers import *
-from game_class.C_ball import Ball
 from game_class.C_gameAnalayzer import GameAnalayzer
+from game_class.C_table import Table
 
 
-def run_one_simulation(run_idx: int, out_dir: str):
+def run_one_simulation(run_idx: int, out_dir: str) -> None:
+    """
+    Creates a single random table layout and runs the analysis on it.
+
+    Args:
+        run_idx: The index number of the current simulation run.
+        out_dir: The directory where the output image will be saved.
+    """
+    # Create the white and black balls
     x_white, y_white = get_table_length() / 2, get_table_width() / 2
-    white = Ball(0, x_white, y_white, "white", get_ball_radius())
+    white_ball = GameBall(0, x_white, y_white, "white", get_ball_radius())
 
     x_black = random.uniform(
         get_ball_radius() * 2, get_table_length() - get_ball_radius() * 2
@@ -18,59 +36,66 @@ def run_one_simulation(run_idx: int, out_dir: str):
     y_black = random.uniform(
         get_ball_radius() * 2, get_table_width() - get_ball_radius() * 2
     )
-    black = Ball(8, x_black, y_black, "black", get_ball_radius())
+    black_ball = GameBall(8, x_black, y_black, "black", get_ball_radius())
 
+    # Create a list of colored balls
     balls = []
-    colors = [
-        ("red", "solid"),
-        ("blue", "striped"),
-        ("green", "solid"),
-        ("yellow", "striped"),
-        ("orange", "solid"),
-        ("purple", "striped"),
-        ("brown", "solid"),
-        ("pink", "striped"),
-        ("cyan", "solid"),
-        ("magenta", "striped"),
-        ("lime", "solid"),
-        ("teal", "striped"),
-        ("gold", "solid"),
-        ("silver", "striped"),
+    ball_colors = [
+        "red",
+        "blue",
+        "green",
+        "yellow",
+        "orange",
+        "purple",
+        "brown",
+        "pink",
+        "cyan",
+        "magenta",
+        "lime",
+        "teal",
+        "gold",
+        "silver",
     ]
-
-    for i, (color, ball_type) in enumerate(colors, start=1):
+    for i, color in enumerate(ball_colors, start=1):
+        ball_type = "solid" if i <= 7 else "striped"
         x = random.uniform(
             get_ball_radius() * 2, get_table_length() - get_ball_radius() * 2
         )
         y = random.uniform(
             get_ball_radius() * 2, get_table_width() - get_ball_radius() * 2
         )
-        balls.append(Ball(str(i), x, y, ball_type, get_ball_radius()))
+        balls.append(GameBall(i, x, y, ball_type, get_ball_radius()))
 
-    # יצירת שולחן עם כל הכדורים
-    table = Table(get_table_length(), get_table_width(), [white, black] + balls)
+    # Create a table with all the balls
+    table = Table(
+        get_table_length(), get_table_width(), [white_ball, black_ball] + balls
+    )
 
-    game = GameAnalayzer(table)
-    best_shot = game.find_best_overall_shot("striped")
+    game_analyzer = GameAnalayzer(table)
+    best_shot_info = game_analyzer.find_best_overall_shot("striped")
 
-    if best_shot:
-        print(f"[{run_idx}] best shot is:", best_shot[0])
+    if best_shot_info:
+        print(f"[{run_idx:02d}] Best shot found: {best_shot_info[0]}")
 
-    # ציור ושמירה לקובץ
-    fig = draw_table(table, best_shot=best_shot[0] if best_shot else None)
+    # Draw the table and save it to a file
+    fig = draw_table(table, best_shot=best_shot_info[0] if best_shot_info else None)
     save_path = os.path.join(out_dir, f"table_{run_idx:02d}.png")
     fig.savefig(save_path)
     plt.close(fig)
 
 
 def main():
-    out_dir = "simulations"
-    os.makedirs(out_dir, exist_ok=True)
+    """
+    Runs a series of game analysis simulations and saves the results as images.
+    """
+    output_directory = "simulations"
+    os.makedirs(output_directory, exist_ok=True)
 
-    for i in range(1, 21):  # 20 ריצות
-        run_one_simulation(i, out_dir)
+    num_simulations = 20
+    for i in range(1, num_simulations + 1):
+        run_one_simulation(i, output_directory)
 
-    print(f"\n✅ Done! Saved 20 images inside ./{out_dir}")
+    print(f"\n✅ Done! Saved {num_simulations} images in ./{output_directory}")
 
 
 if __name__ == "__main__":

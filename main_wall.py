@@ -1,79 +1,64 @@
-from game_class.C_table import Table
-from game_class.C_draw import *
-from const_numbers import *
-from game_class.C_ball import *
-from game_class.C_calc import *
-from game_class.C_bestShot import *
-from game_class.C_gameAnalayzer import *
+"""
+A script for testing the game analysis with a predefined table layout,
+with a focus on evaluating wall shots.
+"""
+
 import math
 
+from const_numbers import get_ball_radius, get_table_length, get_table_width
+from game_class.C_ball import GameBall
+from game_class.C_gameAnalayzer import GameAnalayzer
+from game_class.C_table import Table
 
-def main():
-    # White ball in the center
-    x_white, y_white = get_table_length() / 2, get_table_width() / 2
 
-    # Choose your ball type
-    my_type = "striped"  # or "solid"
-    my_id = 1
+def main() -> None:
+    """
+    Sets up a predefined table layout and runs the game analysis to find the
+    best shots, including wall shots.
+    """
+    # Define a specific layout of balls on the table
+    white_ball = GameBall(0, 100, 111, "white", get_ball_radius())
+    black_ball = GameBall(8, 220, 40, "black", get_ball_radius())
+    my_ball = GameBall(1, 80, 50, "striped", get_ball_radius())
 
-    # Vector from center to pocket 0 (0,0)
-    dx = 0 - x_white
-    dy = 0 - y_white
-    dist = math.hypot(dx, dy)
+    # Add a set of obstacle balls with fixed coordinates
+    obstacle_balls = [
+        GameBall(2, 275, 135, "solid", get_ball_radius()),
+        GameBall(3, 145, 130, "solid", get_ball_radius()),
+        GameBall(9, 156, 135, "solid", get_ball_radius()),
+        GameBall(4, 275, 15, "solid", get_ball_radius()),
+        GameBall(5, 135, 15, "solid", get_ball_radius()),
+        GameBall(6, 155, 15, "solid", get_ball_radius()),
+        GameBall(7, 12, 15, "solid", get_ball_radius()),
+    ]
 
-    # Normalize direction
-    dir_x, dir_y = dx / dist, dy / dist
-
-    # Bigger spacing between balls
-    spacing = get_ball_radius() * 20
-    white = Ball(0, 100, 111, "white", get_ball_radius())
-
-    # Place black ball first after the white
-    black = Ball(8, 220, 40, "black", get_ball_radius())
-
-    # Place your ball further along the same line
-    x_my = x_white + dir_x * spacing * 2 - 20
-    y_my = y_white + dir_y * spacing * 2
-    my_ball = Ball(my_id, 80, 50, my_type, get_ball_radius())
-
-    # --- Extra balls with fixed coordinates ---
-    ball_a = Ball(2, 275, 135, "solid", get_ball_radius())
-    ball_b = Ball(3, 145, 130, "solid", get_ball_radius())
-    ball_b2 = Ball(9, 156, 135, "solid", get_ball_radius())
-
-    ball_c = Ball(4, 275, 15, "solid", get_ball_radius())
-    ball_d = Ball(5, 135, 15, "solid", get_ball_radius())
-    ball_e = Ball(6, 155, 15, "solid", get_ball_radius())
-    ball_f = Ball(7, 12, 15, "solid", get_ball_radius())
-
-    # Create table with only 3 balls
+    # Create the table with all the balls
     table = Table(
         get_table_length(),
         get_table_width(),
-        [
-            white,
-            ball_f,
-            black,
-            my_ball,
-            ball_a,
-            ball_b,
-            ball_c,
-            ball_d,
-            ball_e,
-            ball_b2,
-        ],
+        [white_ball, black_ball, my_ball] + obstacle_balls,
     )
-    # draw_table(table)
 
-    game = GameAnalayzer(table)
-    best_shot = game.find_best_overall_shot(my_type)
-    if len(best_shot) > 0:
-        print("best shot is:", best_shot[0])
-        # draw_table(table, best_shot=best_shot[0])
-    if len(best_shot) > 1:
-        print("second best shot is:", best_shot[1])
-    if len(best_shot) > 2:
-        print("third best shot is:", best_shot[2])
+    # Analyze the game state for the best shot for the 'striped' player
+    game_analyzer = GameAnalayzer(table)
+    best_shots = game_analyzer.find_best_overall_shot("striped")
+
+    if best_shots:
+        if len(best_shots) > 0:
+            print("Best shot is:", best_shots[0])
+        if len(best_shots) > 1:
+            print("Second best shot is:", best_shots[1])
+        if len(best_shots) > 2:
+            print("Third best shot is:", best_shots[2])
+    else:
+        print("No valid shots were found.")
+
+    # The drawing calls can be uncommented for visualization.
+    # from game_class.C_draw import draw_table
+    # if best_shots:
+    #     draw_table(table, best_shot=best_shots[0])
+    # else:
+    #     draw_table(table)
 
 
 if __name__ == "__main__":
