@@ -189,7 +189,7 @@ def full_analyzer_pipeline(image_path: str) -> AnalyzerResult:
         contenders = []
         for ball, score in candidates:
             diff = top_score - score
-            if diff < 10:
+            if diff < 50:
                 contenders.append(ball)
             else:
                 # בגלל שהרשימה ממויינת, ברגע שעברנו את ה-10 אין טעם להמשיך
