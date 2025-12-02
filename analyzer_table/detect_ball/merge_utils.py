@@ -119,14 +119,13 @@ def is_inside_inner_rectangle(ball: Ball, rect: Rectangle, margin: float) -> boo
                 distance = math.sqrt(
                     (ball_x - pocket_x) ** 2 + (ball_y - pocket_y) ** 2
                 )
-
                 # If the distance is less than sum of radii, they are likely the same object
-                if distance < (ball.radius + pocket_radius) * 0.5:
+                if distance < (ball.radius + pocket_radius) * 0.8:
                     Debugger.log(
                         f"⚠️ Ball at ({ball.center[0]:.1f}, {ball.center[1]:.1f}) is identified as a pocket ({pocket.location}) and will be excluded."
                     )
                     return False  # It's a pocket, so not "inside" the playable area
-
+                
             # If the ball is not identified as any of the pockets
             return True  # It is not a pocket, so it's a valid ball in this context.
 
