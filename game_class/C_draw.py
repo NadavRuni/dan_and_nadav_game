@@ -8,7 +8,7 @@ simulation purposes.
 
 import math
 import random
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import matplotlib.pyplot as plt
 

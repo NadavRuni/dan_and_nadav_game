@@ -7,7 +7,7 @@ geometrically sorted Rectangle object.
 
 from typing import Dict, Any, List, Tuple
 
-from analyzer_table.launcher_herlper.json_models import Rectangle
+from analyzer_table.launcher_helper.json_models import Rectangle
 
 
 def create_rectangle_from_data(point_data: Dict[str, Any]) -> Rectangle:

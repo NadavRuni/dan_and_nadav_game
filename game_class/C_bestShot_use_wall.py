@@ -1,5 +1,5 @@
 import math
-from game_class.C_ball import Ball
+from game_class.C_ball import GameBall
 from game_class.C_table import Table
 from game_class.C_pocket import Pocket
 from const_numbers import *
@@ -45,7 +45,7 @@ class BestWallShot(BestShot):
         return math.hypot(px - proj_x, py - proj_y)
 
     def angle_white_ball_wall(
-        self, white: Ball, target: Ball, center_wall: tuple[float, float]
+        self, white: GameBall, target: GameBall, center_wall: tuple[float, float]
     ) -> float:
         """
         מחזיר מילון של {pocket_id: angle} שבו הזווית היא ההפרש

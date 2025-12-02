@@ -20,7 +20,7 @@ import math
 from pathlib import Path
 from typing import List, Optional
 
-from analyzer_table.launcher_helper.json_models import Rectangle, Ball_Color
+from analyzer_table.launcher_helper.json_models import Rectangle, BallType
 from game_class.C_pocket import Pocket
 
 # --- Mutable Global State ---
@@ -29,7 +29,7 @@ from game_class.C_pocket import Pocket
 
 _TABLE_LENGTH_CM: float = 290.0
 _TABLE_WIDTH_CM: float = 145.0
-_PLAYER_BALL_TYPE: str = Ball_Color.SOLID
+_PLAYER_BALL_TYPE: str = BallType.SOLID
 _CROPPED_IMAGE_PATH: str = ""
 _CROPPED_RECTANGLE: Optional[Rectangle] = None
 _USE_PREDICTED_POCKETS: bool = False
@@ -46,6 +46,7 @@ FRONTEND_DIR = BASE_DIR / "frontend"
 
 RECTANGLE_JSON_PATH = "rectangles_cache.json"
 OUTPUT_IMAGE_PATH = OUTPUT_DIR / "img.png"
+OUTPUT_JSON_PATH = OUTPUT_DIR / "analysis.json"
 OUTPUT_CONTACT_VIEW_PATH = BASE_DIR / "img_contact.png"
 FELT_MASK_PATH = "output/debug/black_white_detect/01_felt_mask.jpg"
 
@@ -119,11 +120,11 @@ def set_ball_type(value: str) -> None:
     """
     global _PLAYER_BALL_TYPE
     if value == "solids":
-        value = Ball_Color.SOLID
+        value = BallType.SOLID
     elif value == "stripes":
-        value = Ball_Color.STRIPED
+        value = BallType.STRIPED
 
-    if value not in {Ball_Color.SOLID, Ball_Color.STRIPED}:
+    if value not in {BallType.SOLID, BallType.STRIPED}:
         raise ValueError(f"Invalid ball type: '{value}'")
     _PLAYER_BALL_TYPE = value
 

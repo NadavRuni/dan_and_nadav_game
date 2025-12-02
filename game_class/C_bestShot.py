@@ -3,7 +3,7 @@ Represents and evaluates a direct shot from the cue ball to a target ball.
 """
 
 import math
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 
 from const_numbers import (
     FORSE_WALL_SHOT,

@@ -12,7 +12,7 @@ if ROOT_DIR not in sys.path:
 # ===============================================================
 
 from const_numbers import *
-from game_class.C_ball import Ball
+from game_class.C_ball import GameBall
 from game_class.C_table import Table
 from game_class.C_draw import draw_table
 from game_class.C_gameAnalayzer import GameAnalayzer
@@ -86,7 +86,7 @@ def build_table_from_analysis(analysis: dict):
             continue
 
         balls.append(
-            Ball(
+            GameBall(
                 ball_id=bid,
                 x_cord=x_game,
                 y_cord=y_game,
