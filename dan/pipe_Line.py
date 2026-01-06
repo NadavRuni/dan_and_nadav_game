@@ -1,585 +1,149 @@
+"""
+Main image recognition pipeline for pool table analysis.
+
+This module orchestrates a complex pipeline that takes an image of a pool table
+and outputs a structured JSON file containing the positions of the balls,
+pockets, and other game state information.
+
+Warning:
+    This file has a large number of diverse responsibilities, including object
+    detection, geometric calculations, and data serialization. It should be
+    refactored into smaller, more focused modules.
+"""
+
+import json
+import os
 from dataclasses import asdict
-import cv2
-from ultralytics import YOLO
-import numpy as np
-import os, json
-from const_numbers import OUTPUT_JSON_PATH
-from analyzer_table.balls_from_image import full_analyzer_pipeline
-from analyzer_table.launcher_helper.json_models import (
-    Ball,
-    AnalyzerResult,
-)
-from game_class.C_pocket import Pocket
-from analyzer_table.detect_ball.Debugger import Debugger
 from pathlib import Path
 from typing import List
 
+import cv2
+import numpy as np
+import requests
+from ultralytics import YOLO
+
+from analyzer_table.balls_from_image import full_analyzer_pipeline
+from analyzer_table.detect_ball.Debugger import Debugger
+from analyzer_table.launcher_helper.json_models import AnalyzerResult, Ball
+from const_numbers import OUTPUT_JSON_PATH
+from game_class.C_pocket import Pocket
+
+# --- Configuration Constants ---
 UPLOAD_DIR = Path(__file__).resolve().parents[1] / "uploads"
 
-
-# ====== YOLO / Hough ======
+# YOLOv8 Configuration
 MODEL_PATH = "yolov8n.pt"
 SPORTS_BALL_CLASS_ID = 32
-YOLO_CONF = 0.01
-YOLO_IOU = 0.40
-YOLO_IMGZ = 1536
-YOLO_MAXD = 300
-USE_TTA = True
-
-# ====== constraints ======
-MAX_BALLS = 16
-MIN_RADIUS_REL = 0.010
-MIN_RADIUS_PX_OVERRIDE = None
-
-POCKET_INCLUSION_FACTOR = 1.05  # factor for pocket inclusionע
+YOLO_CONFIDENCE_THRESHOLD = 0.01
+YOLO_IOU_THRESHOLD = 0.40
+YOLO_IMAGE_SIZE = 1536
+YOLO_MAX_DETECTIONS = 300
+USE_TEST_TIME_AUGMENTATION = True
 
 
-# ---------------- Utils ----------------
-def iou_xyxy(a, b):
-    ax1, ay1, ax2, ay2 = a
-    bx1, by1, bx2, by2 = b
-    xi1, yi1 = max(ax1, bx1), max(ay1, by1)
-    xi2, yi2 = min(ax2, bx2), min(ay2, by2)
-    iw, ih = max(0, xi2 - xi1), max(0, yi2 - yi1)
-    inter = iw * ih
-    area_a = max(0, ax2 - ax1) * max(0, ay2 - ay1)
-    area_b = max(0, bx2 - bx1) * max(0, by2 - by1)
-    union = area_a + area_b - inter + 1e-9
-    return inter / union
-
-
-# ---------------- memory ----------------
-def nms_with_tags(boxes, scores, radii, tags, iou_thr=0.45):
-    if not boxes:
-        return [], [], [], []
-    order = np.argsort(scores)[::-1]
-    used = np.zeros(len(order), dtype=bool)
-
-    kept_boxes, kept_scores, kept_radii, kept_tags = [], [], [], []
-    while True:
-        valid = np.where(~used)[0]
-        if valid.size == 0:
-            break
-        i = int(order[valid[0]])
-        used[valid[0]] = True
-
-        kb, ks = boxes[i], scores[i]
-        kr = (
-            radii[i]
-            if (radii and i < len(radii) and radii[i] is not None)
-            else est_radius_from_box(kb)
-        )
-        kt = set(tags[i]) if tags and i < len(tags) else set()
-
-        for idx in valid[1:]:
-            j = int(order[idx])
-            if iou_xyxy(boxes[i], boxes[j]) > iou_thr:
-                used[idx] = True
-                if tags and j < len(tags):
-                    tg = tags[j]
-                    kt |= (
-                        set(tg)
-                        if isinstance(tg, (set, list, tuple))
-                        else ({tg} if tg else set())
-                    )
-
-        kept_boxes.append(kb)
-        kept_scores.append(ks)
-        kept_radii.append(kr)
-        kept_tags.append(kt)
-
-    return kept_boxes, kept_scores, kept_radii, kept_tags
-
-
-def inject_memory_candidate(
-    mem, all_boxes, all_scores, all_radii, all_tags, boost_score, tag_name
-):
-    if not mem:
-        return
-    box = mem["box"]
-    r = mem["radius"]
-    for j, bx in enumerate(all_boxes):
-        if iou_xyxy(box, bx) > 0.30:
-            all_scores[j] = max(all_scores[j], boost_score)
-            all_tags[j].add(tag_name)
-            return
-    all_boxes.append(box)
-    all_scores.append(boost_score)
-    all_radii.append(r)
-    all_tags.append({tag_name})
-
-
-# ---------------- Felt / Table geometry ----------------
-def make_felt_mask(img_bgr):
-    hsv = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2HSV)
-    # טווחים סלחניים לכחול/ירוק
-    mask_green = cv2.inRange(hsv, (35, 30, 30), (95, 255, 255))
-    mask_blue = cv2.inRange(hsv, (85, 30, 30), (140, 255, 255))
-    mask = cv2.bitwise_or(mask_green, mask_blue)
-    mask = cv2.medianBlur(mask, 5)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((5, 5), np.uint8), 1)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((15, 15), np.uint8), 2)
-    return mask
-
-
-def _order_corners(pts):
-    # pts: 4x2 float32 (arbitrary order). Return dict TL,TR,BR,BL
-    pts = np.asarray(pts, dtype=np.float32)
-    s = pts.sum(axis=1)
-    d = np.diff(pts, axis=1).ravel()
-    TL = pts[np.argmin(s)]
-    BR = pts[np.argmax(s)]
-    TR = pts[np.argmin(d)]
-    BL = pts[np.argmax(d)]
-    return {
-        "TL": (float(TL[0]), float(TL[1])),
-        "TR": (float(TR[0]), float(TR[1])),
-        "BR": (float(BR[0]), float(BR[1])),
-        "BL": (float(BL[0]), float(BL[1])),
-    }
-
-
-def detect_table_corners(img_bgr):
+def _create_output_json(
+    image_path: str, analyzer_result: AnalyzerResult, image_size: tuple
+) -> dict:
     """
-    מזהה את 4 פינות הלבד בצורה יציבה (לא תלוי בכיסים).
+    Formats the raw analysis result into the final JSON structure.
+
+    Args:
+        image_path: Path to the original image.
+        analyzer_result: The result from the core analysis pipeline.
+        image_size: A tuple (width, height) of the original image.
+
+    Returns:
+        A dictionary formatted for the final JSON output.
     """
-    mask = make_felt_mask(img_bgr)
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    if not contours:
-        raise RuntimeError("לא נמצאה מעטפת לבד.")
-    cnt = max(contours, key=cv2.contourArea)
-    # קופסת מינימום מסתובבת
-    rect = cv2.minAreaRect(cnt)
-    box = cv2.boxPoints(rect)  # 4x2 float
-    corners = _order_corners(box)
-    return corners, mask
-
-
-def anchors_from_corners(corners):
-    TL = corners["TL"]
-    TR = corners["TR"]
-    BR = corners["BR"]
-    BL = corners["BL"]
-    TM = ((TL[0] + TR[0]) * 0.5, (TL[1] + TR[1]) * 0.5)
-    BM = ((BL[0] + BR[0]) * 0.5, (BL[1] + BR[1]) * 0.5)
-    pockets = {"TL": TL, "TM": TM, "TR": TR, "BL": BL, "BM": BM, "BR": BR}
-    origin = BL  # כאן קובעים חד-משמעית: מקור הצירים = הפינה התחתונה-שמאלית של הלבד
-    return pockets, origin
-
-
-# ---- Optional: refine each pocket near its anchor using local darkness (robust but not mandatory)
-def refine_pockets_near_anchors(img_bgr, pockets, search_px=40):
-    gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
-    h, w = gray.shape[:2]
-    out = {}
-    for name, (ax, ay) in pockets.items():
-        x1 = int(max(0, ax - search_px))
-        x2 = int(min(w - 1, ax + search_px))
-        y1 = int(max(0, ay - search_px))
-        y2 = int(min(h - 1, ay + search_px))
-        roi = gray[y1:y2, x1:x2]
-        if roi.size == 0:
-            out[name] = (float(ax), float(ay))
-            continue
-        # חפש את הנקודה הכי כהה ב־ROI (כיסים כהים). אם אין – השאר עוגן.
-        minval, _, minloc, _ = cv2.minMaxLoc(roi)
-        if minval < 140:  # כהה יחסית
-            px = x1 + minloc[0]
-            py = y1 + minloc[1]
-            out[name] = (float(px), float(py))
-        else:
-            out[name] = (float(ax), float(ay))
-    return out
-
-
-# ---------------- Homography ----------------
-def build_img2table_h(pmap, table_w=2.0, table_h=1.0):
-    src = np.array(
-        [pmap["TL"], pmap["TM"], pmap["TR"], pmap["BL"], pmap["BM"], pmap["BR"]],
-        dtype=np.float32,
-    )
-    dst = np.array(
-        [
-            [0.0 * table_w, 0.0 * table_h],  # TL
-            [0.5 * table_w, 0.0 * table_h],  # TM
-            [1.0 * table_w, 0.0 * table_h],  # TR
-            [0.0 * table_w, 1.0 * table_h],  # BL
-            [0.5 * table_w, 1.0 * table_h],  # BM
-            [1.0 * table_w, 1.0 * table_h],  # BR
-        ],
-        dtype=np.float32,
-    )
-    H, _ = cv2.findHomography(src, dst, method=cv2.RANSAC, ransacReprojThreshold=3.0)
-    return H, (table_w, table_h)
-
-
-def warp_points_xy(points, H):
-    if H is None or len(points) == 0:
-        return np.zeros((0, 2), dtype=np.float32)
-    pts = np.array(points, dtype=np.float32).reshape(-1, 1, 2)
-    warped = cv2.perspectiveTransform(pts, H).reshape(-1, 2)
-    return warped
-
-
-# ---------------- misc ----------------
-def est_radius_from_box(box):
-    x1, y1, x2, y2 = box
-    return 0.5 * min(max(0, x2 - x1), max(0, y2 - y1))
-
-
-def boxes_to_centers(boxes):
-    return [(0.5 * (x1 + x2), 0.5 * (y1 + y2)) for (x1, y1, x2, y2) in boxes]
-
-
-def draw_rect_label(img, box, label, color, thickness=2):
-    x1, y1, x2, y2 = map(int, box)
-    cv2.rectangle(img, (x1, y1), (x2, y2), color, thickness)
-    cv2.putText(
-        img, label, (x1, max(0, y1 - 6)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2
-    )
-
-
-# ---------------- Detectors ----------------
-def yolo_detect(img):
-    model = YOLO(MODEL_PATH)
-    results = model.predict(
-        source=img,
-        conf=YOLO_CONF,
-        iou=YOLO_IOU,
-        classes=[SPORTS_BALL_CLASS_ID],
-        imgsz=YOLO_IMGZ,
-        augment=USE_TTA,
-        max_det=YOLO_MAXD,
-        verbose=False,
-    )
-    boxes_px, scores = [], []
-    if len(results) > 0 and results[0].boxes is not None:
-        for b in results[0].boxes:
-            xyxy = b.xyxy.squeeze().tolist()
-            conf = float(b.conf.item())
-            boxes_px.append(tuple(xyxy))
-            scores.append(conf)
-    return boxes_px, scores
-
-
-def hough_fallback(img, existing_boxes):
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    gray = cv2.medianBlur(gray, 5)
-    h, w = gray.shape[:2]
-    r_min = max(6, int(0.009 * min(h, w)))
-    r_max = max(r_min + 6, int(0.022 * min(h, w)))
-    circles = cv2.HoughCircles(
-        gray,
-        cv2.HOUGH_GRADIENT,
-        dp=1.2,
-        minDist=max(20, r_min * 2),
-        param1=120,
-        param2=18,
-        minRadius=r_min,
-        maxRadius=r_max,
-    )
-    boxes_px, scores, radii = [], [], []
-    if circles is not None:
-        circles = np.uint16(np.around(circles[0, :]))
-        for x, y, r in circles:
-            x1, y1, x2, y2 = x - r, y - r, x + r, y + r
-            if not any(iou_xyxy((x1, y1, x2, y2), bx) > 0.2 for bx in existing_boxes):
-                boxes_px.append((float(x1), float(y1), float(x2), float(y2)))
-                scores.append(0.50)
-                radii.append(float(r))
-    return boxes_px, scores, radii
-
-
-# ---------------- Pockets / felt filters used later ----------------
-def keep_by_indices(seq, indices):
-    return [seq[i] for i in indices]
-
-
-def disk_overlap_frac_with_mask(Hh, Ww, cx, cy, r, mask):
-    cx = int(round(cx))
-    cy = int(round(cy))
-    r = int(max(2, round(r)))
-    x1, y1 = max(0, cx - r), max(0, cy - r)
-    x2, y2 = min(Ww, cx + r + 1), min(Hh, cy + r + 1)
-    if x2 <= x1 or y2 <= y1:
-        return 0.0
-    submask = mask[y1:y2, x1:x2]
-    yy, xx = np.ogrid[y1:y2, x1:x2]
-    circle = ((xx - cx) * (xx - cx) + (yy - cy) * (yy - cy)) <= (r * r)
-    area = int(circle.sum())
-    if area == 0:
-        return 0.0
-    hit = (submask > 0) & circle
-    return float(hit.sum()) / float(area)
-
-
-def felt_filter_protected(
-    Hh,
-    Ww,
-    centers,
-    radii,
-    tags,
-    felt_mask,
-    min_frac=0.55,
-    min_frac_in=0.35,
-    erode_px=3,
-    dilate_px=2,
-):
-    k1 = 2 * erode_px + 1
-    k2 = 2 * dilate_px + 1
-    felt_eroded = cv2.erode(
-        felt_mask, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k1, k1)), 1
-    )
-    felt_dilated = cv2.dilate(
-        felt_mask, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k2, k2)), 1
-    )
-
-    def frac(mask, cx, cy, r):
-        cx, cy, r = float(cx), float(cy), float(r)
-        return disk_overlap_frac_with_mask(Hh, Ww, cx, cy, r, mask)
-
-    keep = []
-    dropped = []
-    for i, (cx, cy) in enumerate(centers):
-        if ("mem_white" in tags[i]) or ("mem_black" in tags[i]):
-            keep.append(i)
-            continue
-        r = radii[i]
-        f = frac(felt_mask, cx, cy, r)
-        fi = frac(felt_eroded, cx, cy, r)
-
-        # הבטחת תחום חוקי
-        ix = min(max(int(round(cx)), 0), Ww - 1)
-        iy = min(max(int(round(cy)), 0), Hh - 1)
-
-        if f >= min_frac or fi >= min_frac_in or (felt_dilated[iy, ix] > 0):
-            keep.append(i)
-        else:
-            dropped.append(i)
-
-    # Rescue רך
-    for i in dropped:
-        if len(keep) >= len(centers):
-            break
-        cx, cy, r = centers[i][0], centers[i][1], radii[i]
-        if disk_overlap_frac_with_mask(Hh, Ww, cx, cy, r, felt_dilated) >= 0.25:
-            keep.append(i)
-
-    return sorted(set(keep))
-
-
-# =========================================================
-#                    PIPELINE STAGES
-# =========================================================
-def white_recognizer(stage):
-    img = stage["img"]
-    h, w = img.shape[:2]
-    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    gray = cv2.medianBlur(gray, 5)
-    print("img shape", img.shape)
-
-    r_min = max(6, int(0.009 * min(h, w)))
-    r_max = max(r_min + 6, int(0.022 * min(h, w)))
-    circles = cv2.HoughCircles(
-        gray,
-        cv2.HOUGH_GRADIENT,
-        dp=1.2,
-        minDist=max(24, r_min * 2),
-        param1=100,
-        param2=18,
-        minRadius=r_min,
-        maxRadius=r_max,
-    )
-
-    best = None
-    best_score = -1e9
-    border_margin = 22
-    print("circles", circles)
-
-    if circles is not None:
-        circles = np.uint16(np.around(circles[0, :]))
-        Hc, S, V = cv2.split(hsv)
-        for x, y, r in circles:
-            if (
-                x < border_margin
-                or x > w - border_margin
-                or y < border_margin
-                or y > h - border_margin
-            ):
-                continue
-            mask = np.zeros((h, w), dtype=np.uint8)
-            cv2.circle(mask, (x, y), r, 255, -1)
-            mean_S = cv2.mean(S, mask=mask)[0]
-            mean_V = cv2.mean(V, mask=mask)[0]
-            frac_bright = cv2.countNonZero(
-                cv2.inRange(hsv, (0, 0, 200), (180, 60, 255)) & mask
-            ) / (np.pi * r * r + 1e-6)
-            score = (mean_V / 255.0) - 0.6 * (mean_S / 255.0) + 0.4 * frac_bright
-            if score > best_score:
-                best_score = score
-                box = (float(x - r), float(y - r), float(x + r), float(y + r))
-                best = {"center": (float(x), float(y)), "radius": float(r), "box": box}
-
-    dbg = img.copy()
-    if best:
-        draw_rect_label(dbg, best["box"], "white", (255, 255, 0))
-
-    stage["white"] = best
-    return stage
-
-
-def black_recognizer(stage):
-    img = stage["img"]
-    h, w = img.shape[:2]
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    circles = cv2.HoughCircles(
-        gray,
-        cv2.HOUGH_GRADIENT,
-        dp=1.2,
-        minDist=50,
-        param1=50,
-        param2=30,
-        minRadius=10,
-        maxRadius=max(50, int(0.03 * min(h, w))),
-    )
-
-    best = None
-    best_intensity = float("inf")
-    border_margin = 30
-
-    if circles is not None:
-        arr = np.round(circles[0, :]).astype("int")
-        radii = arr[:, 2]
-        median_r = int(np.median(radii)) if len(radii) else 0
-
-        for x, y, r in arr:
-            if median_r and abs(r - median_r) > 5:
-                continue
-            if (
-                x < border_margin
-                or x > w - border_margin
-                or y < border_margin
-                or y > h - border_margin
-            ):
-                continue
-            mask = np.zeros_like(gray)
-            cv2.circle(mask, (x, y), r, 255, -1)
-            mean_bgr = cv2.mean(img, mask=mask)[:3]
-            intensity = float(sum(mean_bgr))
-            if intensity < 20:
-                continue
-            if intensity < best_intensity:
-                best_intensity = intensity
-                box = (float(x - r), float(y - r), float(x + r), float(y + r))
-                best = {"center": (float(x), float(y)), "radius": float(r), "box": box}
-
-    dbg = img.copy()
-    if best:
-        draw_rect_label(dbg, best["box"], "black", (255, 0, 255))
-
-    stage["black"] = best
-    return stage
-
-
-from dataclasses import asdict
-import cv2, os, json
-import numpy as np
-from analyzer_table.launcher_helper.json_models import AnalyzerResult
-from analyzer_table.detect_ball.Debugger import Debugger
-from const_numbers import OUTPUT_JSON_PATH
-
-
-def image_recognizer(IMAGE_PATH: str) -> dict:
-    """
-    🎯 מבצעת ניתוח תמונה מלא ומחזירה תוצאה בפורמט JSON.
-    משתמשת רק ב־AnalyzerResult (balls, pockets, white, black) — ללא table_box.
-    """
-
-    Debugger.log(f"🚀 Starting image recognition for: {IMAGE_PATH}")
-
-    # === 1) הפעלת הפייפליין הראשי ===
-    analyzer_result: AnalyzerResult = full_analyzer_pipeline(IMAGE_PATH)
-    if not isinstance(analyzer_result, AnalyzerResult):
-        raise TypeError("❌ full_analyzer_pipeline חייב להחזיר AnalyzerResult")
-
-    balls_data = analyzer_result.balls
-    white_ball = analyzer_result.white
-    black_ball = analyzer_result.black
-    all_pockets: List[Pocket] = analyzer_result.pockets
-
-    # === 2) קריאת התמונה ===
-    img = cv2.imread(IMAGE_PATH)
-    if img is None:
-        raise FileNotFoundError(f"❌ לא ניתן לקרוא את התמונה מהנתיב: {IMAGE_PATH}")
-    H, W = img.shape[:2]
-
-    # === 3) בניית רשימת כדורים ===
+    width, height = image_size
     balls_json = []
-    for i, ball in enumerate(balls_data):
-        cx, cy = map(float, ball.center)
-        color_type = getattr(ball, "final_color", "unknown")
+    for i, ball in enumerate(analyzer_result.balls):
+        balls_json.append(
+            {
+                "index": i,
+                "type": getattr(ball, "final_color", "unknown"),
+                "center_px": {"x": float(ball.center[0]), "y": float(ball.center[1])},
+                "radius_px": float(ball.radius),
+            }
+        )
 
-        record = {
-            "index": i,
-            "type": color_type,
-            "center_px": {"x": cx, "y": cy},
-            "radius_px": float(ball.radius),
-        }
-        print("record", record)
-        balls_json.append(record)
-
-    # === 4) בניית מיקומי כיסים מתוך ה־table_pockets ===
     pockets_json = {}
-    for pocket in all_pockets:
-        label = pocket.location
-        pockets_json[label] = {
+    for pocket in analyzer_result.pockets:
+        pockets_json[pocket.location] = {
             "x": float(pocket.pocket_img_cordinates_on_table[0]),
             "y": float(pocket.pocket_img_cordinates_on_table[1]),
             "radius": float(pocket.radius),
         }
 
-    # === 5) יצירת התוצאה הסופית ===
-    result = {
-        "image_path": IMAGE_PATH,
-        "image_size_px": {"width": float(W), "height": float(H)},
+    return {
+        "image_path": image_path,
+        "image_size_px": {"width": float(width), "height": float(height)},
         "balls": balls_json,
-        "white_ball": asdict(white_ball) if white_ball else None,
-        "black_ball": asdict(black_ball) if black_ball else None,
+        "white_ball": asdict(analyzer_result.white) if analyzer_result.white else None,
+        "black_ball": asdict(analyzer_result.black) if analyzer_result.black else None,
         "pockets": pockets_json,
     }
 
-    # === 6) כתיבה ל־JSON ===
+
+def run_image_recognition_pipeline(image_path: str) -> dict:
+    """
+    Executes the full analysis pipeline on an image and saves the result as a JSON file.
+
+    Args:
+        image_path: The path to the image to analyze.
+
+    Returns:
+        A dictionary containing the structured analysis results.
+
+    Raises:
+        FileNotFoundError: If the image cannot be read.
+        TypeError: If the core pipeline returns an unexpected data type.
+    """
+    Debugger.log(f"🚀 Starting image recognition for: {image_path}")
+
+    # 1. Run the core analysis pipeline from the 'analyzer_table' module.
+    analyzer_result: AnalyzerResult = full_analyzer_pipeline(image_path)
+    if not isinstance(analyzer_result, AnalyzerResult):
+        raise TypeError(
+            "❌ full_analyzer_pipeline must return an AnalyzerResult object"
+        )
+
+    # 2. Read the image to get its dimensions.
+    image = cv2.imread(image_path)
+    if image is None:
+        raise FileNotFoundError(f"❌ Cannot read image from path: {image_path}")
+    height, width = image.shape[:2]
+
+    # 3. Format the results into the final JSON structure.
+    result_json = _create_output_json(image_path, analyzer_result, (width, height))
+
+    # 4. Write the result to the output JSON file.
     os.makedirs(os.path.dirname(OUTPUT_JSON_PATH), exist_ok=True)
     with open(OUTPUT_JSON_PATH, "w", encoding="utf-8") as f:
-        json.dump(result, f, ensure_ascii=False, indent=2)
+        json.dump(result_json, f, ensure_ascii=False, indent=2)
 
-    Debugger.log(f"✅ JSON saved successfully → {OUTPUT_JSON_PATH}")
-    return result
-
-
-# =========================================================
-#                         MAIN
-# =========================================================
-def main():
-    IMAGE_PATH = ""
-    img = cv2.imread(IMAGE_PATH)
-    if img is None:
-        raise FileNotFoundError(f"Image not found: {IMAGE_PATH}")
-
-    image_recognizer(IMAGE_PATH)
+    Debugger.log(f"✅ JSON result saved successfully → {OUTPUT_JSON_PATH}")
+    return result_json
 
 
-async def start_pipe_line(image_path: str):
+async def start_pipe_line(image_path: str) -> dict:
+    """
+    An async wrapper for the image recognition pipeline.
+
+    Handles downloading the image if a URL is provided.
+
+    Args:
+        image_path: The path or URL to the image.
+
+    Returns:
+        A dictionary containing the structured analysis results.
+    """
     print("start_pipe_line", image_path)
-    import requests
-    from pathlib import Path
 
-    # אם ה-image_path הוא URL, נוריד אותו לקובץ זמני
+    # If the image_path is a URL, download it to a local temporary file.
     if image_path.startswith("http"):
-        print(f"[DEBUG] Downloading remote image: {image_path}")
-        local_name = Path(image_path.split("/")[-1])
+        Debugger.log(f"[DEBUG] Downloading remote image: {image_path}")
+        local_name = Path(image_path.split("/")[-1]).name
         local_path = UPLOAD_DIR / local_name
         response = requests.get(image_path, stream=True)
         response.raise_for_status()
@@ -587,14 +151,15 @@ async def start_pipe_line(image_path: str):
             for chunk in response.iter_content(chunk_size=8192):
                 f.write(chunk)
         image_path = str(local_path)
-        print(f"[DEBUG] Saved remote image locally to: {image_path}")
+        Debugger.log(f"[DEBUG] Saved remote image locally to: {image_path}")
 
-    img = cv2.imread(image_path)
-    if img is None:
-        raise FileNotFoundError(f"Image not found: {image_path}")
-
-    image_recognizer(image_path)
+    # Run the main pipeline.
+    return run_image_recognition_pipeline(image_path)
 
 
 if __name__ == "__main__":
-    main()
+    # Example usage
+    DEFAULT_IMAGE = Path(__file__).resolve().parent.parent / "photos" / "img_start.jpeg"
+    if not DEFAULT_IMAGE.exists():
+        raise FileNotFoundError(f"Default image not found: {DEFAULT_IMAGE}")
+    run_image_recognition_pipeline(str(DEFAULT_IMAGE))

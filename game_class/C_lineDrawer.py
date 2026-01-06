@@ -1,591 +1,195 @@
-from typing import Tuple, Any
-from PIL import Image, ImageDraw
-import json, os
+"""
+Provides the LineDrawer class for drawing shot trajectories on an image.
+
+This module uses the Pillow (PIL) library to draw detailed visualizations of
+calculated shots, including direct shots, combination shots, and wall shots,
+onto the original table image.
+"""
+
+import json
 import math
+import os
 from pathlib import Path
-from const_numbers import *
+from typing import Any, Dict, Optional, Tuple
+
+from PIL import Image, ImageDraw, ImageFont
+
+from const_numbers import (
+    OUTPUT_CONTACT_VIEW_PATH,
+    get_ball_radius_photo,
+    get_pocket_margin,
+    get_wall_margin,
+)
 
 
 class LineDrawer:
-    def __init__(self, json_path: str, best_shot: Any, output_path: str = None):
+    """
+    Draws calculated shot trajectories onto a table image.
+    """
+
+    def __init__(
+        self, json_path: str, best_shot: Any, output_path: Optional[str] = None
+    ):
         """
-        json_path - קובץ JSON שמכיל image_path, origin_px, balls, pockets
-        best_shot - אובייקט BestShot עם white.id, target.id, pocket.id
+        Initializes the LineDrawer with data from a JSON file and a shot object.
+
+        Args:
+            json_path: Path to the JSON file containing the game state
+                       (image_path, balls, pockets).
+            best_shot: The BestShot object representing the shot to be drawn.
+            output_path: Optional path for the output image. If not provided,
+                         a default is used.
+
+        Raises:
+            FileNotFoundError: If the image specified in the JSON is not found.
         """
         with open(json_path, "r", encoding="utf-8") as f:
             meta = json.load(f)
 
         self.best_shot = best_shot
         self.input_path = meta.get("image_path")
-        print("self.input_path", self.input_path)
         if not self.input_path or not os.path.exists(self.input_path):
-            raise FileNotFoundError(f"❌ image not found: {self.input_path}")
+            raise FileNotFoundError(f"❌ Image not found: {self.input_path}")
 
-        origin_data = meta.get("origin_px")
-        if origin_data:
-            self.origin_px = (float(origin_data["x"]), float(origin_data["y"]))
-        else:
-            # fallback — נשתמש בנקודת התחלה (0,0)
-            self.origin_px = (0.0, 0.0)
-            print("[LineDrawer] ⚠️ Missing origin_px in JSON, using (0,0) as fallback")
-        self.table_rect_units = meta.get(
-            "table_rect_units", {"width": 2.0, "height": 1.0}
-        )
         self.balls = meta.get("balls", [])
-        print("[DEBUG] Loaded balls:", [b["index"] for b in self.balls])
         self.pockets = meta.get("pockets", {})
-        print("[DEBUG] Loaded pockets:", self.pockets.keys())
-
         self.img = Image.open(self.input_path).convert("RGB")
-        base_dir = os.getcwd()
-        self.output_path = os.path.join(
-            base_dir, output_path or "output_with_lines.jpg"
-        )
-        os.makedirs(os.path.dirname(self.output_path), exist_ok=True)
-        print("self.output_path", self.output_path)
 
-    def get_ball_px(self, ball_id: int) -> Tuple[float, float] | None:
-        """מאחזר מיקום פיקסלים של כדור לפי index מה־JSON."""
-        for b in self.balls:
-            if b["index"] == ball_id:
-                if "center_px" in b:  # עדיף להשתמש בנתוני center_px
-                    return (b["center_px"]["x"], b["center_px"]["y"])
+        base_dir = Path.cwd()
+        self.output_path = base_dir / (output_path or "output_with_lines.jpg")
+        self.output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    def get_ball_px(self, ball_id: int) -> Optional[Tuple[float, float]]:
+        """Retrieves the pixel coordinates of a ball by its ID."""
+        for ball in self.balls:
+            if ball.get("index") == ball_id and "center_px" in ball:
+                return (ball["center_px"]["x"], ball["center_px"]["y"])
         return None
 
-    def get_pocket_px(self, pocket_id: int) -> Tuple[float, float] | None:
-        """מאחזר מיקום כיס לפי id (0..5)."""
+    def get_pocket_px(self, pocket_id: int) -> Optional[Tuple[float, float]]:
+        """Retrieves the pixel coordinates of a pocket by its ID."""
+        # Note: This mapping is fragile and assumes a consistent order.
         mapping = ["BL", "BR", "TR", "TL", "BM", "TM"]
-        print("Getting pocket px for pocket_id:", pocket_id)
         if 0 <= pocket_id < len(mapping):
             name = mapping[pocket_id]
-            print("Mapped pocket name:", name)
-            print("Available pockets:", self.pockets.keys())
-            print("Pocket data:", self.pockets[name])
             if name in self.pockets and self.pockets[name]:
                 return (self.pockets[name]["x"], self.pockets[name]["y"])
         return None
 
-    def draw_all_pockets_with_labels(self, draw_obj, dot_radius=15, font_size=30):
-        """
-        Draws all pockets with labels (e.g., TL, BR) on the image.
-        """
-        from PIL import ImageFont  # Import ImageFont outside the try-except
+    def _draw_dashed_line(
+        self,
+        draw: ImageDraw,
+        start: tuple,
+        end: tuple,
+        fill: str,
+        width: int,
+        dash_length: int = 15,
+        gap_length: int = 10,
+    ) -> None:
+        """Helper to draw a dashed line on the image."""
+        x1, y1 = start
+        x2, y2 = end
+        total_length = math.hypot(x2 - x1, y2 - y1)
+        if total_length == 0:
+            return
 
-        try:
-            font = ImageFont.truetype("arial.ttf", font_size)
-        except (
-            ImportError,
-            IOError,
-        ):  # Catch both ImportError (if freetype is missing) and IOError (if font file not found)
-            font = ImageFont.load_default()  # Fallback to default bitmap font
-            print(
-                "WARNING: Could not load 'arial.ttf' or PIL.ImageFont.truetype failed. Using default font."
+        dx, dy = (x2 - x1) / total_length, (y2 - y1) / total_length
+        pos = 0.0
+        while pos < total_length:
+            x_start, y_start = x1 + dx * pos, y1 + dy * pos
+            pos += dash_length
+            x_end, y_end = x1 + dx * min(pos, total_length), y1 + dy * min(
+                pos, total_length
             )
+            draw.line([(x_start, y_start), (x_end, y_end)], fill=fill, width=width)
+            pos += gap_length
 
-        for name, pocket_data in self.pockets.items():
-            x, y = pocket_data["x"], pocket_data["y"]
-
-            # Draw a small red dot
-            draw_obj.ellipse(
-                [x - dot_radius, y - dot_radius, x + dot_radius, y + dot_radius],
-                fill=(255, 0, 0, 128),
-                outline=(255, 0, 0, 255),
-                width=2,
-            )  # Red, semi-transparent
-
-            # Draw the label next to the dot
-            draw_obj.text(
-                (x + dot_radius + 5, y - font_size // 2),
-                name,
-                fill=(255, 255, 255),
-                font=font,
-            )
-
-    def draw_all_balls_with_coordinates(self, draw_obj, font_size=30):
-        """
-        Draws a circle around each ball and labels it with its coordinates.
-        """
-        from PIL import ImageFont  # Import ImageFont outside the try-except
-
-        try:
-            font = ImageFont.truetype("arial.ttf", font_size)
-        except (
-            ImportError,
-            IOError,
-        ):  # Catch both ImportError (if freetype is missing) and IOError (if font file not found)
-            font = ImageFont.load_default()  # Fallback to default bitmap font
-            print(
-                "WARNING: Could not load 'arial.ttf' or PIL.ImageFont.truetype failed. Using default font."
-            )
-
-        for ball_data in self.balls:
-            if "center_px" in ball_data and "radius_px" in ball_data:
-                x, y = ball_data["center_px"]["x"], ball_data["center_px"]["y"]
-                r = ball_data["radius_px"]
-                ball_id = ball_data["index"]
-
-                # Draw a circle around the ball
-                draw_obj.ellipse(
-                    [x - r, y - r, x + r, y + r], outline=(0, 255, 0, 255), width=4
-                )  # Green outline
-
-                # Draw coordinates text
-                label_text = f"B{ball_id}({int(x)},{int(y)})"
-                draw_obj.text(
-                    (x + r + 5, y - font_size // 2),
-                    label_text,
-                    fill=(0, 255, 0),
-                    font=font,
-                )
-
-    def draw_lines(
-        self, color_target=(255, 0, 0), color_white=(0, 0, 255), width=3
+    def draw_direct_shot_lines(
+        self, color_target: str = "red", color_white: str = "blue", width: int = 3
     ) -> str:
-        """
-        מצייר את המסלול הפיזיקלי הנכון:
-        לבן → נקודת מגע על המטרה
-        מטרה (היקף בצד של הכיס) → כיס
-        עם קווים מקווקווים.
-        """
-
+        """Draws the trajectory for a direct shot."""
         draw = ImageDraw.Draw(self.img)
-        print("Drawing contact-based dashed lines...")
-        print(f"  White ID: {self.best_shot.white.id}")
-        print(f"  Target ID: {self.best_shot.target.id}")
-        print(f"  Pocket ID: {self.best_shot.pocket.id}")
-
         white_px = self.get_ball_px(self.best_shot.white.id)
         target_px = self.get_ball_px(self.best_shot.target.id)
         pocket_px = self.get_pocket_px(self.best_shot.pocket.id)
 
         if not (white_px and target_px and pocket_px):
-            raise ValueError("❌ Missing ball or pocket coordinates")
+            raise ValueError("❌ Missing ball or pocket coordinates for drawing.")
 
-        # --- חישוב נקודת המגע על המטרה לפי הכיס ---
-        print("Calculating contact point on target ball...")
+        # Vector from target to pocket
         dx_p, dy_p = pocket_px[0] - target_px[0], pocket_px[1] - target_px[1]
         dist_p = math.hypot(dx_p, dy_p)
-        ux_p, uy_p = dx_p / dist_p, dy_p / dist_p
+        ux_p, uy_p = (dx_p / dist_p, dy_p / dist_p) if dist_p else (0, 0)
 
-        # נקודת מגע על ההיקף (בצד שפונה לכיס)
-        contact_target = (
+        # Contact point on target ball
+        contact_point = (
             target_px[0] - ux_p * get_ball_radius_photo(),
             target_px[1] - uy_p * get_ball_radius_photo(),
         )
-        print("Contact point on target ball:", contact_target)
-        # --- קו לבן → נקודת מגע ---
-        dx_w, dy_w = contact_target[0] - white_px[0], contact_target[1] - white_px[1]
-        dist_w = math.hypot(dx_w, dy_w)
-        ux_w, uy_w = dx_w / dist_w, dy_w / dist_w
 
-        start_white = (
-            white_px[0] + ux_w * get_ball_radius_photo(),
-            white_px[1] + uy_w * get_ball_radius_photo(),
+        # Draw line from white ball to contact point
+        self._draw_dashed_line(
+            draw, white_px, contact_point, fill=color_white, width=width
         )
-        print("Start point on white ball:", start_white)
 
-        def draw_dashed_line(
-            draw, start, end, fill, width=17, dash_length=15, gap_length=10
-        ):
-            x1, y1 = start
-            x2, y2 = end
-            total_length = math.hypot(x2 - x1, y2 - y1)
-            dx, dy = (x2 - x1) / total_length, (y2 - y1) / total_length
-
-            pos = 0
-            while pos < total_length:
-                x_start = x1 + dx * pos
-                y_start = y1 + dy * pos
-                pos += dash_length
-                if pos > total_length:
-                    pos = total_length
-                x_end = x1 + dx * pos
-                y_end = y1 + dy * pos
-                draw.line([(x_start, y_start), (x_end, y_end)], fill=fill, width=width)
-                pos += gap_length
-
-        # לבן → נקודת מגע
-        draw_dashed_line(
-            draw, start_white, contact_target, fill=color_white, width=width
-        )
-        print("Drew dashed line from white to contact point.")
-
-        # --- מטרה (צד שפונה לכיס) → כיס ---
+        # Draw line from target ball to pocket
         start_target = (
             target_px[0] + ux_p * get_ball_radius_photo(),
             target_px[1] + uy_p * get_ball_radius_photo(),
         )
-        pocket_before = (
-            pocket_px[0] - ux_p * get_pocket_margin(),
-            pocket_px[1] - uy_p * get_pocket_margin(),
+        self._draw_dashed_line(
+            draw, start_target, pocket_px, fill=color_target, width=width
         )
-        print("Start point on target ball (towards pocket):", start_target)
-        draw_dashed_line(
-            draw, start_target, pocket_before, fill=color_target, width=width
-        )
-        self.draw_all_pockets_with_labels(draw)  # Add pocket labels and dots
-        self.draw_all_balls_with_coordinates(draw)  # Add ball circles and coordinates
+
         self.img.save(self.output_path, quality=95)
-        return self.output_path
+        return str(self.output_path)
 
-    def show_contact_hit(
+    def draw_combo_shot_lines(
         self,
-        ball_radius: int = get_ball_radius_photo() - 3,
-        color=(255, 0, 0),
-        size: int = 8,
-        crop_size: int = 120,
+        color_mid: str = "cyan",
+        color_target: str = "red",
+        color_white: str = "blue",
+        width: int = 6,
     ) -> str:
-        """
-        מצייר נקודת מגע על הכדור המטרה בצד שפונה לכיס (ולא בצד שפונה ללב),
-        חותך (zoom-in) סביב הכדור המטרה ושומר לנתיב OUTPUT_CONTACT_VIEW_PATH.
-        """
-        # נקודות פיקסלים
-        print("Drawing contact-to-pocket point...")
-        target_px = self.get_ball_px(self.best_shot.target.id)
-        print("target_px", target_px)
-        pocket_px = self.get_pocket_px(self.best_shot.pocket.id)
-        print("pocket_px", pocket_px)
-
-        if not target_px or not pocket_px:
-            raise ValueError("❌ Missing target or pocket positions for contact hit")
-
-        dx = pocket_px[0] - target_px[0]
-        dy = pocket_px[1] - target_px[1]
-        dist = math.hypot(dx, dy)
-        if dist == 0:
-            raise ValueError("❌ Target and pocket overlap")
-
-        ux, uy = dx / dist, dy / dist
-
-        # נקודת מגע: בקצה הכדור המטרה בצד שפונה לכיס
-        contact_x = target_px[0] - ux * ball_radius
-        contact_y = target_px[1] - uy * ball_radius
-
-        # חיתוך סביב הכדור (zoom-in)
-        left = int(target_px[0] - crop_size)
-        top = int(target_px[1] - crop_size)
-        right = int(target_px[0] + crop_size)
-        bottom = int(target_px[1] + crop_size)
-
-        cropped = self.img.crop((left, top, right, bottom)).copy()
-        draw = ImageDraw.Draw(cropped)
-
-        # ציור נקודת הפגיעה
-        r = size
-        contact_x_cropped = contact_x - left
-        contact_y_cropped = contact_y - top
-        draw.ellipse(
-            [
-                contact_x_cropped - r,
-                contact_y_cropped - r,
-                contact_x_cropped + r,
-                contact_y_cropped + r,
-            ],
-            outline=color,
-            width=3,
-        )
-
-        cropped.save(OUTPUT_CONTACT_VIEW_PATH, quality=95)
-        print(
-            f"[DEBUG] Contact-to-pocket point drawn at ({contact_x:.2f}, {contact_y:.2f}), zoom saved."
-        )
-        return str(OUTPUT_CONTACT_VIEW_PATH)
-
-    def draw_combo_lines(
-        self,
-        color_mid=(0, 255, 255),
-        color_target=(255, 0, 0),
-        color_white=(0, 0, 255),
-        width=6,
-    ) -> str:
-        """
-        מצייר מסלול קומבינציה (3 שלבים) מתוך אובייקט BestShotBallToBall:
-        1. לבן (White) → כדור עזר (Helper / Mid)
-        2. כדור עזר (Helper) → כדור מטרה (Target)
-        3. כדור מטרה (Target) → כיס (Pocket)
-
-        מחשב את נקודות המגע הפיזיקליות ("Ghost Ball") לאחור.
-        """
-        print("=== Starting Combo Drawing ===")
+        """Draws the trajectory for a combination (3-ball) shot."""
         draw = ImageDraw.Draw(self.img)
 
-        # בדיקה שהשוט תקין
-        if hasattr(self.best_shot, "valid") and not self.best_shot.valid:
-            print("❌ Combo shot is marked as invalid.")
-            return self.output_path
+        white_px = self.get_ball_px(self.best_shot.white.id)
+        mid_px = self.get_ball_px(self.best_shot.target_helper.id)
+        target_px = self.get_ball_px(self.best_shot.target.id)
+        pocket_px = self.get_pocket_px(self.best_shot.pocket.id)
 
-        # חילוץ הנתונים מתוך אובייקט BestShotBallToBall
-        try:
-            white_id = self.best_shot.white.id
-            mid_ball_id = self.best_shot.target_helper.id  # הכדור הראשון שנפגע (העזר)
-            target_ball_id = self.best_shot.target.id  # הכדור שנכנס לכיס
-            pocket_id = self.best_shot.pocket.id
-        except AttributeError as e:
-            print(f"❌ Error accessing attributes in best_shot: {e}")
-            return self.output_path
-
-        print(
-            f"Drawing COMBO lines: White({white_id}) -> Helper({mid_ball_id}) -> Target({target_ball_id}) -> Pocket({pocket_id})"
-        )
-
-        # 1. השגת קואורדינטות פיקסלים
-        white_px = self.get_ball_px(white_id)
-        mid_px = self.get_ball_px(mid_ball_id)
-        target_px = self.get_ball_px(target_ball_id)
-        pocket_px = self.get_pocket_px(pocket_id)
-
-        if not (white_px and mid_px and target_px and pocket_px):
-            print("❌ Missing coordinates for combo shot")
-            return self.output_path
-
-        # פונקציות עזר פנימיות
-        def get_dir_unit(p1, p2):
-            dx, dy = p2[0] - p1[0], p2[1] - p1[1]
-            dist = math.hypot(dx, dy)
-            return (0, 0) if dist == 0 else (dx / dist, dy / dist)
-
-        def draw_dashed_line(
-            draw, start, end, fill, width=17, dash_length=15, gap_length=10
-        ):
-            x1, y1 = start
-            x2, y2 = end
-            total_length = math.hypot(x2 - x1, y2 - y1)
-            if total_length == 0:
-                return
-            dx, dy = (x2 - x1) / total_length, (y2 - y1) / total_length
-
-            pos = 0
-            while pos < total_length:
-                x_start = x1 + dx * pos
-                y_start = y1 + dy * pos
-                pos += dash_length
-                if pos > total_length:
-                    pos = total_length
-                x_end = x1 + dx * pos
-                y_end = y1 + dy * pos
-                draw.line([(x_start, y_start), (x_end, y_end)], fill=fill, width=width)
-                pos += gap_length
+        if not all((white_px, mid_px, target_px, pocket_px)):
+            raise ValueError("❌ Missing coordinates for combo shot.")
 
         radius = get_ball_radius_photo()
 
-        # --- שלב 3 (הסוף): כדור מטרה (Target) → כיס ---
-        ux_3, uy_3 = get_dir_unit(target_px, pocket_px)
+        # Step 3 (End): Target -> Pocket
+        ux3, uy3 = self._get_unit_vector(target_px, pocket_px)
+        start_3 = (target_px[0] + ux3 * radius, target_px[1] + uy3 * radius)
+        self._draw_dashed_line(draw, start_3, pocket_px, fill=color_target, width=width)
 
-        start_3 = (target_px[0] + ux_3 * radius, target_px[1] + uy_3 * radius)
-        end_3 = (
-            pocket_px[0] - ux_3 * get_pocket_margin(),
-            pocket_px[1] - uy_3 * get_pocket_margin(),
+        # Step 2 (Middle): Helper -> Target
+        contact_on_target = (target_px[0] - ux3 * radius, target_px[1] - uy3 * radius)
+        ux2, uy2 = self._get_unit_vector(mid_px, contact_on_target)
+        start_2 = (mid_px[0] + ux2 * radius, mid_px[1] + uy2 * radius)
+        self._draw_dashed_line(
+            draw, start_2, contact_on_target, fill=color_mid, width=width
         )
 
-        draw_dashed_line(draw, start_3, end_3, fill=color_target, width=width)
-
-        # --- שלב 2 (האמצע): כדור עזר (Helper) → כדור מטרה ---
-        # נקודת המגע הנדרשת על כדור המטרה (בצד ההפוך לכיס)
-        contact_on_target = (target_px[0] - ux_3 * radius, target_px[1] - uy_3 * radius)
-
-        # כיוון התנועה של העזר: מהמרכז שלו אל עבר נקודת המגע
-        ux_2, uy_2 = get_dir_unit(mid_px, contact_on_target)
-
-        start_2 = (mid_px[0] + ux_2 * radius, mid_px[1] + uy_2 * radius)
-
-        draw_dashed_line(draw, start_2, contact_on_target, fill=color_mid, width=width)
-
-        # --- שלב 1 (ההתחלה): לבן → כדור עזר ---
-        # נקודת המגע הנדרשת על כדור העזר (כדי שיעוף לכיוון המטרה)
-        contact_on_mid = (mid_px[0] - ux_2 * radius, mid_px[1] - uy_2 * radius)
-
-        ux_1, uy_1 = get_dir_unit(white_px, contact_on_mid)
-        start_1 = (white_px[0] + ux_1 * radius, white_px[1] + uy_1 * radius)
-
-        draw_dashed_line(draw, start_1, contact_on_mid, fill=color_white, width=width)
-
-        print("=== Finished Combo Drawing ===")
-        self.draw_all_pockets_with_labels(draw)  # Add pocket labels and dots
-        self.draw_all_balls_with_coordinates(draw)  # Add ball circles and coordinates
-        self.img.save(self.output_path, quality=95)
-        return self.output_path
-
-    def table_to_px(
-        self, x: float, y: float, smart_wall_margin=False
-    ) -> tuple[float, float]:
-        """
-        ממיר נקודה מיחידות שולחן (x,y) לפיקסלים בתמונה.
-
-        סדר פעולות (כאשר smart_wall_margin=True):
-        1. המרה מלאה לפיקסלים.
-        2. הזזת הנקודה בפיקסלים (Margin) פנימה, אם זוהתה כדופן.
-        """
-
-        # 1. קבלת מידות
-        width_px, height_px = self.img.size
-        table_length = get_table_length()
-        table_width = get_table_width()
-
-        if table_length == 0 or table_width == 0:
-            print("❌ Error: Table dimensions are zero.")
-            return (0.0, 0.0)
-
-        # -------------------------------------------
-        # 2. המרה בסיסית לפיקסלים (לפני Margin)
-        # -------------------------------------------
-        u = x / table_length
-        v = y / table_width
-
-        px = u * width_px
-        py = height_px
-
-        # -------------------------------------------
-        # 3. לוגיקה חכמה: הוספת Margin בפיקסלים
-        # -------------------------------------------
-        if smart_wall_margin:
-            # ההנחה היא ש-get_wall_margin מחזיר ערך שמתאים לפיקסלים (או שהמשתמש רוצה להחיל אותו במישור התמונה)
-            margin = get_wall_margin()
-            epsilon = 2.0  # זיהוי קיר לפי יחידות שולחן מקוריות
-
-            # -- ציר X --
-
-            # דופן שמאל (x=0) -> בתמונה זה 0 -> דחיפה ימינה (+)
-            if abs(x - 0) < epsilon:
-                print(f"🛡️ Wall (Left): Pushing px {px:.1f} -> {px + margin:.1f}")
-                px += margin
-
-            # דופן ימין (x=Length) -> בתמונה זה Width -> דחיפה שמאלה (-)
-            elif abs(x - table_length) < epsilon:
-                print(f"🛡️ Wall (Right): Pushing px {px:.1f} -> {px - margin:.1f}")
-                px -= margin
-
-            # -- ציר Y --
-
-            # דופן תחתונה (y=0) -> בתמונה זה Height (למטה) -> דחיפה למעלה (-)
-            # הערה: בתמונה Y עולה ככל שיושבים למטה, לכן כדי לעלות למעלה צריך להחסיר
-            if abs(y - 0) < epsilon:
-                print(f"🛡️ Wall (Bottom): Pushing py {py:.1f} -> {py - margin:.1f}")
-                py += margin
-
-            # דופן עליונה (y=Width) -> בתמונה זה 0 (למעלה) -> דחיפה למטה (+)
-            elif abs(y - table_width) < epsilon:
-                print(f"🛡️ Wall (Top): Pushing py {py:.1f} -> {py + margin:.1f}")
-                py -= margin
-
-        print(
-            f"Converting: Table({x:.1f}, {y:.1f}) -> Px({px:.1f}, {py:.1f}) [SmartMargin={smart_wall_margin}]"
+        # Step 1 (Start): White -> Helper
+        contact_on_mid = (mid_px[0] - ux2 * radius, mid_px[1] - uy2 * radius)
+        ux1, uy1 = self._get_unit_vector(white_px, contact_on_mid)
+        start_1 = (white_px[0] + ux1 * radius, white_px[1] + uy1 * radius)
+        self._draw_dashed_line(
+            draw, start_1, contact_on_mid, fill=color_white, width=width
         )
-        return (px, py)
-
-    def draw_lines_with_wall(
-        self,
-        wall_point: tuple[float, float],  # ביחידות שולחן (x,y)
-        color_target=(255, 0, 0),
-        color_white=(0, 0, 255),
-        color_wall=(0, 255, 0),
-        width=6,
-    ) -> str:
-        """
-        מצייר 3 קווים מקווקווים על התמונה:
-        1) לבן → מטרה
-        2) מטרה → קיר
-        3) קיר → חור
-
-        wall_point מתקבל ביחידות שולחן (290x145) ולכן מומר לפיקסלים.
-        """
-
-        def v_sub(a, b):
-            return (a[0] - b[0], a[1] - b[1])
-
-        def v_add(a, b):
-            return (a[0] + b[0], a[1] + b[1])
-
-        def v_len(v):
-            return math.hypot(v[0], v[1])
-
-        def v_unit(v):
-            L = v_len(v)
-            return (0.0, 0.0) if L == 0 else (v[0] / L, v[1] / L)
-
-        def v_scale(v, s):
-            return (v[0] * s, v[1] * s)
-
-        def draw_dashed_line(
-            draw, start, end, fill, width=17, dash_length=15, gap_length=10
-        ):
-            x1, y1 = start
-            x2, y2 = end
-            total_length = math.hypot(x2 - x1, y2 - y1)
-            if total_length == 0:
-                return
-            dx, dy = (x2 - x1) / total_length, (y2 - y1) / total_length
-            pos = 0.0
-            while pos < total_length:
-                x_start = x1 + dx * pos
-                y_start = y1 + dy * pos
-                pos += dash_length
-                if pos > total_length:
-                    pos = total_length
-                x_end = x1 + dx * pos
-                y_end = y1 + dy * pos
-                draw.line([(x_start, y_start), (x_end, y_end)], fill=fill, width=width)
-                pos += gap_length
-
-        # --- נקודות הכדורים/כיס (כבר בפיקסלים) ---
-        white_c = self.get_ball_px(self.best_shot.white.id)
-        target_c = self.get_ball_px(self.best_shot.target.id)
-        pocket_c = self.get_pocket_px(self.best_shot.pocket.id)
-
-        # --- נקודת הקיר (המרה) ---
-        wall_px = self.table_to_px(wall_point[0], wall_point[1], True)
-        print("Converted wall point to px:", wall_px)
-        tw_dir = v_unit(v_sub(wall_px, target_c))
-
-        # FIXED: added () to get_wall_margin
-        # wall_px = v_add(wall_px, v_scale(tw_dir, -get_wall_margin()))
-
-        if not (white_c and target_c and pocket_c and wall_px):
-            raise ValueError("❌ Missing coordinates for white/target/pocket/wall")
-
-        draw = ImageDraw.Draw(self.img)
-
-        print("=== Drawing Debug Info ===")
-        print(f"White center   = {white_c}")
-        print(f"Target center  = {target_c}")
-        print(f"Pocket center  = {pocket_c}")
-        print(f"Wall point (table) = {wall_point}")
-        print(f"Wall point (px)    = {wall_px}")
-
-        # --- 1) לבן → מטרה ---
-        wt_dir = v_unit(v_sub(target_c, white_c))
-        # FIXED: added () to get_ball_radius_photo
-        start_white = v_add(white_c, v_scale(wt_dir, get_ball_radius_photo()))
-        # FIXED: added () to get_ball_radius_photo
-        end_on_target = v_add(target_c, v_scale(wt_dir, -get_ball_radius_photo()))
-
-        print(f"Line 1: White edge {start_white} → Target edge {end_on_target}")
-        draw_dashed_line(
-            draw, start_white, end_on_target, fill=color_white, width=width
-        )
-
-        # --- 2) מטרה → קיר ---
-
-        tw_dir = v_unit(v_sub(wall_px, target_c))
-        # FIXED: added () to get_ball_radius_photo
-        start_target_wall = v_add(target_c, v_scale(tw_dir, get_ball_radius_photo()))
-
-        print(f"Line 2: Target edge {start_target_wall} → Wall {wall_px}")
-        draw_dashed_line(
-            draw, start_target_wall, wall_px, fill=color_target, width=width
-        )
-
-        # --- 3) קיר → חור ---
-        wp_dir = v_unit(v_sub(pocket_c, wall_px))
-        # FIXED: added () to get_pocket_margin
-        pocket_before = v_add(pocket_c, v_scale(wp_dir, -get_pocket_margin()))
-
-        print(f"Line 3: Wall {wall_px} → Pocket-before {pocket_before}")
-        draw_dashed_line(draw, wall_px, pocket_before, fill=color_wall, width=width)
-
-        print("=== Finished Drawing ===")
-
-        self.draw_all_pockets_with_labels(draw)  # Add pocket labels and dots
-        self.draw_all_balls_with_coordinates(draw)  # Add ball circles and coordinates
 
         self.img.save(self.output_path, quality=95)
-        return self.output_path
+        return str(self.output_path)
+
+    def _get_unit_vector(self, p1: tuple, p2: tuple) -> tuple:
+        """Calculates the unit vector from point 1 to point 2."""
+        dx, dy = p2[0] - p1[0], p2[1] - p1[1]
+        dist = math.hypot(dx, dy)
+        return (dx / dist, dy / dist) if dist != 0 else (0, 0)

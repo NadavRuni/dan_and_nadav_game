@@ -1,49 +1,70 @@
-from typing import Dict, Tuple
+"""
+A utility for parsing a Rectangle object from different dictionary formats.
+"""
+
+from typing import Dict, Any, Tuple
+
+from analyzer_table.detect_ball.Debugger import Debugger
 from analyzer_table.launcher_helper.json_models import Rectangle
 
 
-def parse_rectangle_from_data(data: Dict) -> Rectangle:
+def parse_rectangle_from_data(data: Dict[str, Any]) -> Rectangle:
     """
-    מחזירה מופע Rectangle מתוך dict.
-    תומכת בשני מבנים:
-    1. {"points": [{"x":..,"y":..}, ...]}  → מה-frontend
-    2. {"top_left": [...], "top_right": [...], ...}  → מקובץ rectangle.json
+    Parses a dictionary to create a Rectangle object.
+
+    This function supports two common dictionary structures:
+    1. A dictionary with a 'points' key containing a list of four
+       coordinate dictionaries (e.g., from a frontend UI).
+    2. A dictionary with keys like 'top_left', 'top_right', etc., directly
+       representing a Rectangle object (e.g., from a JSON file).
+
+    Args:
+        data: The dictionary containing the rectangle data.
+
+    Returns:
+        A populated Rectangle object.
+
+    Raises:
+        ValueError: If the data format is invalid or does not contain the
+                    expected keys or number of points.
     """
-    # 🟢 אם נשלח כ-4 נקודות מה-frontend
+    # Case 1: Data comes from a frontend-style 'points' list
     if "points" in data:
         points = data.get("points", [])
         if len(points) != 4:
-            raise ValueError(f"Expected 4 points, got {len(points)}")
+            raise ValueError(f"Expected 4 points, but got {len(points)}")
 
-        pts = [(p["x"], p["y"]) for p in points]
-        pts_sorted_by_y = sorted(pts, key=lambda p: p[1])
+        # Sort points by y-coordinate to separate top and bottom pairs
+        pts_sorted_by_y = sorted(points, key=lambda p: p["y"])
 
-        top_points = sorted(pts_sorted_by_y[:2], key=lambda p: p[0])
-        bottom_points = sorted(pts_sorted_by_y[2:], key=lambda p: p[0])
+        # Sort the top and bottom pairs by x-coordinate to find corners
+        top_points = sorted(pts_sorted_by_y[:2], key=lambda p: p["x"])
+        bottom_points = sorted(pts_sorted_by_y[2:], key=lambda p: p["x"])
 
-        rect = Rectangle(
-            top_left=(int(top_points[0][0]), int(top_points[0][1])),
-            top_right=(int(top_points[1][0]), int(top_points[1][1])),
-            bottom_left=(int(bottom_points[0][0]), int(bottom_points[0][1])),
-            bottom_right=(int(bottom_points[1][0]), int(bottom_points[1][1])),
+        rectangle = Rectangle(
+            top_left=(int(top_points[0]["x"]), int(top_points[0]["y"])),
+            top_right=(int(top_points[1]["x"]), int(top_points[1]["y"])),
+            bottom_left=(int(bottom_points[0]["x"]), int(bottom_points[0]["y"])),
+            bottom_right=(int(bottom_points[1]["x"]), int(bottom_points[1]["y"])),
         )
-        print(f"[DEBUG] Rectangle parsed successfully from 'points': {rect}")
-        return rect
+        Debugger.log(f"Rectangle parsed successfully from 'points': {rectangle}")
+        return rectangle
 
-    # 🟣 אם זה קובץ rectangle.json (אובייקט מלבן ישיר)
+    # Case 2: Data comes from a direct dictionary representation of a Rectangle
     elif all(
         k in data for k in ["top_left", "top_right", "bottom_left", "bottom_right"]
     ):
-        rect = Rectangle(
+        rectangle = Rectangle(
             top_left=tuple(map(int, data["top_left"])),
             top_right=tuple(map(int, data["top_right"])),
             bottom_left=tuple(map(int, data["bottom_left"])),
             bottom_right=tuple(map(int, data["bottom_right"])),
         )
-        print(f"[DEBUG] Rectangle parsed successfully from dict: {rect}")
-        return rect
+        Debugger.log(f"Rectangle parsed successfully from dictionary: {rectangle}")
+        return rectangle
 
     else:
         raise ValueError(
-            "Invalid rectangle data format — expected 'points' or 'top_left' keys."
+            "Invalid rectangle data format. Expected a 'points' key or "
+            "keys for all four corners ('top_left', etc.)."
         )
